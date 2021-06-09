@@ -3,7 +3,7 @@ source "virtualbox-iso" "sles15-base" {
     "<esc><enter><wait>",
     "linux netdevice=eth0 netsetup=dhcp install=cd:/<wait>",
     " lang=en_US autoyast=http://{{ .HTTPIP }}:{{ .HTTPPort }}/autoinst.xml<wait>",
-    " textmode=1<wait> password=${var.ssh_password}<wait>",
+    " textmode=1 password=${var.ssh_password}<wait>",
     "<enter><wait>"
   ]
   boot_wait               = "10s"
@@ -22,9 +22,12 @@ source "virtualbox-iso" "sles15-base" {
   ssh_port                = 22
   ssh_username            = "${var.ssh_username}"
   ssh_wait_timeout        = "10000s"
+  output_directory        = "output-sles15-base"
+  output_filename         = "sles15-base"
   vboxmanage              = [
-    ["modifyvm", "{{ .Name }}", "--memory", "${var.memory}"],
-    ["modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"]]
+      [ "modifyvm", "{{ .Name }}", "--memory", "${var.memory}" ],
+      [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}" ]
+    ]
   virtualbox_version_file = ".vbox_version"
 }
 
@@ -33,17 +36,22 @@ build {
 
   provisioner "shell" {
     scripts = [
-      "scripts/wait-for-autoyast-completion.sh",
-      "scripts/setup.sh",
-      "scripts/postinstall.sh",
-      "scripts/virtualbox.sh",
-      "scripts/remove-repos.sh",
-      "scripts/cleanup.sh"
+      "${path.root}/scripts/wait-for-autoyast-completion.sh",
+      "${path.root}/scripts/setup.sh",
+      "${path.root}/scripts/postinstall.sh",
+      "${path.root}/scripts/virtualbox.sh",
+      "${path.root}/scripts/remove-repos.sh",
+      "${path.root}/scripts/cleanup.sh"
     ]
   }
 
   post-processor "vagrant" {
     keep_input_artifact = true
     output = "${var.image_name}-{{ .Provider }}.box"
+    provider_override = "virtualbox"
+  }
+
+  post-processor "manifest" {
+    output = "base-manifest.json"
   }
 }

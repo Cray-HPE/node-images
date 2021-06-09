@@ -8,7 +8,7 @@ date > /etc/vagrant_box_build_time
 rm -f /etc/zypp/locks
 
 # install required packages
-packages=( bzip2 gcc make kernel-devel kernel-macros kernel-default-devel)
+packages=( bzip2 gcc jq make kernel-devel kernel-macros kernel-default-devel)
 zypper --non-interactive install --no-recommends --force-resolution ${packages[@]}
 
 # set vagrant sudo
