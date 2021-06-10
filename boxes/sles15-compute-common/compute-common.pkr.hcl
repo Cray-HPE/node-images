@@ -161,6 +161,10 @@ build {
     destination = "${var.output_directory}/test_results_{{ build_name }}.xml"
   }
 
+  provisioner "shell" {
+    script = "${path.root}/files/scripts/common/cleanup.sh"
+  }
+
   post-processor "vagrant" {
     keep_input_artifact = true
     output = "${var.image_name}-{{ .Provider }}.box"

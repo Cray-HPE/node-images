@@ -1,3 +1,7 @@
 autoinst.xml
 iso/*.iso
 csm-rpms
+*-manifest.json
+output-*
+packer_cache
+*.box
