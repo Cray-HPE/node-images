@@ -1,0 +1,16 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: ceph-cephfs-external
+provisioner: {{ ceph_cephfs_provisioner_type }}
+parameters:
+  {% if build_type == 'metal' %}
+  monitors: {{ ansible_vlan002.ipv4.address }}
+  {% else %}
+  monitors: {{ ansible_eth0.ipv4.address }}
+  {% endif %}
+  adminId: {{ ceph_cephfs_admin_user }}
+  adminSecretName: {{ ceph_cephfs_admin_secret }}
+  adminSecretNamespace: {{ ceph_cephfs_namespace }}
+  claimRoot: {{ ceph_cephfs_claim_root }}

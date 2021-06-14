@@ -1,0 +1,42 @@
+# Copyright 2019, Cray Inc. All Rights Reserved.
+---
+- name: Determine if running on cloud or metal
+  shell: "craysys type get"
+  register: infra_type
+  ignore_errors: yes
+
+- name: Set fact for base infrastructure
+  set_fact:
+    build_type: "{{ infra_type.stdout }}"
+  ignore_errors: yes
+
+- name: Create S3 bucket {{ item.bucket_name }} for vshasta
+  s3_bucket:
+    aws_access_key: "{{ sts_s3_user.access_key }}"
+    aws_secret_key: "{{ sts_s3_user.secret_key }}"
+    name: "{{ item.bucket_name }}"
+    s3_url: "{{ cray_rgw_vshasta_endpoint_url }}"
+    ceph: true
+    versioning: false
+    policy: "{{ item.bucket_policy }}"
+  register: s3_create
+  ignore_errors: true
+  when: build_type != "metal"
+
+- name: Create S3 bucket {{ item.bucket_name }} for metal
+  s3_bucket:
+    aws_access_key: "{{ sts_s3_user.access_key }}"
+    aws_secret_key: "{{ sts_s3_user.secret_key }}"
+    name: "{{ item.bucket_name }}"
+    s3_url: "{{ cray_http_rgw_vip_endpoint_url }}"
+    ceph: true
+    versioning: false
+    policy: "{{ item.bucket_policy }}"
+  register: s3_create
+  ignore_errors: true
+  when: build_type == "metal"
+
+- name: Fail if {{ item.bucket_name }} wasn't successfully created
+  fail:
+    msg: "Bucket {{ item.bucket_name }} was not created"
+  when: s3_create.error is defined and s3_create.error.code != 'BucketAlreadyExists'

@@ -48,3 +48,16 @@ configured to build on top of that.
 ### Build
 Execute the following command from the top level of the project
 * Run `packer build -var 'ssh_password=something' boxes/sles15-kubernetes/`
+
+## Storage Ceph Box
+In the previous step a VirtualBox image was created in `output-sles15-compute-common`. The sles15-storage-ceph stage is
+configured to build on top of that. 
+
+### Prerequisites
+* Check out `csm-rpms` repository and create a symlink to it in the `files` directory
+* `cd boxes/sles15-storage-ceph/files`
+* Run `ln -s ../../../../csm-rpms/ csm-rpms`
+  
+### Build
+Execute the following command from the top level of the project
+* Run `packer build -var 'ssh_password=something' boxes/sles15-storage-ceph/`

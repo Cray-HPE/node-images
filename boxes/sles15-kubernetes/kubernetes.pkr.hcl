@@ -6,7 +6,7 @@ source "virtualbox-ovf" "kubernetes" {
   ssh_username            = "${var.ssh_username}"
   ssh_wait_timeout        = "10000s"
   output_directory        = "${var.output_directory}"
-  output_filename         = "sles15-kubernetes"
+  output_filename         = "${var.image_name}"
   vboxmanage              = [
     ["modifyvm", "{{ .Name }}", "--memory", "${var.memory}"],
     ["modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"]]

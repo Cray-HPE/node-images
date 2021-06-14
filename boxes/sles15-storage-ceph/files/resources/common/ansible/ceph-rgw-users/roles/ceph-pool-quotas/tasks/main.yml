@@ -1,0 +1,20 @@
+# Copyright 2020, Cray Inc. All Rights Reserved.
+---
+- name: Enable osd pool quotas
+  delegate_to: "{{ groups['mons'][0] }}"
+  run_once: true
+  when:
+    - ceph_rbd_enabled|bool
+    - groups['mons'] is defined
+  block:
+    - name: Get the total storage available
+      shell: "ceph report | jq .osd_sum.statfs.total"
+      register: ceph_storage_total
+      changed_when: false
+
+    #
+    # Note we are dividing quota the pool's replication factor to allow for copies
+    #
+    - name: Configure each pool's quota
+      shell: "ceph osd pool set-quota {{ item.pool_name }} max_bytes {{ ((item.percent_of_total|float * ceph_storage_total.stdout|float)/item.replication_factor|float)|int }}"
+      loop: "{{ ceph_pool_quotas }}"

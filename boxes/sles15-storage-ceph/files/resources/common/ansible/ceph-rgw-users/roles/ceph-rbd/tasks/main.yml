@@ -1,0 +1,91 @@
+# Copyright 2018-2020, Cray Inc. All Rights Reserved.
+---
+- name: Determine if running on cloud or metal
+  shell: "craysys type get"
+  register: infra_type
+  ignore_errors: yes
+
+- name: Set fact for base infrastructure
+  set_fact:
+    build_type: "{{ infra_type.stdout }}"
+  ignore_errors: yes
+
+- name: set mon fact
+  set_fact:
+    mon_addrs:  "{% for host in groups['mons'] %}{% if not loop.first %},{% endif %}{{ hostvars[host]['ansible_vlan002']['ipv4']['address'] }}{% endfor %}"
+  when: build_type == 'metal'
+
+- name: Render templates
+  when: ceph_rbd_enabled|bool
+  run_once: true
+  delegate_to: "{{ groups['managers'][0] }}"
+  block:
+    - name: Create /root/k8s/ceph/rbd directory
+      file:
+        path: /root/k8s/ceph/rbd
+        state: directory
+    - name: Render manifest for kubernetes Ceph RBD provisioner
+      template:
+        src: provisioner.yaml.j2
+        dest: "/root/k8s/ceph/rbd/{{ item }}-provisioner.yaml"
+        trim_blocks: false
+      loop: "{{ provisioner_namespaces }}"
+    - name: Render manifest for k8s block storage class
+      template:
+        src: k8s-block.storageclass.yaml.j2
+        dest: "/root/k8s/ceph/rbd/k8s-block-storageclass.yaml"
+        trim_blocks: false
+
+- name: Initialize Ceph
+  when: ceph_rbd_enabled|bool
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  block:
+    - name: Create Ceph OSD pool
+      command: "ceph osd pool create {{ item.pool_name }} {{ item.args }}"
+      loop: "{{ kube_block_pools }}"
+      register: ceph_rbd_osd_pool
+      changed_when: ceph_rbd_osd_pool.rc == 0 and "already exists" not in ceph_rbd_osd_pool.stderr
+    - name: Initialize Ceph OSD pool
+      command: "rbd pool init {{ item.pool_name }}"
+      loop: "{{ kube_block_pools }}"
+      register: ceph_rbd_init_pool
+    - name: Create K8s Block OSD pool credentials
+      command: "ceph auth add client.{{ item.pool_name }} mon 'profile rbd' osd 'profile rbd pool={{ item.pool_name }}'"
+      loop: "{{ kube_block_pools }}"
+    - name: Set compression_algorithm for Ceph pools
+      command: "ceph osd pool set {{ item.pool_name }} compression_algorithm {{ item.compression_algorithm }}"
+      loop: "{{ kube_block_pools }}"
+    - name: Set compression_mode for Ceph pools
+      command: "ceph osd pool set {{ item.pool_name }} compression_mode {{ item.compression_mode }}"
+      loop: "{{ kube_block_pools }}"
+    - name: Set compression_required_ratio for Ceph pools
+      command: "ceph osd pool set {{ item.pool_name }} compression_required_ratio {{ item.compression_required_ratio }}"
+      loop: "{{ kube_block_pools }}"
+
+# Set the default storage class.  There can be only one, so
+# set any others to default=false and set ceph-rbd-external
+# as the default. This will mean when a PVC is created and the
+# storage class is not set, it will default to k8s-block-replicated
+
+## Commenting out default task but leaving it for WAR just incase
+
+#- name: Set k8s-block-replicated as the clusters default storage class
+#  when: ceph_rbd_enabled|bool
+#  run_once: true
+#  delegate_to: "{{ groups['managers'][0] }}"
+#  shell: |
+#    name=k8s-block-replicated
+#    storageclasses=$(kubectl get storageclass -o jsonpath='{range .items[?(@.metadata.name != "'$name'")]}{@.metadata.name} {end}')
+#    for sc in $storageclasses; do
+#        kubectl patch storageclass $sc -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+#    done
+#    kubectl patch storageclass $name -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+#
+- name: Configure SMA storage
+  include_tasks: sma-rbd-provisioner.yml
+
+- name: Set Ceph configuration options
+  when: ceph_rbd_enabled|bool and build_type == 'metal'
+  include_tasks: ceph-tuning.yml
+

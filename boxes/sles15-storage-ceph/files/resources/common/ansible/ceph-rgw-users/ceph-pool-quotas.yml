@@ -1,0 +1,8 @@
+# Copyright 2020, Cray Inc. All Rights Reserved.
+---
+- hosts:
+    - managers
+  any_errors_fatal: true
+  remote_user: root
+  roles:
+    - ceph-pool-quotas

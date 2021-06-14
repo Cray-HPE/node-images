@@ -1,0 +1,9 @@
+# Copyright 2020, Cray Inc. All Rights Reserved.
+---
+
+ceph_rbd_enabled: "{{ external_ceph_enabled | default(true) | bool }}"
+
+ceph_pool_quotas:
+  - pool_name: smf
+    percent_of_total: .33
+    replication_factor: 2.0
