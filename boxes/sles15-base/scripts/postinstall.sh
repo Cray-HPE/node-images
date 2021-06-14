@@ -9,7 +9,7 @@ rm -f /etc/zypp/locks
 
 # install required packages
 packages=( bzip2 gcc jq make kernel-devel kernel-macros kernel-default-devel)
-zypper --non-interactive install --no-recommends --force-resolution ${packages[@]}
+zypper --non-interactive install --no-recommends --force-resolution "${packages[@]}"
 
 # set vagrant sudo
 printf "%b" "
