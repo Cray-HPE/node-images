@@ -1,10 +1,12 @@
 source "virtualbox-iso" "sles15-base" {
   boot_command            = [
-    "<esc><enter><wait>",
-    "linux netdevice=eth0 netsetup=dhcp install=cd:/<wait>",
+    "e<wait><leftCtrlOn>c<leftCtrlOff><wait><wait>",
+    "set gfxpayload=keep<enter><wait>",
+    "linuxefi /boot/x86_64/loader/linux biosdevname=1 netdevice=eth0 netsetup=dhcp install=cd:/<wait>",
     " lang=en_US autoyast=http://{{ .HTTPIP }}:{{ .HTTPPort }}/autoinst.xml<wait>",
-    " textmode=1 password=${var.ssh_password}<wait>",
-    "<enter><wait>"
+    " textmode=1 password=${var.ssh_password}<wait><enter>",
+    "initrdefi /boot/x86_64/loader/initrd<enter><wait>",
+    "boot<wait><enter>"
   ]
   boot_wait               = "10s"
   cpus                    = "${var.cpus}"
@@ -26,7 +28,9 @@ source "virtualbox-iso" "sles15-base" {
   output_filename         = "sles15-base"
   vboxmanage              = [
       [ "modifyvm", "{{ .Name }}", "--memory", "${var.memory}" ],
-      [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}" ]
+      [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}" ],
+      [ "modifyvm", "{{ .Name }}",  "--firmware", "efi" ],
+      [ "modifyvm", "{{ .Name }}", "--vram", "${var.vb_vram}" ]
     ]
   virtualbox_version_file = ".vbox_version"
 }

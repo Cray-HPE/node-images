@@ -44,6 +44,11 @@ variable "ssh_username" {
   default = "root"
 }
 
+variable "vb_vram" {
+  type    = string
+  default = "32"
+}
+
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 locals {

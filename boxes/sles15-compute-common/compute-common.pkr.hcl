@@ -9,7 +9,9 @@ source "virtualbox-ovf" "compute-common" {
   output_filename         = "sles15-compute-common"
   vboxmanage              = [
     ["modifyvm", "{{ .Name }}", "--memory", "${var.memory}"],
-    ["modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"]]
+    ["modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"],
+    [ "modifyvm", "{{ .Name }}",  "--firmware", "efi" ],
+    [ "modifyvm", "{{ .Name }}", "--vram", "${var.vb_vram}" ]]
   virtualbox_version_file = ".vbox_version"
 }
 
