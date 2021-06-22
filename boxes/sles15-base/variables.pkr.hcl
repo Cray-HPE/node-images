@@ -49,6 +49,16 @@ variable "vb_vram" {
   default = "32"
 }
 
+variable "output_directory" {
+  type    = string
+  default = "output-sles15-base/"
+}
+
+variable "create_kis_artifacts_arguments" {
+  type    = string
+  default = "kernel-initrd-only"
+}
+
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 locals {

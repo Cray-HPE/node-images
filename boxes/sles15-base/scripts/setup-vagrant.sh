@@ -3,13 +3,13 @@
 set -e
 
 date > /etc/vagrant_box_build_time
-
-# remove zypper package locks
-rm -f /etc/zypp/locks
-
-# install required packages
-packages=( bzip2 gcc jq make kernel-devel kernel-macros kernel-default-devel)
-zypper --non-interactive install --no-recommends --force-resolution "${packages[@]}"
+# Installing vagrant keys
+mkdir /home/vagrant/.ssh
+chmod 700 /home/vagrant/.ssh
+cd /home/vagrant/.ssh
+wget --no-check-certificate 'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' -O authorized_keys
+chmod 600 /home/vagrant/.ssh/authorized_keys
+chown -R vagrant /home/vagrant/.ssh
 
 # set vagrant sudo
 printf "%b" "
@@ -35,11 +35,15 @@ ln -s /sbin/shutdown /usr/bin/shutdown
 # ntp servers
 printf "%b" "
 # added by packer postinstall.sh
-server 0.de.pool.ntp.org
-server 1.de.pool.ntp.org
-server 2.de.pool.ntp.org
-server 3.de.pool.ntp.org
+server 0.us.pool.ntp.org
+server 1.us.pool.ntp.org
+server 2.us.pool.ntp.org
+server 3.us.pool.ntp.org
 " >> /etc/ntp.conf
 
 # Turn off swap
 swapoff -a
+
+# Cleanup vagrant
+rm -rf /home/vagrant/*.sh
+rm -rf /home/vagrant/.v*

@@ -15,7 +15,7 @@ variable "headless" {
 
 variable "image_name" {
   type    = string
-  default = "sles15-kubernetes"
+  default = "sles15-vbox"
 }
 
 variable "memory" {
@@ -42,7 +42,7 @@ variable "vb_vram" {
 
 variable "output_directory" {
   type    = string
-  default = "output-sles15-kubernetes/"
+  default = "output-sles15-images/"
 }
 
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
