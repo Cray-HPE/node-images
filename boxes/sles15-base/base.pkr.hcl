@@ -15,17 +15,18 @@ source "virtualbox-iso" "sles15-base" {
   guest_additions_path    = "VBoxGuestAdditions_{{ .Version }}.iso"
   guest_os_type           = "OpenSUSE_64"
   hard_drive_interface    = "sata"
+  headless                = "${var.headless}"
   http_directory          = "${path.root}/http"
   iso_checksum            = "${var.source_iso_checksum}"
   iso_url                 = "${var.source_iso_uri}"
   sata_port_count         = 8
-  shutdown_command        = "echo 'vagrant'|sudo -S /sbin/halt -h -p"
+  shutdown_command        = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password            = "${var.ssh_password}"
   ssh_port                = 22
   ssh_username            = "${var.ssh_username}"
   ssh_wait_timeout        = "10000s"
-  output_directory        = "output-sles15-base"
-  output_filename         = "sles15-base"
+  output_directory        = "${var.output_directory}"
+  output_filename         = "${var.image_name}"
   vboxmanage              = [
       [ "modifyvm", "{{ .Name }}", "--memory", "${var.memory}" ],
       [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}" ],
@@ -41,8 +42,7 @@ build {
   provisioner "shell" {
     scripts = [
       "${path.root}/scripts/wait-for-autoyast-completion.sh",
-      "${path.root}/scripts/virtualbox.sh",
-      "${path.root}/scripts/remove-repos.sh"
+      "${path.root}/scripts/virtualbox.sh"
     ]
   }
 
@@ -142,7 +142,7 @@ build {
   provisioner "file" {
     direction = "download"
     source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}"
+    destination = "${var.output_directory}/"
   }
 
   provisioner "shell" {
@@ -165,7 +165,7 @@ build {
       "/tmp/installed.deps.packages",
       "/tmp/installed.packages"
     ]
-    destination = "${var.output_directory}"
+    destination = "${var.output_directory}/"
   }
 
   provisioner "file" {

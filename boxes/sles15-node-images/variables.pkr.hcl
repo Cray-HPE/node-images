@@ -23,7 +23,6 @@ variable "memory" {
   default = "4096"
 }
 
-
 variable "ssh_password" {
   sensitive = true
   type = string
@@ -42,7 +41,7 @@ variable "vb_vram" {
 
 variable "output_directory" {
   type    = string
-  default = "output-sles15-images/"
+  default = "output-sles15-images"
 }
 
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
