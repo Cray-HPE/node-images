@@ -64,6 +64,7 @@ build {
     inline = ["sudo -S bash -c 'if [ -f /root/zero.file ]; then rm /root/zero.file; fi'"]
   }
 
+  //This does nothing on metal, specific to GCP
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
   }
@@ -158,6 +159,7 @@ build {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-package-repos'"]
   }
 
+  //This does nothing on metal, specific to gcp
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; cleanup-dns'"]
   }
