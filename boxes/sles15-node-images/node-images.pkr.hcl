@@ -40,13 +40,13 @@ build {
   provisioner "file" {
     source = "${path.root}/k8s/files"
     destination = "/tmp/"
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "file" {
     source = "${path.root}/ceph/files"
     destination = "/tmp/"
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
 
@@ -82,52 +82,52 @@ build {
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/base.packages'"]
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/metal.packages'"]
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/base.packages'"]
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/metal.packages'"]
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     script = "${path.root}/k8s/provisioners/common/install.sh"
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
     script = "${path.root}/ceph/provisioners/metal/ses.sh"
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     script = "${path.root}/ceph/provisioners/common/install.sh"
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     script = "${path.root}/k8s/provisioners/common/sdu/install.sh"
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
-    only = ["kubernetes"]
+    script = "${path.root}/k8s/provisioners/metal/install.sh"
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
-    only = ["ceph"]
+    script = "${path.root}/ceph/provisioners/metal/install.sh"
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
@@ -146,13 +146,34 @@ build {
       "/tmp/installed.deps.packages",
       "/tmp/installed.packages"
     ]
-    destination = "${var.output_directory}/"
+    destination = "${var.output_directory}/k8s/"
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "file" {
     direction = "download"
     source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/installed.repos"
+    destination = "${var.output_directory}/k8s/installed.repos"
+    only = ["virtualbox-ovf.kubernetes"]
+  }
+
+  provisioner "file" {
+    direction = "download"
+    sources = [
+      "/tmp/initial.deps.packages",
+      "/tmp/initial.packages",
+      "/tmp/installed.deps.packages",
+      "/tmp/installed.packages"
+    ]
+    destination = "${var.output_directory}/ceph/"
+    only = ["virtualbox-ovf.ceph"]
+  }
+
+  provisioner "file" {
+    direction = "download"
+    source = "/tmp/installed.repos"
+    destination = "${var.output_directory}/ceph/installed.repos"
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
@@ -175,7 +196,15 @@ build {
   provisioner "file" {
     direction = "download"
     source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/"
+    destination = "${var.output_directory}/k8s/"
+    only = ["virtualbox-ovf.kubernetes"]
+  }
+
+  provisioner "file" {
+    direction = "download"
+    source = "/tmp/kis.tar.gz"
+    destination = "${var.output_directory}/ceph/"
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
@@ -184,12 +213,12 @@ build {
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '/srv/cray/scripts/common/zeros.sh'"]
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '/srv/cray/scripts/metal/zeros.sh'"]
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
