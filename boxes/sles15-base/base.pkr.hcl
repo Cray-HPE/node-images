@@ -1,12 +1,10 @@
 source "virtualbox-iso" "sles15-base" {
   boot_command            = [
-    "e<wait><leftCtrlOn>c<leftCtrlOff><wait><wait>",
-    "set gfxpayload=keep<enter><wait>",
-    "linuxefi /boot/x86_64/loader/linux biosdevname=1 netdevice=eth0 netsetup=dhcp install=cd:/<wait>",
+    "<esc><enter><wait>",
+    "linux netdevice=eth0 netsetup=dhcp install=cd:/<wait>",
     " lang=en_US autoyast=http://{{ .HTTPIP }}:{{ .HTTPPort }}/autoinst.xml<wait>",
-    " textmode=1 password=${var.ssh_password}<wait><enter>",
-    "initrdefi /boot/x86_64/loader/initrd<enter><wait>",
-    "boot<wait><enter>"
+    " textmode=1 password=${var.ssh_password}<wait>",
+    "<enter><wait>"
   ]
   boot_wait               = "10s"
   cpus                    = "${var.cpus}"
@@ -29,9 +27,7 @@ source "virtualbox-iso" "sles15-base" {
   output_filename         = "${var.image_name}"
   vboxmanage              = [
       [ "modifyvm", "{{ .Name }}", "--memory", "${var.memory}" ],
-      [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}" ],
-      [ "modifyvm", "{{ .Name }}",  "--firmware", "efi" ],
-      [ "modifyvm", "{{ .Name }}", "--vram", "${var.vb_vram}" ]
+      [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}" ]
     ]
   virtualbox_version_file = ".vbox_version"
 }
@@ -135,19 +131,19 @@ build {
     script = "${path.root}/provisioners/common/kernel/modules.sh"
   }
 
-  provisioner "shell" {
-    inline = ["sudo -S bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh ${var.create_kis_artifacts_arguments}'"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/"
-  }
-
-  provisioner "shell" {
-    inline = ["sudo -S bash -c '/srv/cray/scripts/common/cleanup-kis-artifacts.sh'"]
-  }
+//  provisioner "shell" {
+//    inline = ["sudo -S bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh ${var.create_kis_artifacts_arguments}'"]
+//  }
+//
+//  provisioner "file" {
+//    direction = "download"
+//    source = "/tmp/kis.tar.gz"
+//    destination = "${var.output_directory}/"
+//  }
+//
+//  provisioner "shell" {
+//    inline = ["sudo -S bash -c '/srv/cray/scripts/common/cleanup-kis-artifacts.sh'"]
+//  }
 
   provisioner "shell" {
     inline = [

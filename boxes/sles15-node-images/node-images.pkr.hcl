@@ -10,9 +10,7 @@ source "virtualbox-ovf" "kubernetes" {
   output_filename         = "${var.image_name}-k8s"
   vboxmanage              = [
     [ "modifyvm", "{{ .Name }}", "--memory", "${var.memory}"],
-    [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"],
-    [ "modifyvm", "{{ .Name }}",  "--firmware", "efi" ],
-    [ "modifyvm", "{{ .Name }}", "--vram", "${var.vb_vram}" ]]
+    [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"]]
   virtualbox_version_file = ".vbox_version"
 }
 
@@ -28,9 +26,7 @@ source "virtualbox-ovf" "ceph" {
   output_filename         = "${var.image_name}-ceph"
   vboxmanage              = [
     [ "modifyvm", "{{ .Name }}", "--memory", "${var.memory}"],
-    [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"],
-    [ "modifyvm", "{{ .Name }}",  "--firmware", "efi" ],
-    [ "modifyvm", "{{ .Name }}", "--vram", "${var.vb_vram}" ]]
+    [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"]]
   virtualbox_version_file = ".vbox_version"
 }
 

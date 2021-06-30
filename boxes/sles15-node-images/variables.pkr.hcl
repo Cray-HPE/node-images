@@ -34,11 +34,6 @@ variable "ssh_username" {
   default = "root"
 }
 
-variable "vb_vram" {
-  type    = string
-  default = "32"
-}
-
 variable "output_directory" {
   type    = string
   default = "output-sles15-images"

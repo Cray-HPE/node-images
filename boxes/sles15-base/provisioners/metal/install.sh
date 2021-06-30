@@ -2,9 +2,6 @@
 
 set -e
 
-echo "Enabling fstrim metal only"
-cp -pv /srv/cray/resources/metal/fstrim /etc/cron.weekly/fstrim
-
 echo "Enabling sysstat service for metal only"
 cp -pv /srv/cray/resources/metal/sysstat.cron /etc/sysstat/sysstat.cron
 /usr/lib64/sa/sa1 -S DISK 1 1
