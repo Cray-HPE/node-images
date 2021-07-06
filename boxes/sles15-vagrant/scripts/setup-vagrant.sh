@@ -3,6 +3,10 @@
 set -e
 
 date > /etc/vagrant_box_build_time
+# Create vagrant user
+useradd -m -c "Vagrant" vagrant -s /bin/bash
+echo "vagrant:vagrant" | chpasswd
+
 # Installing vagrant keys
 mkdir /home/vagrant/.ssh
 chmod 700 /home/vagrant/.ssh

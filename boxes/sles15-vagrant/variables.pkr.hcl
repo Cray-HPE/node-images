@@ -15,7 +15,7 @@ variable "headless" {
 
 variable "image_name" {
   type    = string
-  default = "sles15-vbox"
+  default = "sles15-vagrant"
 }
 
 variable "memory" {
@@ -34,9 +34,14 @@ variable "ssh_username" {
   default = "root"
 }
 
+variable "vb_vram" {
+  type    = string
+  default = "32"
+}
+
 variable "output_directory" {
   type    = string
-  default = "output-sles15-images"
+  default = "output-sles15-vagrant"
 }
 
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }

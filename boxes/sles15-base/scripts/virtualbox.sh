@@ -2,8 +2,8 @@
 
 set -e
 
-# remove zypper package locks
-rm -f /etc/zypp/locks
+## remove zypper package locks
+#rm -f /etc/zypp/locks
 
 # install required packages for virtualbox
 packages=( bzip2 gcc jq make kernel-devel kernel-macros kernel-default-devel)

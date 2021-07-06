@@ -1,34 +1,32 @@
 source "virtualbox-ovf" "kubernetes" {
   source_path             = "output-sles15-base/sles15-base.ovf"
   checksum                = "none"
-  shutdown_command        = "echo 'vagrant'|sudo -S /sbin/halt -h -p"
+  headless                = "${var.headless}"
+  shutdown_command        = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password            = "${var.ssh_password}"
   ssh_username            = "${var.ssh_username}"
   ssh_wait_timeout        = "10000s"
-  output_directory        = "${var.output_directory}k8s"
+  output_directory        = "${var.output_directory}/k8s"
   output_filename         = "${var.image_name}-k8s"
   vboxmanage              = [
     [ "modifyvm", "{{ .Name }}", "--memory", "${var.memory}"],
-    [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"],
-    [ "modifyvm", "{{ .Name }}",  "--firmware", "efi" ],
-    [ "modifyvm", "{{ .Name }}", "--vram", "${var.vb_vram}" ]]
+    [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"]]
   virtualbox_version_file = ".vbox_version"
 }
 
 source "virtualbox-ovf" "ceph" {
   source_path             = "output-sles15-base/sles15-base.ovf"
   checksum                = "none"
-  shutdown_command        = "echo 'vagrant'|sudo -S /sbin/halt -h -p"
+  headless                = "${var.headless}"
+  shutdown_command        = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password            = "${var.ssh_password}"
   ssh_username            = "${var.ssh_username}"
   ssh_wait_timeout        = "10000s"
-  output_directory        = "${var.output_directory}ceph"
+  output_directory        = "${var.output_directory}/ceph"
   output_filename         = "${var.image_name}-ceph"
   vboxmanage              = [
     [ "modifyvm", "{{ .Name }}", "--memory", "${var.memory}"],
-    [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"],
-    [ "modifyvm", "{{ .Name }}",  "--firmware", "efi" ],
-    [ "modifyvm", "{{ .Name }}", "--vram", "${var.vb_vram}" ]]
+    [ "modifyvm", "{{ .Name }}", "--cpus", "${var.cpus}"]]
   virtualbox_version_file = ".vbox_version"
 }
 
@@ -38,13 +36,13 @@ build {
   provisioner "file" {
     source = "${path.root}/k8s/files"
     destination = "/tmp/"
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "file" {
     source = "${path.root}/ceph/files"
     destination = "/tmp/"
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
 
@@ -53,20 +51,16 @@ build {
     destination = "/tmp/files/"
   }
 
-  // Merge into one file
+  // Merge into common file area
   provisioner "shell" {
     script = "${path.root}/k8s/provisioners/common/setup.sh"
   }
-
-//  provisioner "shell" {
-//    script = "${path.root}/ceph/provisioners/common/setup.sh"
-//    only = ["ceph"]
-//  }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c 'if [ -f /root/zero.file ]; then rm /root/zero.file; fi'"]
   }
 
+  //This does nothing on metal, specific to GCP
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
   }
@@ -84,57 +78,53 @@ build {
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/base.packages'"]
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/metal.packages'"]
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/base.packages'"]
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/metal.packages'"]
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     script = "${path.root}/k8s/provisioners/common/install.sh"
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
     script = "${path.root}/ceph/provisioners/metal/ses.sh"
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     script = "${path.root}/ceph/provisioners/common/install.sh"
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     script = "${path.root}/k8s/provisioners/common/sdu/install.sh"
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
-    only = ["kubernetes"]
+    script = "${path.root}/k8s/provisioners/metal/install.sh"
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
-    only = ["ceph"]
+    script = "${path.root}/ceph/provisioners/metal/install.sh"
+    only = ["virtualbox-ovf.ceph"]
   }
-
-//  provisioner "shell" {
-//    inline = ["sudo -S bash -c '/srv/cray/scripts/metal/set-dhcp-config.sh'"]
-//  }
 
   provisioner "shell" {
     inline = [
@@ -152,19 +142,41 @@ build {
       "/tmp/installed.deps.packages",
       "/tmp/installed.packages"
     ]
-    destination = "${var.output_directory}"
+    destination = "${var.output_directory}/k8s/"
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "file" {
     direction = "download"
     source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/installed.repos"
+    destination = "${var.output_directory}/k8s/installed.repos"
+    only = ["virtualbox-ovf.kubernetes"]
+  }
+
+  provisioner "file" {
+    direction = "download"
+    sources = [
+      "/tmp/initial.deps.packages",
+      "/tmp/initial.packages",
+      "/tmp/installed.deps.packages",
+      "/tmp/installed.packages"
+    ]
+    destination = "${var.output_directory}/ceph/"
+    only = ["virtualbox-ovf.ceph"]
+  }
+
+  provisioner "file" {
+    direction = "download"
+    source = "/tmp/installed.repos"
+    destination = "${var.output_directory}/ceph/installed.repos"
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-package-repos'"]
   }
 
+  //This does nothing on metal, specific to gcp
   provisioner "shell" {
     inline = ["sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; cleanup-dns'"]
   }
@@ -180,7 +192,15 @@ build {
   provisioner "file" {
     direction = "download"
     source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}"
+    destination = "${var.output_directory}/k8s/"
+    only = ["virtualbox-ovf.kubernetes"]
+  }
+
+  provisioner "file" {
+    direction = "download"
+    source = "/tmp/kis.tar.gz"
+    destination = "${var.output_directory}/ceph/"
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
@@ -189,22 +209,16 @@ build {
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '/srv/cray/scripts/common/zeros.sh'"]
-    only = ["kubernetes"]
+    only = ["virtualbox-ovf.kubernetes"]
   }
 
   provisioner "shell" {
     inline = ["sudo -S bash -c '/srv/cray/scripts/metal/zeros.sh'"]
-    only = ["ceph"]
+    only = ["virtualbox-ovf.ceph"]
   }
 
   provisioner "shell" {
     script = "${path.root}/k8s/files/scripts/common/cleanup.sh"
-  }
-
-  post-processor "vagrant" {
-    keep_input_artifact = true
-    output = "${var.image_name}-{{ .Provider }}.box"
-    provider_override = "virtualbox"
   }
 
   post-processor "manifest" {
