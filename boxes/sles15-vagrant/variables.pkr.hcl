@@ -1,26 +1,26 @@
 variable "cpus" {
-  type    = string
+  type = string
   default = "2"
 }
 
-variable "disk_size" {
-  type    = string
-  default = "25000"
-}
-
 variable "headless" {
-  type    = bool
+  type = bool
   default = true
 }
 
 variable "image_name" {
-  type    = string
+  type = string
   default = "sles15-vagrant"
 }
 
 variable "memory" {
-  type    = string
+  type = string
   default = "4096"
+}
+
+variable "ssh_wait_timeout" {
+  type = string
+  default = "10000s"
 }
 
 variable "ssh_password" {
@@ -30,22 +30,11 @@ variable "ssh_password" {
 }
 
 variable "ssh_username" {
-  type    = string
+  type = string
   default = "root"
 }
 
-variable "vb_vram" {
-  type    = string
-  default = "32"
-}
-
 variable "output_directory" {
-  type    = string
+  type = string
   default = "output-sles15-vagrant"
-}
-
-locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
-
-locals {
-  version = "${local.timestamp}"
 }
