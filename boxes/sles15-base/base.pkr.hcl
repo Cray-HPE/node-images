@@ -49,17 +49,19 @@ source "qemu" "sles15-base" {
     "<enter><wait>"
   ]
   accelerator = "${var.qemu_accelerator}"
+  use_default_display = "${var.qemu_default_display}"
   display = "${var.qemu_display}"
   format = "${var.qemu_format}"
   boot_wait = "${var.boot_wait}"
   cpus = "${var.cpus}"
   memory = "${var.memory}"
+  disk_cache = "${var.disk_cache}"
   disk_size = "${var.disk_size}"
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
   disk_compression = true
   skip_compaction = false
-  headless = false
+  headless = "${var.headless}"
   http_directory = "${path.root}/http"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
@@ -119,6 +121,11 @@ build {
   provisioner "shell" {
     inline = [
       "sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo -S bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
   }
 
   provisioner "shell" {
@@ -309,5 +316,20 @@ build {
 
   post-processor "manifest" {
     output = "base-manifest.json"
+  }
+
+  post-processors {
+    post-processor "shell-local" {
+      inline = [
+        "echo 'Extracting KIS artifacts package'",
+        "tar -xzvf ${var.output_directory}/qemu/kis.tar.gz -C ${var.output_directory}/qemu/",
+        "rm ${var.output_directory}/qemu/kis.tar.gz"]
+      only = [
+        "qemu.sles15-base"]
+    }
+    post-processor "shell-local" {
+      inline = [
+        "if cat ${var.output_directory}/qemu/test_results_{{ build_name }}.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
+    }
   }
 }

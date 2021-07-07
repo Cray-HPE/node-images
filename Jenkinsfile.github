@@ -1,0 +1,91 @@
+@Library('csm-shared-library@CASMINST-2545') _
+
+pipeline {
+    agent {
+        label "metal-gcp-builder"
+    }
+
+    options {
+        buildDiscarder(logRotator(daysToKeepStr: "30", artifactDaysToKeepStr: "2"))
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    environment {
+        NAME = "cray-node-image-build"
+        DESCRIPTION = "Cray Management System Node Image Builder"
+        IS_STABLE = getBuildIsStable()
+    }
+
+    stages {
+        stage('Checkout csm-rpms') {
+		  steps {
+			dir('csm-rpms') {
+			  git credentialsId: '18f63634-7b3e-4461-acfe-83c6ee647fa4', url: 'https://stash.us.cray.com/scm/csm/csm-rpms.git', branch: 'main'
+			}
+		  }
+		}
+        stage('Fetch SLES ISO') {
+		  steps {
+			dir('iso') {
+			  withCredentials([
+					string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
+					string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
+				]) {
+			  		sh 'curl -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O "https://artifactory.algol60.net/artifactory/mirror-sles-isos/15/SP2/GM/SLE-15-SP2-Full-x86_64-GM-Media1.iso"'
+			  }
+			}
+		  }
+		}
+        stage("Build Base") {
+            parallel {
+                stage('QEMU Base') {
+                    steps {
+                        withCredentials([
+                            string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                            string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE')
+                        ]) {
+                            sh """
+                                SLES15_INITIAL_ROOT_PASSWORD=${SLES15_INITIAL_ROOT_PASSWORD} \
+                                SLES15_REGISTRATION_CODE=${SLES15_REGISTRATION_CODE} \
+                                  ./scripts/render-templates.sh
+                                  packer build -only=qemu.sles15-base -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-base/
+                            """
+						}
+                    }
+                }
+            }
+        }
+        stage("Build Images") {
+            parallel {
+                stage('QEMU Images') {
+                    steps {
+                        withCredentials([
+                            string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                            string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE')
+                        ]) {
+                            sh """
+							  	packer build -only=qemu.* -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-node-images/
+                            """
+						}
+                    }
+                }
+            }
+        }
+        stage("Publish") {
+            steps {
+				script {
+					env.VERSION = setImageVersion(env.GIT_COMMIT[0..6])
+					env.ARTIFACTS_DIRECTORY_BASE = "output-sles15-base/qemu/"
+					env.ARTIFACTS_DIRECTORY_CEPH = "output-sles15-images/qemu/ceph/"
+					env.ARTIFACTS_DIRECTORY_K8S = "output-sles15-images/qemu/k8s/"
+					def qemuSourceArtifact = "local"
+					def props = "build.url=${env.BUILD_URL};vcs.revision-short=${env.GIT_COMMIT[0..6]};build.source-artifact=${qemuSourceArtifact}"
+					publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: env.VERSION, props: props)
+					publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_CEPH, imageName: 'storage-ceph', version: env.VERSION, props: props)
+					publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
+				}
+            }
+        }
+    }
+}
