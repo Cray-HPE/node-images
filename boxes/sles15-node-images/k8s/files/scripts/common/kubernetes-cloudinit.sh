@@ -14,6 +14,11 @@ export ETCD_INITIAL_CLUSTER_STRING=$(get-etcd-initial-cluster-members)
 export ETCDCTL_BACKUP_ENDPOINTS=$(get-etcdctl-backup-endpoints)
 initialized_file="/etc/cray/kubernetes/initialized"
 
+#
+# Expand the root disk (vshasta only)
+#
+expand-root-disk
+
 . /srv/cray/scripts/common/auditing_config.sh
 echo "Configuring node auditing software"
 configure_auditing
@@ -126,7 +131,7 @@ EOF
     echo "Setting up job for kicking k8s cronjobs when they stop getting scheduled."
     cp /srv/cray/resources/common/cronjob_kicker.py /usr/bin/cronjob_kicker.py
     chmod 0755 /usr/bin/cronjob_kicker.py
-    echo "* * * * * root KUBECONFIG=/etc/kubernetes/admin.conf /usr/bin/cronjob_kicker.py" > /etc/cron.d/cronjob-kicker
+    echo "* */2 * * * root KUBECONFIG=/etc/kubernetes/admin.conf /usr/bin/cronjob_kicker.py" > /etc/cron.d/cronjob-kicker
 
     echo "Create secret for Prometheus to scrape etcd."
     kubectl -n sysmgmt-health create secret generic etcd-client-cert --from-file=etcd-client=/etc/kubernetes/pki/apiserver-etcd-client.crt --from-file=etcd-client-key=/etc/kubernetes/pki/apiserver-etcd-client.key --from-file=etcd-ca=/etc/kubernetes/pki/etcd/ca.crt --save-config --dry-run -o yaml | kubectl apply -f -

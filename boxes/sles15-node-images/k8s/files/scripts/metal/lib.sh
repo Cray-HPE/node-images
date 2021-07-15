@@ -127,3 +127,7 @@ function get-etcd-cluster-state() {
   done
   echo "new"
 }
+
+function expand-root-disk() {
+  echo "In expand-root-disk() -- skipping since we're on metal"
+}

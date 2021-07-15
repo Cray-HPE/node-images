@@ -8,12 +8,17 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 export CRAYSYS_TYPE=$(craysys type get)
 registry="${1:-registry.local}"
 CSM_RELEASE="${2:-1.5}"
-CEPH_VERS="${3:-15.2.8}"
+CEPH_VERS="${3:-15.2.12}"
 
 . /srv/cray/scripts/${CRAYSYS_TYPE}/lib-${CSM_RELEASE}.sh
 . /srv/cray/scripts/common/wait-for-k8s-worker.sh
 . /srv/cray/scripts/common/mark_step_complete.sh
 . /srv/cray/scripts/common/auditing_config.sh
+
+#
+# Expand the root disk (vshasta only)
+#
+expand-root-disk
 
 echo "Configuring node auditing software"
 configure_auditing
@@ -26,31 +31,6 @@ if [ ! -d "/etc/cray/ceph" ]; then
  mkdir /etc/cray/ceph
 fi
 
-function patch_s3_bucket_function() {
-  #
-  # Can't find a version of ansible that includes this
-  # necessary fix for creating buckets with later ceph,
-  # can remove this when available.
-  #
-  s3_bucket_file=/usr/lib/python3.6/site-packages/ansible/modules/cloud/amazon/s3_bucket.py
-
-cat > /tmp/s3_function.txt <<'EOF'
-    try:
-        current_tags = s3_client.get_bucket_tagging(Bucket=bucket_name).get('TagSet')
-    except is_boto3_error_code('NoSuchTagSet'):
-        return {}
-    # The Ceph S3 API returns a different error code to AWS
-    except is_boto3_error_code('NoSuchTagSetError'):  # pylint: disable=duplicate-except
-        return {}
-
-    return boto3_tag_list_to_ansible_dict(current_tags)
-
-
-EOF
-
-  sed -i '/def get_current_bucket_tags_dict.*/,/def paginated_list.*/!b;//!d;/def paginated_list.*/e cat /tmp/s3_function.txt' $s3_bucket_file
-}
-
 function enable_sts () {
   echo "Enabling sts for client.rgw.site1"
   ceph config set client.rgw.site1 rgw_s3_auth_use_sts true
@@ -60,9 +40,6 @@ function enable_sts () {
 if [ -f "$ceph_installed_file" ]; then
   echo "This ceph cluster has been initialized"
 else
-  echo "Patching S3 Bucket function"
-  patch_s3_bucket_function
-
   echo "Installing ceph"
   init
   mark_initialized $ceph_installed_file

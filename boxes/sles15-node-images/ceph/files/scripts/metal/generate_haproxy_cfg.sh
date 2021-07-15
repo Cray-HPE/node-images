@@ -49,10 +49,10 @@ frontend https-rgw-frontend
 backend rgw-backend
     option forwardfor
     balance static-rr
-    option httpchk Get /"
+    option httpchk GET /"
 
 for host in $(ceph orch ls rgw -f json-pretty|jq -r '.[].placement.hosts|map(.)|join(" ")')
 do
  ip=$(get_ip_from_metadata $host.nmn)
- echo "        server server-$host-rgw0 $ip:8080 weight 100"
+ echo "        server server-$host-rgw0 $ip:8080 check weight 100"
 done

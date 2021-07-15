@@ -389,6 +389,16 @@ build {
     script = "${path.root}/k8s/files/scripts/common/cleanup.sh"
   }
 
+  post-processor "shell-local" {
+    inline = [
+      "echo 'Extracting KIS artifacts package'",
+      "tar -xzvf ${var.output_directory}/qemu/ceph/kis.tar.gz -C ${var.output_directory}",
+      "rm ${var.output_directory}/qemu/ceph/kis.tar.gz",
+      "mv ${var.output_directory}/qemu/ceph/filesystem.squashfs ${var.output_directory}/qemu/ceph/${var.image_name}-ceph.squashfs"]
+    only = [
+      "qemu.ceph"]
+  }
+
   post-processor "manifest" {
     output = "node-images-manifest.json"
   }

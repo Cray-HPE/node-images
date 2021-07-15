@@ -167,6 +167,11 @@ crictl pull k8s.gcr.io/sig-storage/csi-attacher:v2.2.0
 crictl pull k8s.gcr.io/sig-storage/csi-resizer:v0.5.0
 crictl pull k8s.gcr.io/sig-storage/csi-snapshotter:v2.1.0
 crictl pull k8s.gcr.io/sig-storage/csi-node-driver-registrar:v1.3.0
+crictl pull k8s.gcr.io/sig-storage/csi-provisioner:v2.0.4
+crictl pull k8s.gcr.io/sig-storage/csi-attacher:v3.0.2
+crictl pull k8s.gcr.io/sig-storage/csi-resizer:v1.0.1
+crictl pull k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.2
+crictl pull k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.0.1
 crictl pull k8s.gcr.io/coredns:${coredns_previous_version}
 crictl pull k8s.gcr.io/coredns:${coredns_version}
 crictl pull quay.io/cephcsi/cephcsi:v3.1.1

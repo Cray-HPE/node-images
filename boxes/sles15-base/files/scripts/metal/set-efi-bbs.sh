@@ -139,7 +139,7 @@ case $vendor in
                 echo >&2 $0 Unsupported node name $hostname
                 exit 1
                 ;;
-        esac    
+        esac
         ;;
     *)
         echo >&2 not modifying unknown vendor: $vendor
@@ -147,7 +147,7 @@ case $vendor in
         ;;
 esac
 
-[ "$no_force" = 0 ] && enforce
+[ "$no_enforce" = 0 ] && enforce
 
 )>/var/log/metal-efi-bbs.log && echo Finished setting boot order
 
