@@ -165,8 +165,6 @@
             <package>sudo</package>
             <package>tar</package>
             <package>wget</package>
-            <package>rpcbind</package>
-            <package>nfs-utils</package>
         </packages>
         <patterns config:type='list'>
             <pattern>base</pattern>
@@ -223,24 +221,6 @@
             <uid>0</uid>
             <user_password>${SLES15_INITIAL_ROOT_PASSWORD}</user_password>
             <username>root</username>
-        </user>
-        <user>
-            <encrypted config:type="boolean">false</encrypted>
-            <fullname>vagrant</fullname>
-            <gid>14901</gid>
-            <home>/home/vagrant</home>
-            <password_settings>
-                <expire/>
-                <flag/>
-                <inact/>
-                <max>99999</max>
-                <min>0</min>
-                <warn>7</warn>
-            </password_settings>
-            <shell>/bin/bash</shell>
-            <uid>1001</uid>
-            <user_password>vagrant</user_password>
-            <username>vagrant</username>
         </user>
     </users>
 

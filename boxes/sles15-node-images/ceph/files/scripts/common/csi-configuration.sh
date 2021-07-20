@@ -104,6 +104,7 @@ function create_k8s_storage_class {
          csi.storage.k8s.io/controller-expand-secret-namespace: default
          csi.storage.k8s.io/node-stage-secret-name: csi-kube-secret
          csi.storage.k8s.io/node-stage-secret-namespace: default
+         imageFeatures: layering
       reclaimPolicy: Delete
       mountOptions:
          - discard
@@ -136,6 +137,7 @@ function create_sma_storage_class {
          csi.storage.k8s.io/controller-expand-secret-namespace: default
          csi.storage.k8s.io/node-stage-secret-name: csi-sma-secret
          csi.storage.k8s.io/node-stage-secret-namespace: default
+         imageFeatures: layering
       reclaimPolicy: Delete
       mountOptions:
          - discard

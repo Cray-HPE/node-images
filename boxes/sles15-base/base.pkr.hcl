@@ -49,17 +49,19 @@ source "qemu" "sles15-base" {
     "<enter><wait>"
   ]
   accelerator = "${var.qemu_accelerator}"
+  use_default_display = "${var.qemu_default_display}"
   display = "${var.qemu_display}"
   format = "${var.qemu_format}"
   boot_wait = "${var.boot_wait}"
   cpus = "${var.cpus}"
   memory = "${var.memory}"
+  disk_cache = "${var.disk_cache}"
   disk_size = "${var.disk_size}"
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
   disk_compression = true
   skip_compaction = false
-  headless = false
+  headless = "${var.headless}"
   http_directory = "${path.root}/http"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
@@ -94,220 +96,15 @@ build {
       "qemu.sles15-base"]
   }
 
-  provisioner "file" {
-    source = "${path.root}/files"
-    destination = "/tmp/"
-  }
-
-  provisioner "file" {
-    source = "csm-rpms"
-    destination = "/tmp/files/"
+  provisioner "shell" {
+    script = "${path.root}/scripts/remove-repos.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/remove-repos.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/setup.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/setup.sh"
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; set -e; setup-package-repos'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
-    ]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/hpc.sh"
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/csm-testing/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/csm/cloud-init.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/fstab.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/python_symlink.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/cms/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/cos/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/cos/rsyslog.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/slingshot/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/kernel/modules.sh"
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh ${var.create_kis_artifacts_arguments}'"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/vbox/"
-    only = [
-      "virtualbox-iso.sles15-base"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/qemu/"
-    only = [
-      "qemu.sles15-base"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '/srv/cray/scripts/common/cleanup-kis-artifacts.sh'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.packages explicit'",
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.deps.packages deps'",
-      "sudo -S bash -c 'zypper lr -e /tmp/installed.repos'"
-    ]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    sources = [
-      "/tmp/initial.deps.packages",
-      "/tmp/initial.packages",
-      "/tmp/installed.deps.packages",
-      "/tmp/installed.packages"
-    ]
-    destination = "${var.output_directory}/vbox/"
-    only = [
-      "virtualbox-iso.sles15-base"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/vbox/installed.repos"
-    only = [
-      "virtualbox-iso.sles15-base"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    sources = [
-      "/tmp/initial.deps.packages",
-      "/tmp/initial.packages",
-      "/tmp/installed.deps.packages",
-      "/tmp/installed.packages"
-    ]
-    destination = "${var.output_directory}/qemu/"
-    only = [
-      "qemu.sles15-base"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/qemu/installed.repos"
-    only = [
-      "qemu.sles15-base"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-package-repos'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; cleanup-dns'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c 'goss -g /srv/cray/tests/common/goss-image-common.yaml validate -f junit | tee /tmp/goss_out.xml'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c 'goss -g /srv/cray/tests/metal/goss-image-common.yaml validate -f junit | tee /tmp/goss_metal_out.xml'"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/goss_out.xml"
-    destination = "${var.output_directory}/vbox/test_results_{{ build_name }}.xml"
-    only = [
-      "virtualbox-iso.sles15-base"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/goss_out.xml"
-    destination = "${var.output_directory}/qemu/test_results_{{ build_name }}.xml"
-    only = [
-      "qemu.sles15-base"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/files/scripts/common/cleanup.sh"
+    script = "${path.root}/scripts/cleanup.sh"
   }
 
   post-processor "manifest" {
-    output = "base-manifest.json"
+    output = "${var.output_directory}/manifest.json"
   }
 }

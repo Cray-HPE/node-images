@@ -15,12 +15,23 @@ variable "headless" {
 
 variable "image_name" {
   type = string
-  default = "sles15-vbox"
+  default = "sles15-common"
 }
 
 variable "memory" {
   type = string
   default = "4096"
+}
+
+variable "source_iso_checksum" {
+  type = string
+  default = "none"
+}
+
+variable "source_iso_uri" {
+  type = string
+//  default = "output-sles15-base/qemu/sles15-base.qcow2"
+  default = "https://artifactory.algol60.net/artifactory/csm-images/unstable/sles15-base/[RELEASE]/sles15-base.qcow2"
 }
 
 variable "ssh_password" {
@@ -39,19 +50,14 @@ variable "ssh_wait_timeout" {
   default = "10000s"
 }
 
-variable "source_iso_checksum" {
-  type = string
-  default = "none"
-}
-
-variable "source_iso_uri" {
-  type = string
-  default = "output-sles15-common/qemu/sles15-common.qcow2"
-}
-
 variable "output_directory" {
   type = string
-  default = "output-sles15-images"
+  default = "output-sles15-common"
+}
+
+variable "create_kis_artifacts_arguments" {
+  type = string
+  default = "kernel-initrd-only"
 }
 
 variable "qemu_accelerator" {

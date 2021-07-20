@@ -29,6 +29,7 @@ cray_sls_rgw_user: "{{ sls_rgw_user |default('SLS') }}"
 cray_velero_rgw_user: "{{ sls_rgw_user |default('VELERO') }}"
 cray_sma_rgw_user: "{{ sma_rgw_user |default('SMA') }}"
 cray_install_artifacts_rgw_user: "{{ artifacts_rgw_user |default('Artifacts') }}"
+cray_postgres_backup_rgw_user: "{{ postgres_backup_rgw_user |default('Postgres-Backup') }}"
 
 cray_rgw_int_endpoint_url: 'http://ncn-s001:8080'
 cray_rgw_ext_endpoint_url: "http://s3.{{ shasta_domain }}:8080"
@@ -220,6 +221,14 @@ ceph_rgw_users:
     policy_action: "\"s3:*\""
     policy_resource: "\"arn:aws:s3:::install-artifacts\",\"arn:aws:s3:::install-artifacts/*\""
 
+  - user_name: "{{ cray_postgres_backup_rgw_user }}"
+    user_display_name: "Postgres Backup User"
+    role_name: "{{ cray_postgres_backup_rgw_user }}"
+    role_arn: "arn:aws:iam:::user/{{ cray_postgres_backup_rgw_user }}"
+    policy_name: "{{ cray_postgres_backup_rgw_user }}_Policy"
+    policy_action: "\"s3:*\""
+    policy_resource: "\"arn:aws:s3:::postgres-backup\",\"arn:aws:s3:::postgres-backup/*\""
+
 ceph_rgw_buckets:
   - bucket_name: sat
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_sat_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::sat\",\"arn:aws:s3:::sat/*\"]}]}"
@@ -277,3 +286,6 @@ ceph_rgw_buckets:
 
   - bucket_name: install-artifacts
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_install_artifacts_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::install-artifacts\",\"arn:aws:s3:::install-artifacts/*\"]}]}"
+
+  - bucket_name: postgres-backup
+    bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_postgres_backup_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::postgres-backup\",\"arn:aws:s3:::postgres-backup/*\"]}]}"

@@ -132,7 +132,7 @@ function init() {
   done
 
   if [[ "$(hostname)" =~ "ncn-s001" ]]; then
-    cephadm --image $registry/ceph/ceph:v15.2.8 bootstrap --skip-pull --skip-dashboard --mon-ip $(ip -4 -br  address show dev vlan002 |awk '{split($3,ip,"/"); print ip[1]}')
+    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-pull --mon-ip $(ip -4 -br  address show dev vlan002 |awk '{split($3,ip,"/"); print ip[1]}')
     cephadm shell -- ceph -s
 
    while [[ $avail != "true" ]] && [[ $backend != "cephadm" ]]
@@ -200,10 +200,6 @@ function init() {
    ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/prometheus/alertmanager:v0.20.0"
    ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/prometheus/node-exporter:v0.18.1"
    
-   # Commenting out.  this is global, which we repeat below in the for loop
-   # we are determining the best method to use here,
-   #ceph config set global container_image $registry/ceph/ceph:v15.2.8 
-
    echo "Dashboard and monitoring images values set"
 
    for SERVICE in mon mgr osd mds client
@@ -237,6 +233,9 @@ function init() {
 
    echo "Running ceph orch apply mon"
    ceph orch apply mon --placement="3 ncn-s001 ncn-s002 ncn-s003"
+
+   echo "Running ceph orch apply mgr"
+   ceph orch apply mgr --placement="3 ncn-s001 ncn-s002 ncn-s003"
 
    echo "Calling prepare hosts"
    prepare_hosts
@@ -280,8 +279,8 @@ function init() {
 
   for host in $(ceph node ls| jq -r '.osd|keys[]'); do
     ssh $host '. /srv/cray/scripts/metal/update_apparmor.sh; reconfigure-apparmor'
-    ssh $host '/srv/cray/scripts/metal/generate_keepalived_conf.sh > /etc/keepalived/keepalived.conf; systemctl restart keepalived.service'
-    ssh $host '/srv/cray/scripts/metal/generate_haproxy_cfg.sh > /etc/haproxy/haproxy.cfg; systemctl restart haproxy.service'
+    ssh $host '/srv/cray/scripts/metal/generate_keepalived_conf.sh > /etc/keepalived/keepalived.conf; systemctl enable keepalived.service; systemctl restart keepalived.service'
+    ssh $host '/srv/cray/scripts/metal/generate_haproxy_cfg.sh > /etc/haproxy/haproxy.cfg; systemctl enable haproxy.service; systemctl restart haproxy.service'
   done
 
 }
@@ -319,8 +318,8 @@ function set_ceph_config() {
 
   echo "setting rgw max user shards"
   ceph config set client.radosgw  rgw_usage_max_user_shards 16
+}
 
-  # echo "restarting ceph osd services"
-  # restart_daemons_by_type osd <-- THIS DOES BAD THINGS -- INEVITABLE CEPH ORCH HANG
-  #wait_for_health_ok # <-- not sure we want this here anymore.  
+function expand-root-disk() {
+  echo "In expand-root-disk() -- skipping since we're on metal"
 }

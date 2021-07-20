@@ -4,9 +4,6 @@ fslabel=BOOTRAID
 working_path=/metal/recovery
 trap 'umount -v $working_path && rmdir -f /tmp/mount 2>/dev/null && echo && exit 0' EXIT
 
-# run before 'set -e' since this is not our library and it should work or die.
-type getarg > /dev/null 2>&1 || . /usr/lib/dracut/modules.d/99base/dracut-lib.sh || alias getarg='echo initrd'
-
 set -e
 
 mkdir -pv $working_path
@@ -72,28 +69,42 @@ menuentry "$name" --class sles --class gnu-linux --class gnu {
 }
 EOF
 
-# TODO: Grab rd.live.dir from cmdline and remove LiveOS hardcode.
-base_dir="$(lsblk $(blkid -L SQFSRAID) -o MOUNTPOINT -n)/LiveOS"
+function update_auxiliary_fstab {
+    # Mount at boot
+    if [ -f /etc/fstab.metal ] && grep -q "${fslabel^^}" /etc/fstab.metal; then :
+    else
+        mkdir -pv $working_path
+        printf '# \nLABEL=%s\t%s\t%s\t%s\t%d\t%d\n' "${fslabel^^}" $working_path vfat defaults 0 0 >> /etc/fstab.metal
+    fi
+}
 
-if [ -f ${base_dir}/kernel ]
-then
-  cp -pv ${base_dir}/kernel $working_path/boot/
-else
-  echo "Kernel file NOT found in $base_dir!"
-fi
+function get_boot_artifacts {
+    # TODO: Grab rd.live.dir from cmdline and remove LiveOS hardcode.
+    local squashfs_storage
+    local initrd
+    local base_dir
+    local live_dir
+    local artifact_error=0
 
-if [ -f ${base_dir}/initrd.img.xz ]
-then
-  cp -pv ${base_dir}/initrd.img.xz $working_path/boot/
-else
-  echo "${initrd} file NOT found in $base_dir!"
-fi
+    squashfs_storage=$(grep -Po 'root=\w+:?\w+=\w+' /proc/cmdline | cut -d '=' -f3)
+    [ -z "$squashfs_storage" ] && squashfs_storage=SQFSRAID
 
-# Mount at boot
-if [ -f /etc/fstab.metal ] && grep -q "${fslabel^^}" /etc/fstab.metal; then :
-else
-    mkdir -pv $working_path
-    printf '# \nLABEL=%s\t%s\t%s\t%s\t%d\t%d\n' "${fslabel^^}" $working_path vfat defaults 0 0 >> /etc/fstab.metal
-fi
+    # initrd - fetched from /proc/cmdline ; grab the horse we rode in on, not what the API aliens say.
+    initrd=$(grep -Po 'initrd=([\w\.]+)' /proc/cmdline | cut -d '=' -f2)
+    [ -z "$initrd" ] && initrd=initrd.img.xz
 
-exit 0
+    # rd.live.dir - fetched from /proc/cmdline ; grab any customization or deviation from the default preference, aling with dracut.
+    live_dir=$(grep -Eo 'rd.live.dir=.* ' /proc/cmdline | cut -d '=' -f2 | sed 's![^/]$!&/!')
+    [ -z "$live_dir" ] && live_dir=LiveOS/
+
+    # pull the loaded items from the mounted squashFS storage into the fallback bootloader
+    base_dir="$(lsblk $(blkid -L $squashfs_storage) -o MOUNTPOINT -n)/$live_dir"
+    [ -d $base_dir ] || echo >&2 'SQFSRAID was not mounted!' return 1
+    cp -pv "${base_dir}kernel" "$working_path/boot/" || echo >&2 "Kernel file NOT found in $base_dir!" && artifact_error=1
+    cp -pv "${base_dir}${initrd}" "$working_path/boot/" || echo >&2 "${initrd} file NOT found in $base_dir!" && artifact_error=1
+
+    [ "$artifact_error" = 0 ] && return 0 || return 1
+}
+
+update_auxiliary_fstab
+get_boot_artifacts

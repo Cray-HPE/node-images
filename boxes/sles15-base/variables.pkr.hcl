@@ -13,6 +13,11 @@ variable "disk_size" {
   default = "25000"
 }
 
+variable "disk_cache" {
+  type = string
+  default = "unsafe"
+}
+
 variable "headless" {
   type = bool
   default = true
@@ -72,6 +77,11 @@ variable "qemu_accelerator" {
 variable "qemu_format" {
   type = string
   default = "qcow2"
+}
+
+variable "qemu_default_display" {
+  type = bool
+  default = true
 }
 
 variable "qemu_display" {
