@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # RPM Packages Installed By Inventory:
 # NOTE: CSM has taken over the following remaining packages from COS.

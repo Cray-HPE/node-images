@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DELAY="{{ handler_health_osd_check_delay }}"
 CEPH_CLI="--name client.bootstrap-osd --keyring /var/lib/ceph/bootstrap-osd/{{ cluster }}.keyring --cluster {{ cluster }}"

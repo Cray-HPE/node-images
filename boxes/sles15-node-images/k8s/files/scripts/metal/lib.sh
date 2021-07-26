@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ip=$(dig +short $(hostname).nmn)
 cnt=0

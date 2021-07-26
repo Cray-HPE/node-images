@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # HPE Cray Metal services and apps used to support kubernetes.
 #

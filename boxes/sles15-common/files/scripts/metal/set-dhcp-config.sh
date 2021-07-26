@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # this script can either be called at runtime coupled with a network restart
 # or as part of a build at a topmost layer. If it's called at any lower layer build, the build

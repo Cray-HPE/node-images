@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 echo "running defrag this will take a while"
 e4defrag / > /dev/null 2>&1
 echo "write zeros...."

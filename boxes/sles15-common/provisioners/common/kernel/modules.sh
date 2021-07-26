@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DISABLED_MODULES="libiscsi"
 MODPROBE_FILE=/etc/modprobe.d/disabled-modules.conf

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Globally disable warning about globbing and word splitting
 # shellcheck disable=SC2086
 

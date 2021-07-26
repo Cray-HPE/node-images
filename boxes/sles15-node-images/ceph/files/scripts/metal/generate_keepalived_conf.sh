@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 
 rgw_vip_ip=$(craysys metadata get rgw_virtual_ip)

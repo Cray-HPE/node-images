@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 num_storage_nodes=$(craysys metadata get num_storage_nodes)
 export RGW_VIRTUAL_IP=$(craysys metadata get rgw-virtual-ip)

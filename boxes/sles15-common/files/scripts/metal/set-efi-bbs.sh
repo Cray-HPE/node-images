@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Author: Russell Bunch <doomslayer@hpe.com>
 # Usage: This will dangerously set the boot order to the required order for IMAGE BOOTING
 # Warning: This should not be used on a system using a conventional wizard-based installer; this prefers netboot first, always.

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2020 HPED LP
 fslabel=BOOTRAID
 working_path=/metal/recovery

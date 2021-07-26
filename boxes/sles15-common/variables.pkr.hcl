@@ -30,8 +30,7 @@ variable "source_iso_checksum" {
 
 variable "source_iso_uri" {
   type = string
-//  default = "output-sles15-base/qemu/sles15-base.qcow2"
-  default = "https://artifactory.algol60.net/artifactory/csm-images/unstable/sles15-base/[RELEASE]/sles15-base.qcow2"
+  default = "output-sles15-base/qemu/sles15-base.qcow2"
 }
 
 variable "ssh_password" {
@@ -53,6 +52,11 @@ variable "ssh_wait_timeout" {
 variable "output_directory" {
   type = string
   default = "output-sles15-common"
+}
+
+variable "artifact_version" {
+  type = string
+  default = "none"
 }
 
 variable "create_kis_artifacts_arguments" {

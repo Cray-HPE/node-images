@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # get the host_records from cloud-init
 data=$(craysys metadata get host_records|jq)

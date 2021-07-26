@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2021 HPED LP
 # create-kdump-artifacts.sh creates an initrd for use with kdump
 #   this specialized initrd is booted when a node crashes

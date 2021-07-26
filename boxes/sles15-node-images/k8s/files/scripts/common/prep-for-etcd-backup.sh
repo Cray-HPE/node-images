@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 etcdctl_backup_endpoints=$1
 http_s3_endpoint=$2

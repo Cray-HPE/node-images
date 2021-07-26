@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # NOTE: it might seem like these KIS scripts belong in a metal subdir instead of common
 # but the idea is that other environments, cloud ones even may soon IPXE boot squashfs

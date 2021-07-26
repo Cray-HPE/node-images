@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -108,7 +108,7 @@ function post-join() {
     echo "Setting cluster-stored certs to be refreshed periodically to support HA and joining at any time by new members"
     mkdir -p /srv/cray/scripts/kubernetes
     cat > /srv/cray/scripts/kubernetes/token-certs-refresh.sh <<'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ "$1" != "skip-upload-certs" ]]; then
   kubeadm init phase upload-certs --upload-certs --config /etc/cray/kubernetes/kubeadm.yaml

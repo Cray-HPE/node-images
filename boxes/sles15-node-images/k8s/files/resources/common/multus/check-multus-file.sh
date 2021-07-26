@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "Checking that 00-multus.conf file is in place and not empty"
 if [ -f /etc/cni/net.d/00-multus.conf ] && [ ! -s /etc/cni/net.d/00-multus.conf ]; then

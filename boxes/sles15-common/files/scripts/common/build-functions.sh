@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # TODO: eventually we shouldn't need any of this file as-is, pending proper internal
 # artifact serving and mirroring, interconnect, etc. Virtual Shasta/Google Cloud can pull

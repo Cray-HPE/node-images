@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 image_path="/srv/cray/resources/common/images/"
 echo "Pre-loading local images"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ceph_installed_file="/etc/cray/ceph/installed"
 ceph_tuning_file="/etc/cray/ceph/tuned"
