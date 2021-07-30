@@ -34,6 +34,11 @@ variable "ssh_username" {
   default = "root"
 }
 
+variable "artifact_version" {
+  type = string
+  default = "none"
+}
+
 variable "output_directory" {
   type = string
   default = "output-sles15-vagrant"

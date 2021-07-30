@@ -64,9 +64,19 @@ variable "output_directory" {
   default = "output-sles15-base"
 }
 
+variable "artifact_version" {
+  type = string
+  default = "none"
+}
+
 variable "create_kis_artifacts_arguments" {
   type = string
   default = "kernel-initrd-only"
+}
+
+variable "vbox_format" {
+  type = string
+  default = "ovf"
 }
 
 variable "qemu_accelerator" {

@@ -1,12 +1,13 @@
 source "virtualbox-ovf" "sles15-common" {
-  source_path = "output-sles15-base/vbox/sles15-base.ovf"
+  source_path = "${var.vbox_source_path}"
+  format = "${var.vbox_format}"
   checksum = "none"
   headless = "${var.headless}"
   shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/vbox"
+  output_directory = "${var.output_directory}"
   output_filename = "${var.image_name}"
   vboxmanage = [
     [
@@ -42,7 +43,7 @@ source "qemu" "sles15-common" {
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/qemu"
+  output_directory = "${var.output_directory}"
   vnc_bind_address = "${var.vnc_bind_address}"
   vm_name = "${var.image_name}.${var.qemu_format}"
 }
@@ -99,11 +100,13 @@ build {
   provisioner "shell" {
     inline = [
       "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
+    valid_exit_codes = [0, 123]
   }
 
   provisioner "shell" {
     inline = [
       "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
+    valid_exit_codes = [0, 123]
   }
 
   provisioner "shell" {
@@ -157,18 +160,8 @@ build {
 
   provisioner "file" {
     direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/vbox/"
-    only = [
-      "virtualbox-ovf.sles15-common"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/qemu/"
-    only = [
-      "qemu.sles15-common"]
+    source = "/squashfs/*"
+    destination = "${var.output_directory}/kis/"
   }
 
   provisioner "shell" {
@@ -192,38 +185,13 @@ build {
       "/tmp/installed.deps.packages",
       "/tmp/installed.packages"
     ]
-    destination = "${var.output_directory}/vbox/"
-    only = [
-      "virtualbox-ovf.sles15-common"]
+    destination = "${var.output_directory}/"
   }
 
   provisioner "file" {
     direction = "download"
     source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/vbox/installed.repos"
-    only = [
-      "virtualbox-ovf.sles15-common"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    sources = [
-      "/tmp/initial.deps.packages",
-      "/tmp/initial.packages",
-      "/tmp/installed.deps.packages",
-      "/tmp/installed.packages"
-    ]
-    destination = "${var.output_directory}/qemu/"
-    only = [
-      "qemu.sles15-common"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/qemu/installed.repos"
-    only = [
-      "qemu.sles15-common"]
+    destination = "${var.output_directory}/installed.repos"
   }
 
   provisioner "shell" {
@@ -249,39 +217,24 @@ build {
   provisioner "file" {
     direction = "download"
     source = "/tmp/goss_out.xml"
-    destination = "${var.output_directory}/vbox/test_results_{{ build_name }}.xml"
-    only = [
-      "virtualbox-ovf.sles15-common"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/goss_out.xml"
-    destination = "${var.output_directory}/qemu/test_results_{{ build_name }}.xml"
-    only = [
-      "qemu.sles15-common"]
+    destination = "${var.output_directory}/test-results.xml"
   }
 
   provisioner "shell" {
     script = "${path.root}/files/scripts/common/cleanup.sh"
   }
 
-  post-processor "manifest" {
-    output = "${var.output_directory}/manifest.json"
-  }
-
   post-processors {
     post-processor "shell-local" {
       inline = [
-        "echo 'Extracting KIS artifacts package'",
-        "tar -xzvf ${var.output_directory}/qemu/kis.tar.gz -C ${var.output_directory}/qemu/",
-        "rm ${var.output_directory}/qemu/kis.tar.gz"]
-      only = [
-        "qemu.sles15-common"]
+        "if cat ${var.output_directory}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
     }
-    post-processor "shell-local" {
-      inline = [
-        "if cat ${var.output_directory}/qemu/test_results_{{ build_name }}.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
+    post-processor "manifest" {
+      output = "${var.output_directory}/manifest.json"
+    }
+    post-processor "compress" {
+      output = "${var.output_directory}/{{.BuildName}}-${var.artifact_version}.tar.gz"
+      keep_input_artifact = true
     }
   }
 }

@@ -1,13 +1,14 @@
 source "virtualbox-ovf" "kubernetes" {
-  source_path = "output-sles15-common/vbox/sles15-common.ovf"
+  source_path = "${var.vbox_source_path}"
+  format = "${var.vbox_format}"
   checksum = "none"
   headless = "${var.headless}"
   shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/vbox/k8s"
-  output_filename = "${var.image_name}-k8s"
+  output_directory = "${var.output_directory}/kubernetes"
+  output_filename = "${var.image_name}"
   vboxmanage = [
     [
       "modifyvm",
@@ -23,15 +24,16 @@ source "virtualbox-ovf" "kubernetes" {
 }
 
 source "virtualbox-ovf" "ceph" {
-  source_path = "output-sles15-common/vbox/sles15-common.ovf"
+  source_path = "${var.vbox_source_path}"
+  format = "${var.vbox_format}"
   checksum = "none"
   headless = "${var.headless}"
   shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/vbox/ceph"
-  output_filename = "${var.image_name}-ceph"
+  output_directory = "${var.output_directory}/ceph"
+  output_filename = "${var.image_name}"
   vboxmanage = [
     [
       "modifyvm",
@@ -60,8 +62,8 @@ source "qemu" "kubernetes" {
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/qemu/k8s"
-  vm_name = "${var.image_name}.${var.qemu_format}-k8s"
+  output_directory = "${var.output_directory}/kubernetes"
+  vm_name = "${var.image_name}.${var.qemu_format}"
   disk_image = true
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
@@ -84,8 +86,8 @@ source "qemu" "ceph" {
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/qemu/ceph"
-  vm_name = "${var.image_name}.${var.qemu_format}-ceph"
+  output_directory = "${var.output_directory}/ceph"
+  vm_name = "${var.image_name}.${var.qemu_format}"
   disk_image = true
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
@@ -249,80 +251,13 @@ build {
       "/tmp/installed.deps.packages",
       "/tmp/installed.packages"
     ]
-    destination = "${var.output_directory}/vbox/k8s/"
-    only = [
-      "virtualbox-ovf.kubernetes"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    sources = [
-      "/tmp/initial.deps.packages",
-      "/tmp/initial.packages",
-      "/tmp/installed.deps.packages",
-      "/tmp/installed.packages"
-    ]
-    destination = "${var.output_directory}/qemu/k8s/"
-    only = [
-      "qemu.kubernetes"]
+    destination = "${var.output_directory}/${source.name}/"
   }
 
   provisioner "file" {
     direction = "download"
     source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/vbox/k8s/installed.repos"
-    only = [
-      "virtualbox-ovf.kubernetes"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/qemu/k8s/installed.repos"
-    only = [
-      "qemu.kubernetes"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    sources = [
-      "/tmp/initial.deps.packages",
-      "/tmp/initial.packages",
-      "/tmp/installed.deps.packages",
-      "/tmp/installed.packages"
-    ]
-    destination = "${var.output_directory}/vbox/ceph/"
-    only = [
-      "virtualbox-ovf.ceph"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    sources = [
-      "/tmp/initial.deps.packages",
-      "/tmp/initial.packages",
-      "/tmp/installed.deps.packages",
-      "/tmp/installed.packages"
-    ]
-    destination = "${var.output_directory}/qemu/ceph/"
-    only = [
-      "qemu.ceph"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/vbox/ceph/installed.repos"
-    only = [
-      "virtualbox-ovf.ceph"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/installed.repos"
-    destination = "${var.output_directory}/qemu/ceph/installed.repos"
-    only = [
-      "qemu.ceph"]
+    destination = "${var.output_directory}/${source.name}/installed.repos"
   }
 
   provisioner "shell" {
@@ -348,34 +283,8 @@ build {
 
   provisioner "file" {
     direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/vbox/k8s/"
-    only = [
-      "virtualbox-ovf.kubernetes"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/qemu/k8s/"
-    only = [
-      "qemu.kubernetes"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/vbox/ceph/"
-    only = [
-      "virtualbox-ovf.ceph"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/qemu/ceph/"
-    only = [
-      "qemu.ceph"]
+    source = "/squashfs/*"
+    destination = "${var.output_directory}/${source.name}/kis/"
   }
 
   provisioner "shell" {
@@ -413,48 +322,13 @@ build {
       "qemu.kubernetes"]
   }
 
-  post-processor "shell-local" {
-    inline = [
-      "echo 'Extracting KIS artifacts package'",
-      "tar -xzvf ${var.output_directory}/qemu/ceph/kis.tar.gz -C ${var.output_directory}/qemu/ceph/",
-      "rm ${var.output_directory}/qemu/ceph/kis.tar.gz",
-      "mv ${var.output_directory}/qemu/ceph/filesystem.squashfs ${var.output_directory}/qemu/ceph/${var.image_name}-ceph.squashfs"]
-    only = [
-      "qemu.ceph"]
+  post-processors {
+    post-processor "manifest" {
+      output = "${var.output_directory}/${source.name}/manifest.json"
+    }
+    post-processor "compress" {
+      output = "${var.output_directory}/${source.name}/${source.name}-${var.artifact_version}.tar.gz"
+      keep_input_artifact = true
+    }
   }
-
-  post-processor "shell-local" {
-    inline = [
-      "echo 'Extracting KIS artifacts package'",
-      "tar -xzvf ${var.output_directory}/qemu/k8s/kis.tar.gz -C ${var.output_directory}/qemu/k8s/",
-      "rm ${var.output_directory}/qemu/k8s/kis.tar.gz",
-      "mv ${var.output_directory}/qemu/k8s/filesystem.squashfs ${var.output_directory}/qemu/k8s/${var.image_name}-k8s.squashfs"]
-    only = [
-      "qemu.kubernetes"]
-  }
-
-  post-processor "shell-local" {
-    inline = [
-      "echo 'Extracting KIS artifacts package'",
-      "tar -xzvf ${var.output_directory}/vbox/ceph/kis.tar.gz -C ${var.output_directory}/vbox/ceph/",
-      "rm ${var.output_directory}/vbox/ceph/kis.tar.gz",
-      "mv ${var.output_directory}/vbox/ceph/filesystem.squashfs ${var.output_directory}/vbox/ceph/${var.image_name}-ceph.squashfs"]
-    only = [
-      "vbox.ceph"]
-  }
-
-  post-processor "shell-local" {
-    inline = [
-      "echo 'Extracting KIS artifacts package'",
-      "tar -xzvf ${var.output_directory}/vbox/k8s/kis.tar.gz -C ${var.output_directory}/vbox/k8s/",
-      "rm ${var.output_directory}/vbox/k8s/kis.tar.gz",
-      "mv ${var.output_directory}/vbox/k8s/filesystem.squashfs ${var.output_directory}/vbox/k8s/${var.image_name}-k8s.squashfs"]
-    only = [
-      "vbox.kubernetes"]
-  }
-
-  post-processor "manifest" {
-    output = "${var.output_directory}/manifest.json"
-  }
-
 }

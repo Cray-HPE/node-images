@@ -1,4 +1,4 @@
-# Dependencies
+# Getting Started
 
 ## Software
 - packer
@@ -87,3 +87,35 @@ If you want to view the output of the build, disable `headless` mode:
 * Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/sles15-vagrant/`
 
 `# vagrant box add --force --name sles15sp2 ./sles15-base-virtualbox.box`
+
+# Build Process
+
+## Build Output
+- There are two Providers that can be built; VirtualBox and QEMU
+- VirtualBox is best for local development and carries the ability to create a Vagrant box.
+- QEMU is best for pipeline and portability on linux machines. 
+- Both outputs are capable of creating the kernel, initrd, and squashfs required to boot nodes.
+
+## Versioning
+- The version of the build is passed with the `packer build` command as a var:
+```
+packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short HEAD`" -var 'ssh_password=initial0' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/
+```
+- If no version is passed to the builder then the version `none` is used when generating the archive.
+
+## Base OS
+- `boxes/sles15-base`
+- The base OS is essentially unchanging unless something fundamental needs to be changed, such as partitions,
+  filesystems, boot loaders, core users, kernels, qemu/vbox drivers, etc.
+- The base OS should be built once and everything else should be built on top of it. 
+- Base OS install requires the full media offline version of SLES 15 SP2
+
+## Common layer
+- `boxes/sles15-common`
+- There are some common aspects to building the OS, but the ramp up and ramp downtime of this layer probably doesn't
+  warrant keeping it separate.
+- The common layer starts from the output of the base layer.
+  
+## Node image layers
+- `boxes/sles15-node-images`
+- The node image layers of `storage-ceph` and `kubernetes` are built here.
