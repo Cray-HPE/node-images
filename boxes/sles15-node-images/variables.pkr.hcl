@@ -46,12 +46,22 @@ variable "source_iso_checksum" {
 
 variable "source_iso_uri" {
   type = string
-  default = "output-sles15-common/qemu/sles15-common.qcow2"
+  default = "output-sles15-common/sles15-common.qcow2"
+}
+
+variable "vbox_source_path" {
+  type = string
+  default = "output-sles15-common/sles15-common.ovf"
 }
 
 variable "output_directory" {
   type = string
   default = "output-sles15-images"
+}
+
+variable "artifact_version" {
+  type = string
+  default = "none"
 }
 
 variable "qemu_accelerator" {
@@ -62,6 +72,11 @@ variable "qemu_accelerator" {
 variable "qemu_format" {
   type = string
   default = "qcow2"
+}
+
+variable "vbox_format" {
+  type = string
+  default = "ovf"
 }
 
 variable "qemu_default_display" {

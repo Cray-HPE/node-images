@@ -10,6 +10,7 @@ source "virtualbox-iso" "sles15-base" {
   cpus = "${var.cpus}"
   memory = "${var.memory}"
   disk_size = "${var.disk_size}"
+  format = "${var.vbox_format}"
   guest_additions_path = "VBoxGuestAdditions_{{ .Version }}.iso"
   guest_os_type = "OpenSUSE_64"
   hard_drive_interface = "sata"
@@ -23,7 +24,7 @@ source "virtualbox-iso" "sles15-base" {
   ssh_port = 22
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/vbox"
+  output_directory = "${var.output_directory}"
   output_filename = "${var.image_name}"
   vboxmanage = [
     [
@@ -70,7 +71,7 @@ source "qemu" "sles15-base" {
   ssh_port = 22
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/qemu"
+  output_directory = "${var.output_directory}"
   vnc_bind_address = "${var.vnc_bind_address}"
   vm_name = "${var.image_name}.${var.qemu_format}"
 }
@@ -104,7 +105,13 @@ build {
     script = "${path.root}/scripts/cleanup.sh"
   }
 
-  post-processor "manifest" {
-    output = "${var.output_directory}/manifest.json"
+  post-processors {
+    post-processor "manifest" {
+      output = "${var.output_directory}/manifest.json"
+    }
+    post-processor "compress" {
+      output = "${var.output_directory}/{{.BuildName}}-${var.artifact_version}.tar.gz"
+      keep_input_artifact = true
+    }
   }
 }
