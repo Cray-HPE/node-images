@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -e
 
 kubernetes_version="1.18.6-0"
-ceph_version='15.2.8.80+g1f4b6229ca-3.13.1'
+ceph_version='15.2.12.83+g528da226523-3.25.1'
 ansible_version='2.9.21'
 mkdir -p /etc/kubernetes
 echo "export KUBECONFIG=\"/etc/kubernetes/admin.conf\"" >> /etc/profile.d/cray.sh
@@ -50,6 +50,9 @@ systemctl start podman
 podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8
 podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8 registry.local/ceph/ceph:v15.2.8
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8
+podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12
+podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12 registry.local/ceph/ceph:v15.2.12
+podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12
 podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
 podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0 registry.local/prometheus/alertmanager:v0.20.0
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
@@ -61,17 +64,27 @@ podman tag arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2 reg
 podman rmi arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2
 podman pull arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
 podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/prometheus/prometheus:v2.18.1
+podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1
+
 podman rmi arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
 echo "Image pull complete"
 
 echo "Saving ceph image to tar file as backup"
-for image in $(podman images --format "{{.Repository}}")
- do
-  read -r name vers <<<$(podman images --format "{{.Repository}} {{.Tag}}" $image)
-  read -r image_name <<<$(echo "$name"|awk -F"/" '{print $NF}')
-  echo "saving image $image_dir/$image_name $vers"
-  podman save $name":"$vers -o "$image_dir$image_name"_$vers".tar"
- done
+# Commenting out for troubleshooting.  will do a manual save per image for now.
+#for image in $(podman images --format "{{.Repository}}")
+# do
+#  read -r name vers <<<$(podman images --format "{{.Repository}} {{.Tag}}" $image|grep registry)
+#  read -r image_name <<<$(echo "$name"|awk -F"/" '{print $NF}')
+#  echo "saving image $image_dir/$image_name $vers"
+#  podman save $name":"$vers -o "$image_dir$image_name"_$vers".tar"
+# done
+
+podman save registry.local/ceph/ceph:v15.2.8 -o /srv/cray/resources/common/images/ceph_v15.2.8.tar
+podman save registry.local/ceph/ceph:v15.2.12 -o /srv/cray/resources/common/images/ceph_v15.2.12.tar
+podman save registry.local/prometheus/alertmanager:v0.20.0 -o /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
+podman save registry.local/prometheus/node-exporter:v0.18.1 -o /srv/cray/resources/common/images/node-exporter_v0.18.1.tar
+podman save registry.local/ceph/ceph-grafana:6.6.2 -o /srv/cray/resources/common/images/ceph-grafana_6.6.2.tar
+podman save registry.local/prometheus/prometheus:v2.18.1 -o /srv/cray/resources/common/images/prometheus_v2.18.1.tar
 
 
 # We may want to put a check in here for the files.
@@ -96,3 +109,6 @@ zypper refresh google-kubernetes
 zypper install -y kubectl-${kubernetes_version}
 
 zypper -n removerepo google-kubernetes || true
+
+echo "Disabling spire-agent.service"
+systemctl disable spire-agent.service && systemctl stop spire-agent.service
