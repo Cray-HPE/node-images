@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 ceph_installed_file="/etc/cray/ceph/installed"
 ceph_tuning_file="/etc/cray/ceph/tuned"
@@ -8,7 +8,7 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 export CRAYSYS_TYPE=$(craysys type get)
 registry="${1:-registry.local}"
 CSM_RELEASE="${2:-1.5}"
-CEPH_VERS="${3:-15.2.12}"
+CEPH_VERS="${3:-15.2.8}"
 
 . /srv/cray/scripts/${CRAYSYS_TYPE}/lib-${CSM_RELEASE}.sh
 . /srv/cray/scripts/common/wait-for-k8s-worker.sh
