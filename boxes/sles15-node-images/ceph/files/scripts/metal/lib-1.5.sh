@@ -118,7 +118,7 @@ function init() {
   echo "number of storage nodes: $num_storage_nodes"
 
   for node in $(seq 1 $num_storage_nodes); do
-    nodename=$(printf "ncn-s%03d.nmn" $node)
+    nodename=$(printf "ncn-s%03d" $node)
     echo "Checking for node $nodename status"
     until nc -z -w 10 $nodename 22; do
       echo "Waiting for $nodename to be online, sleeping 60 seconds between polls"
@@ -127,12 +127,12 @@ function init() {
   done
 
   for node in $(seq 1 $num_storage_nodes); do
-   nodename=$(printf "ncn-s%03d.nmn" $node)
+   nodename=$(printf "ncn-s%03d" $node)
    ssh-keyscan -t rsa -H $nodename >> ~/.ssh/known_hosts
   done
 
   if [[ "$(hostname)" =~ "ncn-s001" ]]; then
-    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-dashboard --skip-pull --mon-ip $(ip -4 -br  address show dev vlan002 |awk '{split($3,ip,"/"); print ip[1]}')
+    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-dashboard --skip-pull --mon-ip $(ip -4 -br  address show dev bond0.nmn0 |awk '{split($3,ip,"/"); print ip[1]}')
     cephadm shell -- ceph -s
 
    while [[ $avail != "true" ]] && [[ $backend != "cephadm" ]]
@@ -193,7 +193,7 @@ function init() {
       done
    done
 
-
+ 
    echo "Container image values"
    ceph config set mgr mgr/cephadm/container_image_grafana       "$registry/ceph/ceph-grafana:6.6.2"
    ceph config set mgr mgr/cephadm/container_image_prometheus    "$registry/prometheus/prometheus:v2.18.1"

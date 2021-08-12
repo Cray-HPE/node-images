@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 
 rgw_vip_ip=$(craysys metadata get rgw_virtual_ip)
@@ -21,7 +21,7 @@ vrrp_script check_haproxy {
 vrrp_instance VI_0 {
     state BACKUP
     priority 90
-    interface vlan002
+    interface bond0.nmn0
     virtual_router_id 51
     advert_int 1
     authentication {
@@ -29,7 +29,7 @@ vrrp_instance VI_0 {
         auth_pass 1234
     }
     virtual_ipaddress {
-        "$rgw_vip_ip"/17 dev vlan002
+        "$rgw_vip_ip"/17 dev bond0.nmn0
     }
     track_script {
         check_haproxy

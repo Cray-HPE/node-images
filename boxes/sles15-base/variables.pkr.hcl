@@ -35,12 +35,12 @@ variable "memory" {
 
 variable "source_iso_checksum" {
   type = string
-  default = "938dd99becf3bf29d0948a52d04bcd1952ea72621a334f33ddb5e83909116b55"
+  default = "2a6259fc849fef6ce6701b8505f64f89de0d2882857def1c9e4379d26e74fa56"
 }
 
 variable "source_iso_uri" {
   type = string
-  default = "iso/SLE-15-SP2-Full-x86_64-GM-Media1.iso"
+  default = "iso/SLE-15-SP3-Full-x86_64-GM-Media1.iso"
 }
 
 variable "ssh_password" {

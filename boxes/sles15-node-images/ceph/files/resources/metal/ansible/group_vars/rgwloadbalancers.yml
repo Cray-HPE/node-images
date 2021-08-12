@@ -22,4 +22,4 @@ haproxy_frontend_ssl_certificate: "/etc/ceph/rgw.pem"
 virtual_ips:
     - "{{ lookup ('env', 'RGW_VIRTUAL_IP') }}"
 virtual_ip_netmask: 17
-virtual_ip_interface: vlan002
+virtual_ip_interface: bond0.nmn0

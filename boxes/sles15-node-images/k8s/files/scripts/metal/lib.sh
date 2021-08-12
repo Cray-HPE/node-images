@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 ip=$(dig +short $(hostname).nmn)
 cnt=0
@@ -42,9 +42,8 @@ function pre-configure-node() {
   echo "In pre-configure-node()"
 
   cangw=$(craysys metadata get can-gw)
-  canif=$(craysys metadata get can-if)
-  if ! ip route replace default via ${cangw} dev ${canif}; then
-    echo "Replacing default route via '$cangw' on device '$canif' failed"
+  if ! ip route replace default via ${cangw} dev bond0.can0; then
+    echo "Replacing default route via '$cangw' on device bond0.can0 failed"
   fi
 }
 

@@ -6,6 +6,19 @@ echo "Ensuring /srv/cray/utilities locations are available for use system-wide"
 ln -s /srv/cray/utilities/common/craysys/craysys /bin/craysys
 echo "export PYTHONPATH=\"/srv/cray/utilities/common\"" >> /etc/profile.d/cray.sh
 
+
+DISABLED_MODULES="libiscsi"
+MODPROBE_FILE=/etc/modprobe.d/disabled-modules.conf
+echo "Removing modules: $DISABLED_MODULES"
+touch $MODPROBE_FILE
+for mod in $DISABLED_MODULES; do
+    echo "install $mod /bin/true" >> $MODPROBE_FILE
+done
+
+
+echo "Setting /usr/bin/python -> /usr/bin/python3 symlink"
+ln -snf /usr/bin/python3 /usr/bin/python
+
 echo "Enabling services"
 systemctl enable multi-user.target
 systemctl set-default multi-user.target

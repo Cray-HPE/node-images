@@ -1,23 +1,25 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
-# Cray System Management
-#
+# Cray System Management : METAL
+# To be installed on all mediums (Google, Metal, etc.)
 set -e
 
 function cloud {
     echo 'Setting cloud-init config'
-    local base=/etc/cloud/
-    cp -pv /srv/cray/resources/common/cloud.cfg /etc/cloud/
-    rsync -av --delete /srv/cray/resources/common/cloud.cfg.d/ /etc/cloud/cloud.cfg.d/
-    # remove default ntp module and replace it with our custom one
-    rm -f /usr/lib/python3.6/site-packages/cloudinit/config/cc_ntp.py
-    cp /srv/cray/resources/common/cloud/cc_ntp.py /usr/lib/python3.6/site-packages/cloudinit/config/cc_ntp.py
-    # do the same for the timezone module (where it's modified to change the hwclock as well)
-    rm -f /usr/lib/python3.6/site-packages/cloudinit/config/cc_timezone.py
-    cp /srv/cray/resources/common/cloud/cc_timezone.py /usr/lib/python3.6/site-packages/cloudinit/config/cc_timezone.py
+    local base=/etc/cloud
+
+    # Copy the base config.
+    # Clean out any pre-existing configs; nothing should exist in the ncn-common layer here.
+    mkdir -pv $base || echo "$base already exists"
+    cp -pv /srv/cray/resources/common/cloud.cfg ${base}/
+    rsync -av --delete /srv/cray/resources/common/cloud.cfg.d/ ${base}/cloud.cfg.d/ || echo 'No cloud-init configs to copy.'
+    rsync -av /srv/cray/resources/common/cloud/templates/ ${base}/templates/ || echo 'No templates to copy.'
+
+    # Enable cloud-init at boot
     systemctl enable cloud-config
     systemctl enable cloud-init
     systemctl enable cloud-init-local
     systemctl enable cloud-final
 }
 cloud
+ 3

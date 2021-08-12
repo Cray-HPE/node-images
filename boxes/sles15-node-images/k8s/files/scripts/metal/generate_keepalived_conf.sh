@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 function get_ip_from_metadata() {
   host=$1
@@ -18,7 +18,7 @@ echo "vrrp_script haproxy-check {
 vrrp_instance kube-apiserver-nmn-vip {
     state BACKUP
     priority 101
-    interface vlan002
+    interface bond0.nmn0
     virtual_router_id 47
     advert_int 3
 

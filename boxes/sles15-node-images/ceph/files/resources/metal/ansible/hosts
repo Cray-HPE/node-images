@@ -1,59 +1,59 @@
 [all]
-ncn-s[001:LASTNODE].nmn
+ncn-s[001:LASTNODE]
 
 [ceph_all]
-ncn-s[001:LASTNODE].nmn
+ncn-s[001:LASTNODE]
 
 [ceph_all:vars]
 ansible_python_interpreter=/usr/bin/python3
 
 [mons]
-ncn-s001.nmn
-ncn-s002.nmn
-ncn-s003.nmn
+ncn-s001
+ncn-s002
+ncn-s003
 
 [mons:vars]
-public_network = "{{ [ansible_vlan002.ipv4.network, [ansible_vlan002.ipv4.address, ansible_vlan002.ipv4.netmask] | join('/') | ipaddr('prefix')] | join('/') }}"
+public_network = "{{ [ansible_bond0.nmn0.ipv4.network, [ansible_bond0.nmn0.ipv4.address, ansible_bond0.nmn0.ipv4.netmask] | join('/') | ipaddr('prefix')] | join('/') }}"
 cluster_network = "{{ public_network }}"
-monitor_address = "{{ ansible_vlan002.ipv4.address }}"
+monitor_address = "{{ ansible_bond0.nmn0.ipv4.address }}"
 monitor_port = 3300
 
 [mdss]
-ncn-s001.nmn
-ncn-s002.nmn
-ncn-s003.nmn
+ncn-s001
+ncn-s002
+ncn-s003
 
 [osds]
-ncn-s[001:LASTNODE].nmn
+ncn-s[001:LASTNODE]
 
 [osds:vars]
-public_network = "{{ [ansible_vlan002.ipv4.network, [ansible_vlan002.ipv4.address, ansible_vlan002.ipv4.netmask] | join('/') | ipaddr('prefix')] | join('/') }}"
+public_network = "{{ [ansible_bond0.nmn0.ipv4.network, [ansible_bond0.nmn0.ipv4.address, ansible_bond0.nmn0.ipv4.netmask] | join('/') | ipaddr('prefix')] | join('/') }}"
 cluster_network = "{{ public_network }}"
 
 [rgws]
-ncn-s[001:LASTNODE].nmn
+ncn-s[001:LASTNODE]
 
 [rgws:vars]
 radosgw_address = "0.0.0.0"
 
 ## keeping here till testing is complete
-#radosgw_address = "{{ ansible_vlan002.ipv4.address }}"
+#radosgw_address = "{{ ansible_bond0.nmn0.ipv4.address }}"
 
 
 [mgrs]
-ncn-s001.nmn
-ncn-s002.nmn
-ncn-s003.nmn
+ncn-s001
+ncn-s002
+ncn-s003
 
 [rgwloadbalancers]	
-ncn-s001.nmn
-ncn-s002.nmn
-ncn-s003.nmn
+ncn-s001
+ncn-s002
+ncn-s003
 
 [clients]
-ncn-s001.nmn
-ncn-s002.nmn
-ncn-s003.nmn
+ncn-s001
+ncn-s002
+ncn-s003
 
 [managers]
 localhost ansible_connection=local
