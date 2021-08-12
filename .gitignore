@@ -1,4 +1,5 @@
 autoinst.xml
+autoinst-google.xml
 iso/*.iso
 csm-rpms
 *-manifest.json
