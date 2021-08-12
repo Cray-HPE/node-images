@@ -15,11 +15,11 @@ source "virtualbox-iso" "sles15-base" {
   guest_os_type = "OpenSUSE_64"
   hard_drive_interface = "sata"
   headless = "${var.headless}"
-  http_directory = "${path.root}/http"
+  http_directory = "${path.root}http"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
   sata_port_count = 8
-  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_port = 22
   ssh_username = "${var.ssh_username}"
@@ -60,13 +60,13 @@ source "qemu" "sles15-base" {
   disk_size = "${var.disk_size}"
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
-  disk_compression = "${var.qemu_disk_compression}"
-  skip_compaction = "${var.qemu_skip_compaction}"
+  disk_compression = true
+  skip_compaction = false
   headless = "${var.headless}"
-  http_directory = "${path.root}/http"
+  http_directory = "${path.root}http"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
-  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_port = 22
   ssh_username = "${var.ssh_username}"
@@ -82,27 +82,23 @@ build {
     "source.qemu.sles15-base"]
 
   provisioner "shell" {
-    script = "${path.root}/scripts/wait-for-autoyast-completion.sh"
+    script = "${path.root}scripts/wait-for-autoyast-completion.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/scripts/virtualbox.sh"
+    script = "${path.root}scripts/virtualbox.sh"
     only = [
       "virtualbox-iso.sles15-base"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/scripts/qemu.sh"
+    script = "${path.root}scripts/qemu.sh"
     only = [
       "qemu.sles15-base"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/scripts/remove-repos.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/scripts/cleanup.sh"
+    script = "${path.root}scripts/cleanup.sh"
   }
 
   post-processors {
