@@ -11,7 +11,7 @@ mountOptions:
 - discard
 parameters:
   {% if build_type == 'metal' %}
-  monitors: {{ ansible_vlan002.ipv4.address }}
+  monitors: {{ ansible_bond0.nmn0.ipv4.address }}
   {% else %}
   monitors: {{ ansible_eth0.ipv4.address }}
   {% endif %}

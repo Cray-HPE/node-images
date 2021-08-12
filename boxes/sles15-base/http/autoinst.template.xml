@@ -3,236 +3,238 @@
 <!-- ****************************************************************************************************************** -->
 <!-- just the minimal to ensure that we can boot, provisioning will happen otherwise via alternative scripted solutions -->
 <!-- ****************************************************************************************************************** -->
-<profile xmlns:config="http://www.suse.com/1.0/configns" xmlns="http://www.suse.com/1.0/yast2ns">
+<profile xmlns="http://www.suse.com/1.0/yast2ns" xmlns:config="http://www.suse.com/1.0/configns">
 
-    <suse_register>
-        <do_registration config:type="boolean">true</do_registration>
-        <reg_code>${SLES15_REGISTRATION_CODE}</reg_code>
-        <install_updates config:type="boolean">true</install_updates>
-        <slp_discovery config:type="boolean">false</slp_discovery>
-        <addons config:type="list">
-            <addon>
-                <name>sle-module-public-cloud</name>
-                <version>15.2</version>
-                <arch>x86_64</arch>
-            </addon>
-        </addons>
-    </suse_register>
+  <suse_register>
+    <do_registration config:type="boolean">true</do_registration>
+    <reg_code>${SLES15_REGISTRATION_CODE}</reg_code>
+    <install_updates config:type="boolean">true</install_updates>
+    <slp_discovery config:type="boolean">false</slp_discovery>
+    <addons config:type="list">
+      <addon>
+        <name>sle-module-public-cloud</name>
+        <version>${SLES15_SP_VERSION}</version>
+        <arch>x86_64</arch>
+      </addon>
+    </addons>
+  </suse_register>
 
-    <add-on>
-        <add_on_products config:type="list">
-            <listentry>
-                <media_url>https://${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}@artifactory.algol60.net/artifactory/sles-mirror/Products/SLE-Module-Basesystem/15-SP2/x86_64/product?auth=basic</media_url>
-                <product>sle-module-basesystem</product>
-                <alias>buildonly-cray-sle-module-basesystem</alias>
-                <name>SLES Basesystem</name>
-            </listentry>
-            <listentry>
-                <media_url>https://${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}@artifactory.algol60.net/artifactory/sles-mirror/Products/SLE-Module-Basesystem/15-SP2/x86_64/product_debug?auth=basic</media_url>
-                <product>sle-module-basesystem</product>
-                <alias>buildonly-cray-sle-module-basesystem-debug</alias>
-                <name>SLES Basesystem Debug</name>
-            </listentry>
-            <listentry>
-                <media_url>https://${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}@artifactory.algol60.net/artifactory/sles-mirror/Products/SLE-Module-Public-Cloud/15-SP2/x86_64/product?auth=basic</media_url>
-                <product>sle-module-public-cloud</product>
-                <alias>buildonly-cray-sle-module-public-cloud</alias>
-                <name>SLES Public Cloud</name>
-            </listentry>
-        </add_on_products>
-        <add_on_others config:type="list">
-            <listentry>
-                <media_url>https://${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}@artifactory.algol60.net/artifactory/sles-mirror/Updates/SLE-Module-Basesystem/15-SP2/x86_64/update?auth=basic</media_url>
-                <alias>buildonly-cray-sle-module-basesystem-updates</alias>
-                <name>SLES Basesystem Updates</name>
-            </listentry>
-            <listentry>
-                <media_url>https://${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}@artifactory.algol60.net/artifactory/sles-mirror/Updates/SLE-Module-Basesystem/15-SP2/x86_64/update_debug?auth=basic</media_url>
-                <alias>buildonly-cray-sle-module-basesystem-updates-debug</alias>
-                <name>SLES Basesystem Updates Debug</name>
-            </listentry>
-            <listentry>
-                <media_url>https://${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}@artifactory.algol60.net/artifactory/sles-mirror/Updates/SLE-Module-Public-Cloud/15-SP2/x86_64/update?auth=basic</media_url>
-                <alias>buildonly-cray-sle-module-public-cloud-updates</alias>
-                <name>SLES Public Cloud Updates</name>
-            </listentry>
-        </add_on_others>
-    </add-on>
+  <add-on>
+    <add_on_products config:type="list">
+      <listentry>
+        <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Products</media_url>
+        <product_dir>/SLE-Module-Basesystem/15-SP3/x86_64/product</product_dir>
+        <product>sle-module-basesystem</product>
+        <alias>buildonly-cray-sle-module-basesystem</alias>
+        <name>SLES Basesystem</name>
+      </listentry>
+      <listentry>
+        <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Products</media_url>
+        <product_dir>/SLE-Module-Basesystem/15-SP3/x86_64/product_debug</product_dir>
+        <product>sle-module-basesystem</product>
+        <alias>buildonly-cray-sle-module-basesystem-debug</alias>
+        <name>SLES Basesystem Debug</name>
+      </listentry>
+      <listentry>
+        <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Products</media_url>
+        <product_dir>/SLE-Module-Public-Cloud/15-SP3/x86_64/product</product_dir>
+        <product>sle-module-public-cloud</product>
+        <alias>buildonly-cray-sle-module-public-cloud</alias>
+        <name>SLES Public Cloud</name>
+      </listentry>
+    </add_on_products>
+    <add_on_others config:type="list">
+      <listentry>
+        <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates</media_url>
+        <product_dir>/SLE-Module-Basesystem/15-SP3/x86_64/update</product_dir>
+        <alias>buildonly-cray-sle-module-basesystem-updates</alias>
+        <name>SLES Basesystem Updates</name>
+      </listentry>
+      <listentry>
+        <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates</media_url>
+        <product_dir>/SLE-Module-Basesystem/15-SP3/x86_64/update_debug</product_dir>
+        <alias>buildonly-cray-sle-module-basesystem-updates-debug</alias>
+        <name>SLES Basesystem Updates Debug</name>
+      </listentry>
+      <listentry>
+        <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates</media_url>
+        <product_dir>/SLE-Module-Public-Cloud/15-SP3/x86_64/update</product_dir>
+        <alias>buildonly-cray-sle-module-public-cloud-updates</alias>
+        <name>SLES Public Cloud Updates</name>
+      </listentry>
+    </add_on_others>
+  </add-on>
 
+  <general>
+    <mode>
+      <confirm config:type="boolean">false</confirm>
+      <second_stage config:type="boolean">false</second_stage>
+      <final_reboot config:type="boolean">false</final_reboot>
+      <final_restart_services config:type="boolean">false</final_restart_services>
+    </mode>
+  </general>
+
+  <kdump>
+    <!-- memory reservation -->
+    <add_crash_kernel config:type="boolean">true</add_crash_kernel>
+    <crash_kernel config:type="list">
+      <listentry>256M,low</listentry>
+      <listentry>364M,high</listentry>
+    </crash_kernel>
     <general>
-        <mode>
-            <confirm config:type="boolean">false</confirm>
-            <final_reboot config:type="boolean">false</final_reboot>
-            <final_restart_services config:type="boolean">false</final_restart_services>
-        </mode>
+      <!-- dump target settings -->
+      <KDUMP_SAVEDIR>file:///var/crash</KDUMP_SAVEDIR>
+      <!-- filtering and compression -->
+      <KDUMP_DUMPFORMAT>compressed</KDUMP_DUMPFORMAT>
+      <KDUMP_DUMPLEVEL>31</KDUMP_DUMPLEVEL>
+      <!-- kdump kernel -->
+      <KDUMP_COMMANDLINE_APPEND>irqpoll nr_cpus=1 selinux=0 reset_devices cgroup_disable=memory mce=off numa=off udev.children-max=2 acpi_no_memhotplug rd.neednet=0 rd.shell panic=10 nohpet nokaslr</KDUMP_COMMANDLINE_APPEND>
+      <!-- remove network default value auto -->
+      <KDUMP_NETCONFIG/>
     </general>
+  </kdump>
 
-    <kdump>
-        <!-- memory reservation -->
-        <add_crash_kernel config:type="boolean">true</add_crash_kernel>
-        <crash_kernel>256M</crash_kernel>
-        <general>
-            <!-- dump target settings -->
-            <KDUMP_SAVEDIR>/var/crash</KDUMP_SAVEDIR>
-            <!-- filtering and compression -->
-            <KDUMP_DUMPFORMAT>compressed</KDUMP_DUMPFORMAT>
-            <KDUMP_DUMPLEVEL>31</KDUMP_DUMPLEVEL>
-            <!-- kdump kernel -->
-            <KDUMP_COMMANDLINE_APPEND>irqpoll nr_cpus=1 selinux=0 reset_devices cgroup_disable=memory mce=off numa=off
-                udev.children-max=2 acpi_no_memhotplug rd.neednet=0 rd.shell panic=10 nohpet nokaslr
-            </KDUMP_COMMANDLINE_APPEND>
-            <!-- remove network default value auto -->
-            <KDUMP_NETCONFIG></KDUMP_NETCONFIG>
-        </general>
-    </kdump>
+  <keyboard>
+    <keymap>english-us</keymap>
+  </keyboard>
 
-    <keyboard>
-        <keymap>english-us</keymap>
-    </keyboard>
+  <language>
+    <language>en_US</language>
+    <languages>en_US</languages>
+  </language>
 
-    <language>
-        <language>en_US</language>
-        <languages>en_US</languages>
-    </language>
+  <timezone>
+    <hwclock>UTC</hwclock>
+    <timezone>UTC</timezone>
+  </timezone>
 
-    <timezone>
-        <hwclock>UTC</hwclock>
-        <timezone>UTC</timezone>
-    </timezone>
+  <report>
+    <messages>
+      <show config:type="boolean">false</show>
+      <timeout config:type="integer">10</timeout>
+      <log config:type="boolean">true</log>
+    </messages>
+    <warnings>
+      <show config:type="boolean">false</show>
+      <timeout config:type="integer">10</timeout>
+      <log config:type="boolean">true</log>
+    </warnings>
+    <errors>
+      <show config:type="boolean">false</show>
+      <timeout config:type="integer">10</timeout>
+      <log config:type="boolean">true</log>
+    </errors>
+  </report>
 
-    <report>
-        <messages>
-            <show config:type="boolean">false</show>
-            <timeout config:type="integer">10</timeout>
-            <log config:type="boolean">true</log>
-        </messages>
-        <warnings>
-            <show config:type="boolean">false</show>
-            <timeout config:type="integer">10</timeout>
-            <log config:type="boolean">true</log>
-        </warnings>
-        <errors>
-            <show config:type="boolean">false</show>
-            <timeout config:type="integer">10</timeout>
-            <log config:type="boolean">true</log>
-        </errors>
-    </report>
+  <yast2-bootloader>
+    <loader_type>grub2</loader_type>
+    <global>
+      <activate config:type='boolean'>true</activate>
+      <append>biosdevname transparent_hugepage=never</append><!-- Ensure BIOSDEVNAME is enabled and THP=never for the whole stack; initrd & squashFS. -->
+    </global>
+  </yast2-bootloader>
 
-    <bootloader>
-        <loader_type>grub2</loader_type>
-        <global>
-            <activate config:type='boolean'>true</activate>
-            <append>biosdevname transparent_hugepage=never
-            </append><!-- Ensure BIOSDEVNAME is enabled and THP=never for the whole stack; initrd & squashFS. -->
-        </global>
-    </bootloader>
+  <partitioning config:type="list">
+    <drive>
+      <use>all</use>
+      <partitions config:type="list">
+        <partition>
+          <mount>/</mount>
+          <create_subvolumes config:type="boolean">false</create_subvolumes>
+          <size>max</size>
+          <filesystem config:type="symbol">ext4</filesystem>
+          <mountby config:type="symbol">label</mountby>
+          <label>SQUASHFS</label>
+        </partition>
+      </partitions>
+    </drive>
+  </partitioning>
 
-    <partitioning config:type="list">
-        <drive>
-            <use>all</use>
-            <initialize config:type="boolean">true</initialize>
-            <partitions config:type="list">
-                <partition>
-                    <mount>/</mount>
-                    <!--Apply labels-->
-                    <label>ROOTIMG</label>
-                    <mountby config:type="symbol">label</mountby>
-                    <filesystem config:type="symbol">ext4</filesystem>
-                    <disklabel>gpt</disklabel>
-                    <!--Use all-->
-                    <size>max</size>
-                    <create config:type="boolean">true</create>
-                    <format config:type="boolean">true</format>
-                </partition>
-            </partitions>
-        </drive>
-    </partitioning>
+  <software>
+    <products config:type="list">
+      <product>SLES</product>
+      <product>SLE_HPC</product>
+    </products>
+    <packages config:type='list'>
+      <package>kernel-default-debuginfo</package>
+      <package>squashfs</package>
+      <package>sudo</package>
+      <package>tar</package>
+    </packages>
+    <patterns config:type='list'>
+      <pattern>base</pattern>
+    </patterns>
+    <remove-packages config:type="list">
+      <package>btrfsmaintenance</package>
+    </remove-packages>
+  </software>
 
-    <software>
-        <products config:type="list">
-            <product>SLES</product>
-            <product>SLE_HPC</product>
-        </products>
-        <packages config:type='list'>
-            <package>kernel-default-debuginfo</package>
-            <package>squashfs</package>
-            <package>sudo</package>
-            <package>tar</package>
-            <package>wget</package>
-        </packages>
-        <patterns config:type='list'>
-            <pattern>base</pattern>
-        </patterns>
-        <remove-packages config:type="list">
-            <package>btrfsmaintenance</package>
-        </remove-packages>
-    </software>
+  <services-manager>
+    <default_target>multi-user</default_target>
+    <services>
+      <disable config:type='list'/>
+      <enable config:type='list'>
+        <service>sshd</service>
+      </enable>
+    </services>
+  </services-manager>
 
-    <services-manager>
-        <default_target>multi-user</default_target>
-        <services>
-            <disable config:type='list'/>
-            <enable config:type='list'>
-                <service>sshd</service>
-            </enable>
-        </services>
-    </services-manager>
+  <network>
+    <keep_install_network config:type='boolean'>true</keep_install_network>
+    <setup_before_proposal config:type='boolean'>true</setup_before_proposal>
+    <managed config:type='boolean'>false</managed>
+    <ipv4 config:type='boolean'>true</ipv4>
+    <ipv6 config:type='boolean'>true</ipv6>
+    <dns>
+      <hostname>sles</hostname>
+      <domain>local</domain>
+      <nameservers config:type='list'/>
+      <searchlist config:type='list'/>
+      <resolv_conf_policy>auto</resolv_conf_policy>
+      <write_hostname config:type='boolean'>false</write_hostname>
+    </dns>
+    <routing>
+      <ipv4_forward config:type="boolean">true</ipv4_forward>
+      <ipv6_forward config:type="boolean">true</ipv6_forward>
+    </routing>
+  </network>
 
-    <networking>
-        <keep_install_network config:type='boolean'>true</keep_install_network>
-        <setup_before_proposal config:type='boolean'>true</setup_before_proposal>
-        <ipv4 config:type='boolean'>true</ipv4>
-        <ipv6 config:type='boolean'>true</ipv6>
-        <dns>
-            <hostname>sles</hostname>
-            <domain>local</domain>
-            <nameservers config:type='list'/>
-            <searchlist config:type='list'/>
-            <resolv_conf_policy>auto</resolv_conf_policy>
-            <write_hostname config:type='boolean'>false</write_hostname>
-        </dns>
-        <routing>
-            <ipv4_forward config:type="boolean">true</ipv4_forward>
-            <ipv6_forward config:type="boolean">true</ipv6_forward>
-        </routing>
-    </networking>
+  <users config:type='list'>
+    <user>
+      <encrypted config:type="boolean">false</encrypted>
+      <fullname>root</fullname>
+      <gid>0</gid>
+      <home>/root</home>
+      <password_settings>
+        <expire/>
+        <flag/>
+        <inact/>
+        <max/>
+        <min/>
+        <warn/>
+      </password_settings>
+      <shell>/bin/bash</shell>
+      <uid>0</uid>
+      <user_password>${SLES15_INITIAL_ROOT_PASSWORD}</user_password>
+      <username>root</username>
+    </user>
+  </users>
 
-    <users config:type='list'>
-        <user>
-            <encrypted config:type="boolean">false</encrypted>
-            <fullname>root</fullname>
-            <gid>0</gid>
-            <home>/root</home>
-            <password_settings>
-                <expire/>
-                <flag/>
-                <inact/>
-                <max/>
-                <min/>
-                <warn/>
-            </password_settings>
-            <shell>/bin/bash</shell>
-            <uid>0</uid>
-            <user_password>${SLES15_INITIAL_ROOT_PASSWORD}</user_password>
-            <username>root</username>
-        </user>
-    </users>
-
-    <scripts>
-        <post-scripts config:type="list">
-            <script>
-                <filename>enable-ssh.sh</filename>
-                <interpreter>shell</interpreter>
-                <source><![CDATA[
-#!/usr/bin/env bash
+  <scripts>
+    <post-scripts config:type="list">
+      <script>
+        <filename>enable-ssh.sh</filename>
+        <interpreter>shell</interpreter>
+        <source><![CDATA[
+#!/bin/bash
 # sshd won't start with AutoYast until SSH reqs are satisfied during install
 # instead, enable/start in script.
 systemctl enable sshd.service
 systemctl start sshd.service
 ]]>
-                </source>
-            </script>
-        </post-scripts>
-    </scripts>
+        </source>
+      </script>
+    </post-scripts>
+  </scripts>
 
 </profile>

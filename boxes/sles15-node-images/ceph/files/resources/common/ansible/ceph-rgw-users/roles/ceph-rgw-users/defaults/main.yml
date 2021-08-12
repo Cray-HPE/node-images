@@ -34,9 +34,9 @@ cray_postgres_backup_rgw_user: "{{ postgres_backup_rgw_user |default('Postgres-B
 cray_rgw_int_endpoint_url: 'http://ncn-s001:8080'
 cray_rgw_ext_endpoint_url: "http://s3.{{ shasta_domain }}:8080"
 cray_rgw_vshasta_endpoint_url: "http://{{ ansible_hostname }}:8080"
-cray_rgw_vip_endpoint_url: "https://rgw-vip.nmn"
-cray_http_rgw_vip_endpoint_url: "http://rgw-vip.nmn"
-cray_https_rgw_vip_endpoint_url: "https://rgw-vip.nmn"
+cray_rgw_vip_endpoint_url: "https://rgw-vip"
+cray_http_rgw_vip_endpoint_url: "http://rgw-vip"
+cray_https_rgw_vip_endpoint_url: "https://rgw-vip"
 cray_rgw_hmn_vip_endpoint_url: "http://rgw-vip.hmn:8080"
 
 cray_sts_role_arn: "arn:aws:iam:::user/{{ cray_sts_rgw_user }}"

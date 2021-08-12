@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 function reconfigure-apparmor {
   echo "Reconfiguring apparmor for haproxy"

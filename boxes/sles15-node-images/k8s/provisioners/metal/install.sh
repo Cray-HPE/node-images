@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # HPE Cray Metal services and apps used to support kubernetes.
 #
@@ -26,13 +26,15 @@ sysctl -p
 # Adding tmpfiles for metal.
 cp -pvr /srv/cray/resources/metal/tmpfiles.d/* /usr/lib/tmpfiles.d/
 
-# Adding cloud-init.cfg files for metal.
-cp -pvr /srv/cray/resources/metal/cloud.cfg.d/* /etc/cloud/cloud.cfg.d/
+# Adding cloud-init.cfg files and templates for metal.
+# Do not delete anything there, incase a lower layer already added common configs.
+rsync -av /srv/cray/resources/metal/cloud.cfg.d/ /etc/cloud/cloud.cfg.d/
+rsync -av /srv/cray/resources/common/templates/ /etc/cloud/templates/
 
 # Create directories for mountpoints (skip existing).
 # lib-containerd will be an overlayfs, this will allow the added block-device to be transparent to
 # existing files.
-cp -p /srv/cray/resources/metal/metalfs.service /usr/lib/systemd/system
+cp -pv /srv/cray/resources/metal/metalfs.service /usr/lib/systemd/system
 systemctl enable metalfs
 
 # enable this to run on first boot during deployment, and then the kdump script disables it

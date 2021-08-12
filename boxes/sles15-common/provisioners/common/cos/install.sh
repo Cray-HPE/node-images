@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # RPM Packages Installed By Inventory:
 # NOTE: CSM has taken over the following remaining packages from COS.
@@ -26,4 +26,7 @@ set -e
 echo "Enabling HPE Cray OS services"
 systemctl enable acpid.service
 systemctl enable cray-heartbeat.service
-systemctl enable cray-node-identity.service
+# FIXME "causing build failures on main:release/1.2": systemctl enable cray-node-identity.service
+
+echo "Setting up rsyslog"
+/srv/cray/scripts/commong/cos/rsyslog.sh

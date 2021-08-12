@@ -64,7 +64,7 @@ podman tag arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2 reg
 podman rmi arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2
 podman pull arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
 podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/prometheus/prometheus:v2.18.1
-podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1
+podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1 
 
 podman rmi arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
 echo "Image pull complete"
@@ -75,7 +75,7 @@ echo "Saving ceph image to tar file as backup"
 # do
 #  read -r name vers <<<$(podman images --format "{{.Repository}} {{.Tag}}" $image|grep registry)
 #  read -r image_name <<<$(echo "$name"|awk -F"/" '{print $NF}')
-#  echo "saving image $image_dir/$image_name $vers"
+#  echo "saving image $image_dir$image_name $vers"
 #  podman save $name":"$vers -o "$image_dir$image_name"_$vers".tar"
 # done
 

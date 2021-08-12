@@ -12,7 +12,7 @@
 
 - name: set mon fact
   set_fact:
-    mon_addrs:  "{% for host in groups['mons'] %}{% if not loop.first %},{% endif %}{{ hostvars[host]['ansible_vlan002']['ipv4']['address'] }}{% endfor %}"
+    mon_addrs:  "{% for host in groups['mons'] %}{% if not loop.first %},{% endif %}{{ hostvars[host]['ansible_bond0.nmn0']['ipv4']['address'] }}{% endfor %}"
   when: build_type == 'metal'
 
 - name: Render templates

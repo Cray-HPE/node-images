@@ -1,17 +1,38 @@
+# CRAY-Shasta Image Build Framework
+
+This repository contains the [Packer][1] pipepline code for building CRAY High-Performance Computing as a Service (HPCaaS)
+images for any distributable medium.
+
+This page will suffice for getting started, but for more background information please see the official documentation in the [node-image-docs][2] repository.
+
 # Getting Started
 
-## Software
+The listed software below will equip a local machine or buildserver to build for any medium (`.squashfs`, `.vbox`, `.qcow2`, `.iso`, etc.).
+
+## Necessary Software
+- media (`.iso` or `.qcow2`) (depending on the layer)
 - packer
 - qemu  
-- virtualbox
 - vagrant
+- virtualbox
 
-## SLES 15 SP2 ISO
-You will need to obtain a copy of the SLES 15 SP2 ISO. The file name is `SLE-15-SP2-Full-x86_64-GM-Media1.iso`.
-Copy this file into the `iso` directory.
 
-# Build Steps
-* Install packer from [here](https://www.packer.io/downloads.html)
+### Media
+
+Packer can intake any ISO, the sections below detail utilized base ISOs in CRAY HPCaaS.
+
+For any ISO, copy it into the `iso` directory.
+
+##### SuSE Linux Enterprise
+
+The file name is `SLE-15-SP3-Full-x86_64-GM-Media1.iso`.
+
+##### RHEL/CentOS
+
+_Coming soon ..._ (?)
+
+## Build Steps
+* Install packer from a reputable endpoint, like **[this one][3]**.
 
 If you are building QEMU images in MacOS, you will need to adjust specific QEMU options:
 * MacOS requires HVF for acceleration
@@ -21,7 +42,7 @@ If you are building QEMU images in MacOS, you will need to adjust specific QEMU 
 ## Base Box
 
 ### Prerequisites
-* Ensure that `SLE-15-SP2-Full-x86_64-GM-Media1.iso` is in the iso folder
+* Ensure that `SLE-15-SP3-Full-x86_64-GM-Media1.iso` is in the iso folder
 * Check out `csm-rpms` repository and create a symlink to it in the root directory of the project.
 * `cd node-image-build`
 * Run `ln -s ../csm-rpms/ csm-rpms`
@@ -29,7 +50,7 @@ If you are building QEMU images in MacOS, you will need to adjust specific QEMU 
 ### Build
 
 ## Base Images
-The base box will install SLES 15 SP2 and prepare the image for the installation of Kubernetes and Ceph.
+The base box will install SLES 15 SP3 and prepare the image for the installation of Kubernetes and Ceph.
 
 ### Prerequisites
 N/A
@@ -51,6 +72,7 @@ If you want to view the output of the build, disable `headless` mode:
 Once the images are built, the output will be placed in the `output-sles15-base` directory in the root of the project.
 
 ## Node Images
+
 In the previous step a VirtualBox image, Qemu image, or both were created in `output-sles15-base`.
 The sles15-node-images stage builds on top of that to create functional images for Kubernetes and Ceph.
 
@@ -86,7 +108,7 @@ If you only want to build Kubernetes or Ceph, limit the build:
 If you want to view the output of the build, disable `headless` mode:
 * Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/sles15-vagrant/`
 
-`# vagrant box add --force --name sles15sp2 ./sles15-base-virtualbox.box`
+`# vagrant box add --force --name sles15sp3 ./sles15-base-virtualbox.box`
 
 # Build Process
 
@@ -108,7 +130,7 @@ packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short H
 - The base OS is essentially unchanging unless something fundamental needs to be changed, such as partitions,
   filesystems, boot loaders, core users, kernels, qemu/vbox drivers, etc.
 - The base OS should be built once and everything else should be built on top of it. 
-- Base OS install requires the full media offline version of SLES 15 SP2
+- Base OS install requires the full media offline version of SLES 15 SP3
 
 ## Common layer
 - `boxes/sles15-common`
@@ -119,3 +141,7 @@ packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short H
 ## Node image layers
 - `boxes/sles15-node-images`
 - The node image layers of `storage-ceph` and `kubernetes` are built here.
+
+[1]: https://www.packer.io/
+[2]: https://github.com/Cray-HPE/node-image-docs
+[3]: https://www.packer.io/downloads.html

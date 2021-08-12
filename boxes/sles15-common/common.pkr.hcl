@@ -95,19 +95,27 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/hpc.sh"
-  }
-
-  provisioner "shell" {
     inline = [
       "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
     valid_exit_codes = [0, 123]
   }
 
   provisioner "shell" {
+    script = "${path.root}/provisioners/metal/hpc.sh"
+  }
+
+  provisioner "shell" {
     inline = [
       "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
     valid_exit_codes = [0, 123]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/metal/fstab.sh"
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/metal/install.sh"
   }
 
   provisioner "shell" {
@@ -123,35 +131,11 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/fstab.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/python_symlink.sh"
-  }
-
-  provisioner "shell" {
     script = "${path.root}/provisioners/common/cms/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
-  }
-
-  provisioner "shell" {
     script = "${path.root}/provisioners/common/cos/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/cos/rsyslog.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/slingshot/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/kernel/modules.sh"
   }
 
   provisioner "shell" {
