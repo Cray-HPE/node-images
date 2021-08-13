@@ -22,21 +22,21 @@
     <add-on>
         <add_on_products config:type="list">
             <listentry>
-                <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Products</media_url>
+                <media_url>https://manderson:AP64gANhbq5JbAMsGovHT5DJYWw92e3z4DGEAd@artifactory.algol60.net/artifactory/sles-mirror/Products</media_url>
                 <product_dir>/SLE-Module-Basesystem/15-SP2/x86_64/product</product_dir>
                 <product>sle-module-basesystem</product>
                 <alias>buildonly-cray-sle-module-basesystem</alias>
                 <name>SLES Basesystem</name>
             </listentry>
             <listentry>
-                <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Products</media_url>
+                <media_url>https://manderson:AP64gANhbq5JbAMsGovHT5DJYWw92e3z4DGEAd@artifactory.algol60.net/artifactory/sles-mirror/Products</media_url>
                 <product_dir>/SLE-Module-Basesystem/15-SP2/x86_64/product_debug</product_dir>
                 <product>sle-module-basesystem</product>
                 <alias>buildonly-cray-sle-module-basesystem-debug</alias>
                 <name>SLES Basesystem Debug</name>
             </listentry>
             <listentry>
-                <media_url>https://arti.dev.cray.com/artifactory/mirror-SUSE/Products</media_url>
+                <media_url>https://manderson:AP64gANhbq5JbAMsGovHT5DJYWw92e3z4DGEAd@artifactory.algol60.net/artifactory/sles-mirror/Products</media_url>
                 <product_dir>/SLE-Module-Public-Cloud/15-SP2/x86_64/product</product_dir>
                 <product>sle-module-public-cloud</product>
                 <alias>buildonly-cray-sle-module-public-cloud</alias>
