@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 num_storage_nodes=$(craysys metadata get num_storage_nodes)
 export RGW_VIRTUAL_IP=$(craysys metadata get rgw-virtual-ip)
@@ -132,7 +132,7 @@ function init() {
   done
 
   if [[ "$(hostname)" =~ "ncn-s001" ]]; then
-    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-pull --mon-ip $(ip -4 -br  address show dev vlan002 |awk '{split($3,ip,"/"); print ip[1]}')
+    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-dashboard --skip-pull --mon-ip $(ip -4 -br  address show dev vlan002 |awk '{split($3,ip,"/"); print ip[1]}')
     cephadm shell -- ceph -s
 
    while [[ $avail != "true" ]] && [[ $backend != "cephadm" ]]
@@ -193,12 +193,12 @@ function init() {
       done
    done
 
- 
+
    echo "Container image values"
    ceph config set mgr mgr/cephadm/container_image_grafana       "$registry/ceph/ceph-grafana:6.6.2"
    ceph config set mgr mgr/cephadm/container_image_prometheus    "$registry/prometheus/prometheus:v2.18.1"
-   ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/prometheus/alertmanager:v0.20.0"
-   ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/prometheus/node-exporter:v0.18.1"
+   ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/quay.io/prometheus/alertmanager:v0.20.0"
+   ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/quay.io/prometheus/node-exporter:v0.18.1"
    
    echo "Dashboard and monitoring images values set"
 
