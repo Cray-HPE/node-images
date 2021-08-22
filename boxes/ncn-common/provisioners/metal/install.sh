@@ -3,6 +3,7 @@
 set -e
 
 echo "Enabling sysstat service for metal only"
+mkdir -pv /etc/sysstat/
 cp -pv /srv/cray/resources/metal/sysstat.cron /etc/sysstat/sysstat.cron
 /usr/lib64/sa/sa1 -S DISK 1 1
 systemctl enable sysstat.service

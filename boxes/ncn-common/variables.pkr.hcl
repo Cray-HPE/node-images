@@ -15,7 +15,7 @@ variable "headless" {
 
 variable "image_name" {
   type = string
-  default = "sles15-common"
+  default = "ncn-common"
 }
 
 variable "memory" {
@@ -56,7 +56,7 @@ variable "ssh_wait_timeout" {
 
 variable "output_directory" {
   type = string
-  default = "output-sles15-common"
+  default = "output-ncn-common"
 }
 
 variable "artifact_version" {

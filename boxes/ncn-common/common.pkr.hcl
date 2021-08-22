@@ -1,4 +1,4 @@
-source "virtualbox-ovf" "sles15-common" {
+source "virtualbox-ovf" "ncn-common" {
   source_path = "${var.vbox_source_path}"
   format = "${var.vbox_format}"
   checksum = "none"
@@ -25,7 +25,7 @@ source "virtualbox-ovf" "sles15-common" {
   guest_additions_mode = "disable"
 }
 
-source "qemu" "sles15-common" {
+source "qemu" "ncn-common" {
   accelerator = "${var.qemu_accelerator}"
   cpus = "${var.cpus}"
   disk_cache = "${var.disk_cache}"
@@ -51,8 +51,8 @@ source "qemu" "sles15-common" {
 
 build {
   sources = [
-    "source.virtualbox-ovf.sles15-common",
-    "source.qemu.sles15-common"]
+    "source.virtualbox-ovf.ncn-common",
+    "source.qemu.ncn-common"]
 
   provisioner "file" {
     source = "${path.root}/files"

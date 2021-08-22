@@ -74,23 +74,23 @@ Once the images are built, the output will be placed in the `output-sles15-base`
 ## Node Images
 
 In the previous step a VirtualBox image, Qemu image, or both were created in `output-sles15-base`.
-The sles15-node-images stage builds on top of that to create functional images for Kubernetes and Ceph.
+The ncn-node-images stage builds on top of that to create functional images for Kubernetes and Ceph.
 
 ### Prerequisites
 N/A
   
 ### Build
 Execute the following command from the top level of the project
-* Run `packer build -force -var 'ssh_password=something' boxes/sles15-node-images/`
+* Run `packer build -force -var 'ssh_password=something' boxes/ncn-node-images/`
 
 To only build VirtualBox, run the following command.
-* Run `packer build -only=virtualbox-ovf.* -force -var 'ssh_password=something' boxes/sles15-node-images/`
+* Run `packer build -only=virtualbox-ovf.* -force -var 'ssh_password=something' boxes/ncn-node-images/`
 
 To only build QEMU, run the following command.
-* Run `packer build -only=qemu.* -force -var 'ssh_password=something' boxes/sles15-node-images/`
+* Run `packer build -only=qemu.* -force -var 'ssh_password=something' boxes/ncn-node-images/`
 
 If you want to view the output of the build, disable `headless` mode:
-* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/sles15-node-images/`
+* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/ncn-node-images/`
 
 Once the images are built, the output will be placed in the `output-sles15-images` directory in the root of the project.
 
@@ -133,13 +133,13 @@ packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short H
 - Base OS install requires the full media offline version of SLES 15 SP3
 
 ## Common layer
-- `boxes/sles15-common`
+- `boxes/ncn-common`
 - There are some common aspects to building the OS, but the ramp up and ramp downtime of this layer probably doesn't
   warrant keeping it separate.
 - The common layer starts from the output of the base layer.
   
 ## Node image layers
-- `boxes/sles15-node-images`
+- `boxes/ncn-node-images`
 - The node image layers of `storage-ceph` and `kubernetes` are built here.
 
 [1]: https://www.packer.io/
