@@ -17,9 +17,9 @@ pipeline {
         IS_STABLE = getBuildIsStable()
         VERSION = setImageVersion(commitHashShort: env.GIT_COMMIT[0..6])
         ARTIFACTS_DIRECTORY_BASE = "output-sles15-base/*"
-        ARTIFACTS_DIRECTORY_COMMON = "output-sles15-common/*"
-        ARTIFACTS_DIRECTORY_CEPH = "output-sles15-images/ceph/*"
-        ARTIFACTS_DIRECTORY_K8S = "output-sles15-images/kubernetes/*"
+        ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common/*"
+        ARTIFACTS_DIRECTORY_CEPH = "output-ncn-images/ceph/*"
+        ARTIFACTS_DIRECTORY_K8S = "output-ncn-images/kubernetes/*"
     }
 
     stages {
@@ -83,7 +83,7 @@ pipeline {
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
                         ]) {
                             sh """
-                                  packer build -only=qemu.sles15-common -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-common/
+                                  packer build -only=qemu.ncn-common -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/ncn-common/
                             """
                         }
                     }
@@ -98,7 +98,7 @@ pipeline {
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
                         ]) {
                             sh """
-                                packer build -only=qemu.kubernetes -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-node-images/
+                                packer build -only=qemu.kubernetes -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/ncn-node-images/
                             """
                         }
                     }
@@ -109,7 +109,7 @@ pipeline {
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
                         ]) {
                             sh """
-                                packer build -only=qemu.ceph -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-node-images/
+                                packer build -only=qemu.ceph -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/ncn-node-images/
                             """
                         }
                     }
@@ -122,7 +122,7 @@ pipeline {
                     def qemuSourceArtifact = "local"
                     def props = "build.url=${env.BUILD_URL};vcs.revision-short=${env.VERSION};build.source-artifact=${qemuSourceArtifact}"
                     publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: env.VERSION, props: props)
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_COMMON, imageName: 'sles15-common', version: env.VERSION, props: props)
+                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_COMMON, imageName: 'ncn-common', version: env.VERSION, props: props)
                     publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_CEPH, imageName: 'storage-ceph', version: env.VERSION, props: props)
                     publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
                 }

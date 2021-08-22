@@ -46,12 +46,12 @@ variable "source_iso_checksum" {
 
 variable "source_iso_uri" {
   type = string
-  default = "output-sles15-common/sles15-common.qcow2"
+  default = "output-ncn-common/ncn-common.qcow2"
 }
 
 variable "vbox_source_path" {
   type = string
-  default = "output-sles15-common/sles15-common.ovf"
+  default = "output-ncn-common/ncn-common.ovf"
 }
 
 variable "output_directory" {
