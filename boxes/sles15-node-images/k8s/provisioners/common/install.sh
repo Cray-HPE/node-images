@@ -121,6 +121,7 @@ modprobe overlay
 modprobe br_netfilter
 
 echo "Installing kubernetes python client"
+pip3 install --ignore-installed PyYAML
 pip3 install kubernetes
 
 echo "Setting TasksMax to infinity via 10-kubelet.conf file"
