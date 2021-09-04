@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -e
 
@@ -16,8 +16,8 @@ systemctl enable kdump-cray
 
 echo 'Setting cloud-init config'
 # allow override; if no cloud.cfg file, copy one in from this image; help local-builds.
-[ -f /etc/cloud/cloud.cfg ] || cp -pv /srv/cray/resources/metal/cloud.cfg /etc/cloud/
-rsync -av --delete /srv/cray/resources/metal/cloud.cfg.d/ /etc/cloud/cloud.cfg.d/
+[ -f /etc/cloud/cloud.cfg ] || cp -pv /srv/cray/resources/common/cloud.cfg /etc/cloud/
+rsync -av /srv/cray/resources/metal/cloud.cfg.d/ /etc/cloud/cloud.cfg.d/
 
 systemctl enable cloud-config
 systemctl enable cloud-init

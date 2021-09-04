@@ -8,6 +8,11 @@ variable "disk_cache" {
   default = "unsafe"
 }
 
+variable "disk_size" {
+  type = string
+  default = "42000"
+}
+
 variable "headless" {
   type = bool
   default = true

@@ -118,7 +118,7 @@ function init() {
   echo "number of storage nodes: $num_storage_nodes"
 
   for node in $(seq 1 $num_storage_nodes); do
-    nodename=$(printf "ncn-s%03d" $node)
+    nodename=$(printf "ncn-s%03d.nmn" $node)
     echo "Checking for node $nodename status"
     until nc -z -w 10 $nodename 22; do
       echo "Waiting for $nodename to be online, sleeping 60 seconds between polls"
@@ -127,12 +127,12 @@ function init() {
   done
 
   for node in $(seq 1 $num_storage_nodes); do
-   nodename=$(printf "ncn-s%03d" $node)
+   nodename=$(printf "ncn-s%03d.nmn" $node)
    ssh-keyscan -t rsa -H $nodename >> ~/.ssh/known_hosts
   done
 
   if [[ "$(hostname)" =~ "ncn-s001" ]]; then
-    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-dashboard --skip-pull --mon-ip $(ip -4 -br  address show dev bond0.nmn0 |awk '{split($3,ip,"/"); print ip[1]}')
+    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-monitoring-stack --skip-dashboard --skip-pull --mon-ip $(ip -4 -br  address show dev bond0.nmn0 |awk '{split($3,ip,"/"); print ip[1]}')
     cephadm shell -- ceph -s
 
    while [[ $avail != "true" ]] && [[ $backend != "cephadm" ]]
@@ -193,14 +193,19 @@ function init() {
       done
    done
 
- 
    echo "Container image values"
-   ceph config set mgr mgr/cephadm/container_image_grafana       "$registry/ceph/ceph-grafana:6.6.2"
+   ceph config set mgr mgr/cephadm/container_image_grafana       "$registry/ceph/ceph-grafana:6.7.4"
    ceph config set mgr mgr/cephadm/container_image_prometheus    "$registry/prometheus/prometheus:v2.18.1"
-   ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/quay.io/prometheus/alertmanager:v0.20.0"
-   ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/quay.io/prometheus/node-exporter:v0.18.1"
-   
+   ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/quay.io/prometheus/alertmanager:v0.21.0"
+   ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/quay.io/prometheus/node-exporter:v1.2.2"
+
    echo "Dashboard and monitoring images values set"
+
+   echo "Deploying alertmanager, grafana, node-exporter and prometheus"
+   ceph orch apply alertmanager
+   ceph orch apply grafana
+   ceph orch apply node-exporter
+   ceph orch apply prometheus
 
    for SERVICE in mon mgr osd mds client
     do
@@ -273,6 +278,9 @@ function init() {
   ansible-playbook /etc/ansible/ceph-rgw-users/pre-install-certs.yml
   deactivate
 
+  ceph config generate-minimal-conf > /etc/ceph/ceph_conf_min
+  cp /etc/ceph/ceph_conf_min /etc/ceph/ceph.conf
+
   for host in $(ceph node ls| jq -r '.mon|keys[]'); do
     scp /etc/ceph/* $host:/etc/ceph
   done
@@ -323,3 +331,4 @@ function set_ceph_config() {
 function expand-root-disk() {
   echo "In expand-root-disk() -- skipping since we're on metal"
 }
+

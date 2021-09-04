@@ -7,7 +7,7 @@ wipe=$(craysys metadata get wipe-ceph-osds)
 function init() {
 
   for node in $(seq 1 $num_storage_nodes); do
-    nodename=$(printf "ncn-s%03d" $node)
+    nodename=$(printf "ncn-s%03d.nmn" $node)
     echo "Checking for node $nodename status"
     until nc -z -w 10 $nodename 22; do
       echo "Waiting for $nodename to be online, sleeping 60 seconds between polls"
@@ -16,7 +16,7 @@ function init() {
   done
 
   for node in $(seq 1 $num_storage_nodes); do
-   nodename=$(printf "ncn-s%03d" $node)
+   nodename=$(printf "ncn-s%03d.nmn" $node)
    ssh-keyscan -H $nodename >> ~/.ssh/known_hosts
   done
 

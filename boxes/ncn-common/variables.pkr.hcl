@@ -8,6 +8,11 @@ variable "disk_cache" {
   default = "unsafe"
 }
 
+variable "disk_size" {
+  type = string
+  default = "42000"
+}
+
 variable "headless" {
   type = bool
   default = true
@@ -97,4 +102,14 @@ variable "qemu_display" {
 variable "vnc_bind_address" {
   type = string
   default = "0.0.0.0"
+}
+
+variable "artifactory_user" {
+  type = string
+  default = ""
+}
+
+variable "artifactory_token" {
+  type = string
+  default = ""
 }

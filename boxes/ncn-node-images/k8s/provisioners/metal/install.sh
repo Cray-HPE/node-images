@@ -29,7 +29,6 @@ cp -pvr /srv/cray/resources/metal/tmpfiles.d/* /usr/lib/tmpfiles.d/
 # Adding cloud-init.cfg files and templates for metal.
 # Do not delete anything there, incase a lower layer already added common configs.
 rsync -av /srv/cray/resources/metal/cloud.cfg.d/ /etc/cloud/cloud.cfg.d/
-rsync -av /srv/cray/resources/common/templates/ /etc/cloud/templates/
 
 # Create directories for mountpoints (skip existing).
 # lib-containerd will be an overlayfs, this will allow the added block-device to be transparent to

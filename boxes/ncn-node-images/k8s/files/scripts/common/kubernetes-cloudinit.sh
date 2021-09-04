@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -e
 
@@ -102,13 +102,14 @@ function post-join() {
     get-kube-config
     reconfigure-kube-api-server
     reconfigure-kube-scheduler
+    reconfigure-kube-controller
     complete-initialization
     /srv/cray/scripts/common/prep-for-etcd-backup.sh ${ETCDCTL_BACKUP_ENDPOINTS} ${RGW_VIRTUAL_IP}
   elif [[ "$node_type" == "first-master" ]]; then
     echo "Setting cluster-stored certs to be refreshed periodically to support HA and joining at any time by new members"
     mkdir -p /srv/cray/scripts/kubernetes
     cat > /srv/cray/scripts/kubernetes/token-certs-refresh.sh <<'EOF'
-#!/usr/bin/env bash
+#!/bin/bash
 
 if [[ "$1" != "skip-upload-certs" ]]; then
   kubeadm init phase upload-certs --upload-certs --config /etc/cray/kubernetes/kubeadm.yaml
@@ -138,6 +139,7 @@ EOF
 
     reconfigure-kube-api-server
     reconfigure-kube-scheduler
+    reconfigure-kube-controller
     reconfigure_coredns
     add_pod_priority_class
     complete-initialization
@@ -154,6 +156,18 @@ function complete-initialization() {
   mark-initialized
 }
 
+function reconfigure-kube-controller() {
+  echo "In reconfigure-kube-controller()"
+
+  #
+  # This enables prometheus monitoring of the kube controller
+  #
+  sed -i 's/--bind-address=127.0.0.1/--bind-address=0.0.0.0/' /etc/kubernetes/manifests/kube-controller-manager.yaml
+
+  echo "Sleeping 30 seconds after reconfiguring kube controller to let things settle.."
+  sleep 30
+}
+
 function reconfigure-kube-scheduler() {
   echo "In reconfigure-kube-scheduler()"
 
@@ -161,6 +175,7 @@ function reconfigure-kube-scheduler() {
   # This enables prometheus monitoring of the scheduler
   #
   sed -i '/--port=0/d' /etc/kubernetes/manifests/kube-scheduler.yaml
+  sed -i 's/--bind-address=127.0.0.1/--bind-address=0.0.0.0/' /etc/kubernetes/manifests/kube-scheduler.yaml
 
   echo "Sleeping 30 seconds after reconfiguring kube scheduler to let things settle.."
   sleep 30
