@@ -9,6 +9,10 @@ cloud-init query --format="$(cat /etc/cloud/templates/resolv.conf.tmpl)" > /etc/
 # FIXME: MTL-1440 Use the default update_etc_hosts module.
 cloud-init query --format="$(cat /etc/cloud/templates/hosts.suse.tmpl)" > /etc/hosts
 
+# Cease updating the default route; use the templated config files.
+sed -i 's/^DHCLIENT_SET_DEFAULT_ROUTE=.*/DHCLIENT_SET_DEFAULT_ROUTE="no"/' /etc/sysconfig/network/dhcp
+netconfig update -f
+
 # Run cloud-init again against our new network.cfg file.
 cloud-init clean
 cloud-init init

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # Common file that can be sourced and then used by both
 # build and runtime scripts.

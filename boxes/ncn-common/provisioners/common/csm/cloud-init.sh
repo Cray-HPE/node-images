@@ -22,4 +22,3 @@ function cloud {
     systemctl enable cloud-final
 }
 cloud
- 3

@@ -20,5 +20,6 @@ fi
 
 export SLES15_SP_VERSION="15.3"
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst.xml
+
 export SLES15_SP_VERSION="15.2"
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst-google.xml

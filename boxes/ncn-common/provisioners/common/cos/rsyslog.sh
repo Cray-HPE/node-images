@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -x
 # rsyslog config to ensure the NCN OS logs are routed to SMF
 cat << EOF > /etc/rsyslog.d/01-cray-rsyslog.conf

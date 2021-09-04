@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
+
+echo "purging buildonly repos"
+for repo in $(zypper repos | awk '{print $3}' | grep -E '^buildonly'); do
+    zypper -n rr $repo
+done
 
 # Zero out the free space to save space in the final image:
 rm -rf /var/adm/autoinstall/cache
