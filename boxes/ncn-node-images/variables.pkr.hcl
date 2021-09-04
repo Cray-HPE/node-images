@@ -98,3 +98,14 @@ variable "vnc_bind_address" {
   type = string
   default = "0.0.0.0"
 }
+
+
+variable "artifactory_user" {
+  type = string
+  default = ""
+}
+
+variable "artifactory_token" {
+  type = string
+  default = ""
+}

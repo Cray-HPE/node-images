@@ -81,23 +81,27 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
+      "sudo -E bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
   }
 
   provisioner "shell" {
     inline = [
-      "sudo -S bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
+      "sudo -E bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
+  }
+
+  provisioner "shell" {
+    environment_vars = [
+      "ARTIFACTORY_USER=${var.artifactory_user}",
+      "ARTIFACTORY_TOKEN=${var.artifactory_token}"
+    ]
+    inline = [
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; set -e; setup-package-repos'"]
   }
 
   provisioner "shell" {
     inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; set -e; setup-package-repos'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
     ]
   }
 
@@ -109,13 +113,13 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
     valid_exit_codes = [0, 123]
   }
 
   provisioner "shell" {
     inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
     valid_exit_codes = [0, 123]
   }
 
