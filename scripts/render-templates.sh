@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -e
 
@@ -19,4 +19,3 @@ if [ -z "$SLES15_REGISTRATION_CODE" ]; then
 fi
 
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst.xml
-envsubst < $root_dir/templates/suse.template.repos > $root_dir/csm-rpms/repos/suse.repos
