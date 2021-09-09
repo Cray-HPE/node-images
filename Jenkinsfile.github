@@ -68,7 +68,7 @@ pipeline {
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
                         ]) {
                             sh """
-                                packer build -only=qemu.sles15-base -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-base/
+                                packer build -only=qemu.sles15-base -var 'artifact_version=${env.VERSION}' -var 'cpus=16' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-base/
                             """
                         }
                     }
@@ -85,7 +85,7 @@ pipeline {
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             sh """
-                                packer build -only=qemu.ncn-common -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-common/
+                                packer build -only=qemu.ncn-common -var 'artifact_version=${env.VERSION}' -var 'cpus=16' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-common/
                             """
                         }
                     }
@@ -102,7 +102,7 @@ pipeline {
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             sh """
-                                packer build -only=qemu.kubernetes -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-node-images/
+                                packer build -only=qemu.kubernetes -var 'artifact_version=${env.VERSION}' -var 'cpus=16' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-node-images/
                             """
                         }
                     }
@@ -115,7 +115,7 @@ pipeline {
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             sh """
-                                packer build -only=qemu.storage-ceph -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-node-images/
+                                packer build -only=qemu.storage-ceph -var 'artifact_version=${env.VERSION}' -var 'cpus=16' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-node-images/
                             """
                         }
                     }
