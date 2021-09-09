@@ -19,7 +19,7 @@ source "virtualbox-iso" "sles15-base" {
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
   sata_port_count = 8
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_port = 22
   ssh_username = "${var.ssh_username}"
@@ -60,13 +60,13 @@ source "qemu" "sles15-base" {
   disk_size = "${var.disk_size}"
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
-  disk_compression = true
-  skip_compaction = false
+  disk_compression = "${var.qemu_disk_compression}"
+  skip_compaction = "${var.qemu_skip_compaction}"
   headless = "${var.headless}"
   http_directory = "${path.root}/http"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_port = 22
   ssh_username = "${var.ssh_username}"
