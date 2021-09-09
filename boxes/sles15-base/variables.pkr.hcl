@@ -99,6 +99,16 @@ variable "qemu_display" {
   default = "none"
 }
 
+variable "qemu_disk_compression" {
+  type = bool
+  default = true
+}
+
+variable "qemu_skip_compaction" {
+  type = bool
+  default = false
+}
+
 variable "vnc_bind_address" {
   type = string
   default = "0.0.0.0"

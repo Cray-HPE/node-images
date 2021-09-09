@@ -10,7 +10,7 @@ variable "headless" {
 
 variable "image_name" {
   type = string
-  default = "sles15-vagrant"
+  default = "ncn-vagrant"
 }
 
 variable "memory" {
@@ -41,5 +41,5 @@ variable "artifact_version" {
 
 variable "output_directory" {
   type = string
-  default = "output-sles15-vagrant"
+  default = "output-ncn-vagrant"
 }

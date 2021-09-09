@@ -224,7 +224,7 @@
                 <filename>enable-ssh.sh</filename>
                 <interpreter>shell</interpreter>
                 <source><![CDATA[
-#!/usr/bin/env bash
+#!/bin/bash
 # sshd won't start with AutoYast until SSH reqs are satisfied during install
 # instead, enable/start in script.
 systemctl enable sshd.service

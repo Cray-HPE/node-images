@@ -52,39 +52,39 @@ Once the images are built, the output will be placed in the `output-sles15-base`
 
 ## Node Images
 In the previous step a VirtualBox image, Qemu image, or both were created in `output-sles15-base`.
-The sles15-node-images stage builds on top of that to create functional images for Kubernetes and Ceph.
+The ncn-images stage builds on top of that to create functional images for Kubernetes and Ceph.
 
 ### Prerequisites
 N/A
   
 ### Build
 Execute the following command from the top level of the project
-* Run `packer build -force -var 'ssh_password=something' boxes/sles15-node-images/`
+* Run `packer build -force -var 'ssh_password=something' boxes/ncn-images/`
 
 To only build VirtualBox, run the following command.
-* Run `packer build -only=virtualbox-ovf.* -force -var 'ssh_password=something' boxes/sles15-node-images/`
+* Run `packer build -only=virtualbox-ovf.* -force -var 'ssh_password=something' boxes/ncn-images/`
 
 To only build QEMU, run the following command.
-* Run `packer build -only=qemu.* -force -var 'ssh_password=something' boxes/sles15-node-images/`
+* Run `packer build -only=qemu.* -force -var 'ssh_password=something' boxes/ncn-images/`
 
 If you want to view the output of the build, disable `headless` mode:
-* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/sles15-node-images/`
+* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/ncn-images/`
 
-Once the images are built, the output will be placed in the `output-sles15-images` directory in the root of the project.
+Once the images are built, the output will be placed in the `output-ncn-images` directory in the root of the project.
 
 ## Vagrant
 Vagrant boxes are only configured to build from the output of the VirtualBox builds. In order to create Vagrant boxes
 you will first need to create the base image and the relevant node-image for Kubernetes and Ceph.
 
 To build vagrant boxes, run the following command:
-* Run `packer build -force -var 'ssh_password=something' boxes/sles15-vagrant/`
+* Run `packer build -force -var 'ssh_password=something' boxes/ncn-vagrant/`
 
 If you only want to build Kubernetes or Ceph, limit the build:
-* Run `packer build -only=virtualbox-ovf.kubernetes -force -var 'ssh_password=something' boxes/sles15-vagrant/`
+* Run `packer build -only=virtualbox-ovf.kubernetes -force -var 'ssh_password=something' boxes/ncn-vagrant/`
 
 
 If you want to view the output of the build, disable `headless` mode:
-* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/sles15-vagrant/`
+* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/ncn-vagrant/`
 
 `# vagrant box add --force --name sles15sp2 ./sles15-base-virtualbox.box`
 
@@ -111,11 +111,11 @@ packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short H
 - Base OS install requires the full media offline version of SLES 15 SP2
 
 ## Common layer
-- `boxes/sles15-common`
+- `boxes/ncn-common`
 - There are some common aspects to building the OS, but the ramp up and ramp downtime of this layer probably doesn't
   warrant keeping it separate.
 - The common layer starts from the output of the base layer.
   
 ## Node image layers
-- `boxes/sles15-node-images`
+- `boxes/ncn-images`
 - The node image layers of `storage-ceph` and `kubernetes` are built here.
