@@ -26,7 +26,7 @@ pipeline {
         stage('Checkout csm-rpms') {
             steps {
                 dir('csm-rpms') {
-                    git credentialsId: 'jenkins-algol60-cray-hpe-github-integration', url: 'https://github.com/Cray-HPE/csm-rpms.git', branch: 'algol60-artifactory'
+                    git credentialsId: 'jenkins-algol60-cray-hpe-github-integration', url: 'https://github.com/Cray-HPE/csm-rpms.git', branch: 'release/1.0'
                 }
             }
         }
