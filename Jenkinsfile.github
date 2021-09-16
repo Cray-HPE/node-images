@@ -20,6 +20,7 @@ pipeline {
         ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common/*"
         ARTIFACTS_DIRECTORY_STORAGE_CEPH = "output-ncn-images/storage-ceph/*"
         ARTIFACTS_DIRECTORY_K8S = "output-ncn-images/kubernetes/*"
+        SLES15_KERNEL_VERSION = "5.3.18-24.75.3"
     }
 
     stages {
