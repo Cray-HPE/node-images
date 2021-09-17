@@ -1,5 +1,26 @@
 #!/bin/bash
-# Copyright 2020 HPED LP
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# (MIT License)
+
 fslabel=BOOTRAID
 type mprint >/dev/null 2>&1 || . /srv/cray/scripts/common/lib.sh
 
@@ -242,15 +263,16 @@ function efi_fail_host {
 }
 
 function efi_trim {
-    echo disabling undesired boot entries $(cat /tmp/rbbs*) && cat /tmp/rbbs* | sort | sed 's/^Boot//g' | awk '{print $1}' | tr -d '*' | xargs -i efibootmgr -b {} -A
+    echo disabling undesired boot entries $(cat /tmp/rbbs*) && cat /tmp/rbbs* | sort | sed 's/^Boot//g' | awk '{print $1}' | tr -d '*' | xargs -r -i efibootmgr -b {} -A
 }
 
 function efi_remove {
-    echo removing undesired boot entries $(cat /tmp/sbbs*) && cat /tmp/sbbs* | sort | sed 's/^Boot//g' | awk '{print $1}' | tr -d '*' | xargs -i efibootmgr -b {} -B
+    echo removing undesired boot entries $(cat /tmp/sbbs*) && cat /tmp/sbbs* | sort | sed 's/^Boot//g' | awk '{print $1}' | tr -d '*' | xargs -r -i efibootmgr -b {} -B
 }
 
 function efi_enforce {
-    echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o 0000,$(cat /tmp/bbs* | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//') | grep -i bootorder
+    echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o 0000,$(cat /tmp/bbs* | awk '!x[$0]++' | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*\n' | sed -r 's/(.{4})/\1,/g;s/,$//') | grep -i bootorder
+    echo activating boot entries && cat /tmp/bbs* | awk '!x[$0]++' | sed 's/^Boot//g' | tr -d '*' | awk '{print $1}' | xargs -r -i efibootmgr -b {} -a
 }
 
 # uses /tmp/rbbs99
