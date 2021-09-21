@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 echo "purging buildonly repos"
 for repo in $(zypper repos | awk '{print $3}' | grep -E '^buildonly'); do
     zypper -n rr $repo
 done
 
-echo "purging services repos"
-for repo in $(zypper ls | awk '{print $3}' | grep -E 'SP3'); do
+SLES_VERSION=$(grep -i VERSION= /etc/os-release | tr -d '"' | cut -d '-' -f2)
+echo "purging $SLES_VERSION services repos"
+for repo in $(zypper ls | awk '{print $3}' | grep -E $SLES_VERSION); do
     zypper rs $repo
 done
 

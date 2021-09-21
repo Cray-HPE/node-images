@@ -299,11 +299,14 @@ build {
       "qemu.storage-ceph"
     ]
   }
-
   provisioner "file" {
     direction = "download"
-    source = "/squashfs/*"
-    destination = "${var.output_directory}/${source.name}/kis/"
+    source = "/tmp/kis.tar.gz"
+    destination = "${var.output_directory}/${source.name}/"
+    only = [
+      "qemu.kubernetes",
+      "qemu.storage-ceph"
+    ]
   }
 
   provisioner "shell" {
@@ -332,12 +335,26 @@ build {
   }
 
   post-processors {
+    post-processor "shell-local" {
+      inline = [
+        "echo 'Extracting KIS artifacts package'",
+        "echo 'Putting image name into the squashFS filename.'",
+        "ls -lR ./${var.output_directory}/${source.name}",
+        "tar -xzvf ${var.output_directory}/${source.name}/kis.tar.gz -C ${var.output_directory}/${source.name}",
+        "mv ${var.output_directory}/${source.name}/filesystem.squashfs ${var.output_directory}/${source.name}/${source.name}.squashfs",
+        "rm ${var.output_directory}/${source.name}/kis.tar.gz"
+      ]
+      only   = [
+        "qemu.kubernetes",
+        "qemu.storage-ceph"
+      ]
+    }
     post-processor "manifest" {
       output = "${var.output_directory}/${source.name}/manifest.json"
     }
-    post-processor "compress" {
-      output = "${var.output_directory}/${source.name}/${source.name}-${var.artifact_version}.tar.gz"
-      keep_input_artifact = true
-    }
+#    post-processor "compress" {
+#      output = "${var.output_directory}/${source.name}/${source.name}-${var.artifact_version}.tar.gz"
+#      keep_input_artifact = true
+#    }
   }
 }
