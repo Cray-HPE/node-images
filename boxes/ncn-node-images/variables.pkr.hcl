@@ -54,7 +54,7 @@ variable "source_iso_checksum" {
   default = "none"
 }
 
-variable "source_iso_uri" {
+variable "source_image_uri" {
   type = string
   default = "output-ncn-common/ncn-common.qcow2"
 }

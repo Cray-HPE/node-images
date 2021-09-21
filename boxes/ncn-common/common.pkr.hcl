@@ -40,7 +40,7 @@ source "qemu" "ncn-common" {
   skip_compaction = false
   headless = "${var.headless}"
   iso_checksum = "${var.source_iso_checksum}"
-  iso_url = "${var.source_iso_uri}"
+  iso_url = "${var.source_image_uri}"
   shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"

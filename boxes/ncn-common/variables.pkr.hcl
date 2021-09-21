@@ -38,7 +38,7 @@ variable "source_iso_checksum" {
   default = "none"
 }
 
-variable "source_iso_uri" {
+variable "source_image_uri" {
   type = string
   default = "output-sles15-base/sles15-base.qcow2"
 }
