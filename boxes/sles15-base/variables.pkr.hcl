@@ -38,7 +38,7 @@ variable "source_iso_checksum" {
   default = "none"
 }
 
-variable "source_iso_uri" {
+variable "source_image_uri" {
   type = string
   default = "iso/SLE-15-SP3-Full-x86_64-GM-Media1.iso"
 }
