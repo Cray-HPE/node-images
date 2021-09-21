@@ -69,11 +69,13 @@ build {
     script = "${path.root}provisioners/common/setup.sh"
   }
 
+// TODO: This runs only on Google.
 //  provisioner "shell" {
 //    script = "${path.root}provisioners/google/setup.sh"
 //    only = ["google"]
 //  }
 
+  // This runs only on metal and vbox.
   provisioner "shell" {
     script = "${path.root}provisioners/metal/setup.sh"
     only = ["qemu.ncn-common"]
@@ -105,6 +107,7 @@ build {
     ]
   }
 
+  // This runs only on metal and vbox.
   provisioner "shell" {
     script = "${path.root}provisioners/metal/hpc.sh"
     only = ["qemu.ncn-common"]
@@ -143,6 +146,7 @@ build {
     script = "${path.root}provisioners/common/csm/cloud-init.sh"
   }
 
+  // This runs only on metal and vbox.
   provisioner "shell" {
     script = "${path.root}provisioners/metal/fstab.sh"
     only = ["qemu.ncn-common"]
@@ -156,6 +160,7 @@ build {
     script = "${path.root}provisioners/common/cms/install.sh"
   }
 
+  // This runs only on metal and vbox.
   provisioner "shell" {
     script = "${path.root}provisioners/metal/install.sh"
     only = ["qemu.ncn-common"]
@@ -244,6 +249,7 @@ build {
       "sudo -E bash -c 'goss -g /srv/cray/tests/common/goss-image-common.yaml validate -f junit | tee /tmp/goss_out.xml'"]
   }
 
+  // This runs only on metal and vbox.
   provisioner "shell" {
     inline = [
       "sudo -E bash -c 'goss -g /srv/cray/tests/metal/goss-image-common.yaml validate -f junit | tee /tmp/goss_metal_out.xml'"]

@@ -1,5 +1,8 @@
-@Library('csm-shared-library') _
+@Library('csm-shared-library@main') _
 
+def promotionToken = ~"(master|main|develop|lts\\/.*)"
+def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
+def rebuildBaseImage = buildAndPublish ? true : false
 pipeline {
     agent {
         label "metal-gcp-builder-large"
@@ -15,35 +18,57 @@ pipeline {
         NAME = "cray-node-image-build"
         DESCRIPTION = "Cray Management System Node Image Builder"
         IS_STABLE = getBuildIsStable()
-        VERSION = setImageVersion(commitHashShort: env.GIT_COMMIT[0..6])
-        ARTIFACTS_DIRECTORY_BASE = "output-sles15-base/*"
-        ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common/*"
-        ARTIFACTS_DIRECTORY_CEPH = "output-ncn-node-images/storage-ceph/*"
-        ARTIFACTS_DIRECTORY_K8S = "output-ncn-node-images/kubernetes/*"
+        VERSION = setImageVersion(commitHashShort: GIT_COMMIT[0..6])
+        ARTIFACTS_DIRECTORY_BASE = "output-sles15-base"
+        ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common"
+        ARTIFACTS_DIRECTORY_CEPH = "output-ncn-node-images/storage-ceph"
+        ARTIFACTS_DIRECTORY_K8S = "output-ncn-node-images/kubernetes"
+        ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/SLE-15-SP3-Full-x86_64-GM-Media1.iso"
+        STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
+        NRAM = '4096'
+    }
+
+    parameters {
+        booleanParam(name: 'buildAndPublish', defaultValue: buildAndPublish, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to actually rebuild and publish for a stable merge build job.')
+        booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the base image; unchecked will pull latest STABLE base. (This overrides rebuildCommonImage; if this is true, rebuildCommonImage is bypassed.)')
+        booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the common image; unchecked will pull latest STABLE ncn-common.')
+        string(name: 'csmRpmBranch', defaultValue: "main", description: 'The branch or ref to use when checking out csm-rpm repo for repo list and package lock versions.')
+        string(name: 'csmRpmRepo', defaultValue: "https://github.com/Cray-HPE/csm-rpms.git", description: 'The repo URL (HTTPS) to use for checking out csm-rpm.')
     }
 
     stages {
         stage('Checkout csm-rpms') {
+            when {
+                expression { env.TAG_NAME == null && (!(env.BRANCH_NAME ==~ promotionToken) || (env.BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+            }
             steps {
                 dir('csm-rpms') {
-                    git credentialsId: 'jenkins-algol60-cray-hpe-github-integration', url: 'https://github.com/Cray-HPE/csm-rpms.git', branch: 'main'
+                    git credentialsId: 'jenkins-algol60-cray-hpe-github-integration', url: "${params.csmRpmRepo}", branch: "${params.csmRpmBranch}"
                 }
             }
         }
+
         stage('Fetch SLES ISO') {
+            when {
+                expression { env.TAG_NAME == null && (!(env.BRANCH_NAME ==~ promotionToken) || (env.BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+                expression { params.rebuildBaseImage || (params.rebuildBaseImage && ! params.rebuildCommonImage) }
+            }
             steps {
                 dir('iso') {
                     withCredentials([
                         string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
                         string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                     ]) {
-                        sh 'curl -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O "https://artifactory.algol60.net/artifactory/os-images/SLE-15-SP3-Full-x86_64-GM-Media1.iso"'
+                        sh "curl -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O ${ISO_URL}"
                     }
                 }
             }
         }
         stage('Process template files') {
+            when {
+                expression { env.TAG_NAME == null && (!(env.BRANCH_NAME ==~ promotionToken) || (env.BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+            }
             steps {
                 withCredentials([
                     string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
@@ -60,74 +85,126 @@ pipeline {
         stage("Build base") {
             parallel {
                 stage('QEMU Base') {
+                    when {
+                        expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+                        expression { params.rebuildBaseImage || (params.rebuildBaseImage && ! params.rebuildCommonImage) }
+                    }
                     steps {
                         withCredentials([
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
                         ]) {
-                            sh '''
-                                packer build -only=qemu.sles15-base -var "artifact_version=${VERSION}" -var "cpus=${NPROC}" -var "memory=4096" -var "ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}" boxes/sles15-base/
-                            '''
+                            script {
+                                def arguments = "-only=qemu.sles15-base -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                publishCsmImages.build(arguments, 'boxes/sles15-base/')
+                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_BASE}"
+                                publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_BASE, VERSION)
+                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_BASE}"
+                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${ISO_URL}"
+                                publishCsmImages(pattern: ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: env.VERSION, props: props)
+                            }
                         }
                     }
                 }
             }
         }
+        // Always build.
         stage("Build common") {
             parallel {
                 stage('QEMU Common') {
+                    when {
+                        expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+                        expression { params.rebuildCommonImage }
+                    }
                     steps {
                         withCredentials([
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
                             string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
-                            sh '''
-                                packer build -only=qemu.ncn-common -var "artifact_version=${VERSION}" -var "cpus=${NPROC}" -var "memory=4096" -var "ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}" -var "artifactory_user=${ARTIFACTORY_USER}" -var "artifactory_token=${ARTIFACTORY_TOKEN}" boxes/ncn-common/
-                            '''
+                            script {
+                                // If we didn't rebuild in this build, then always grab latest stable base.
+                                def source = params.rebuildBaseImage ? "${ARTIFACTS_DIRECTORY_BASE}/sles15-base-${VERSION}.qcow2" : "${STABLE_BASE}/sles15-base/[RELEASE]/sles15-base-[RELEASE].qcow2"
+                                def arguments = "-only=qemu.ncn-common -var 'source_iso_uri='${source} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                publishCsmImages.build(arguments, 'boxes/ncn-common/')
+                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_COMMON}"
+                                publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_COMMON, VERSION)
+                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_COMMON}"
+                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                publishCsmImages(pattern: ARTIFACTS_DIRECTORY_COMMON, imageName: 'ncn-common', version: env.VERSION, props: props)
+                            }
                         }
                     }
                 }
             }
         }
+        // Always build.
+        // TODO: Allow building either or in Jenkins.
         stage("Build images") {
             parallel {
                 stage('QEMU Kubernetes Image') {
+                    when {
+                        expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+                    }
+
                     steps {
                         withCredentials([
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
                             string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
-                            sh '''
-                                packer build -only=qemu.kubernetes -var "artifact_version=${VERSION}" -var "cpus=${NPROC}" -var "memory=4096" -var "ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}" -var "artifactory_user=${ARTIFACTORY_USER}" -var "artifactory_token=${ARTIFACTORY_TOKEN}" boxes/ncn-node-images/
-                            '''
+                            script {
+                                def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/[RELEASE]/ncn-common-[RELEASE].qcow2"
+                                def arguments = "-only=qemu.kubernetes -var 'source_iso_uri='${source} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
+                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_K8S}"
+                                publishCsmImages.prepareArtifacts("${ARTIFACTS_DIRECTORY_K8S}", env.VERSION)
+                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_K8S}"
+                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                publishCsmImages(pattern: ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
+                            }
                         }
                     }
                 }
                 stage('QEMU Ceph Image') {
+                    when {
+                        expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+                    }
                     steps {
                         withCredentials([
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
                             string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
-                            sh '''
-                                packer build -only=qemu.storage-ceph -var "artifact_version=${VERSION}" -var "cpus=${NPROC}" -var "memory=4096" -var "ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}" -var "artifactory_user=${ARTIFACTORY_USER}" -var "artifactory_token=${ARTIFACTORY_TOKEN}" boxes/ncn-node-images/
-                            '''
+                            script {
+                                def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/[RELEASE]/ncn-common-[RELEASE].qcow2"
+                                def arguments = "-only=qemu.storage-ceph -var 'source_iso_uri='${source} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
+                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_CEPH}"
+                                publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_CEPH, VERSION)
+                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_CEPH}"
+                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                publishCsmImages(pattern: ARTIFACTS_DIRECTORY_CEPH, imageName: 'storage-ceph', version: VERSION, props: props)
+                            }
                         }
                     }
                 }
             }
         }
-        stage("Publish") {
+
+        // This should run stand-alone; nothing should build when we release, we're just moving things within artifactory.
+        stage('Release') {
+            when { tag "*" }
             steps {
-                script {
-                    def qemuSourceArtifact = "local"
-                    def props = "build.url=${env.BUILD_URL};vcs.revision-short=${env.VERSION};build.source-artifact=${qemuSourceArtifact}"
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: env.VERSION, props: props)
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_COMMON, imageName: 'ncn-common', version: env.VERSION, props: props)
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_CEPH, imageName: 'storage-ceph', version: env.VERSION, props: props)
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
+                withCredentials([
+                        string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
+                        string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
+                ]) {
+                    script {
+                        publishCsmImages.release('sles15-base', GIT_COMMIT[0..6], env.TAG_NAME)
+                        publishCsmImages.release('ncn-common', GIT_COMMIT[0..6], env.TAG_NAME)
+                        publishCsmImages.release('storage-ceph', GIT_COMMIT[0..6], env.TAG_NAME)
+                        publishCsmImages.release('kubernetes', GIT_COMMIT[0..6], env.TAG_NAME)
+                    }
                 }
             }
         }
