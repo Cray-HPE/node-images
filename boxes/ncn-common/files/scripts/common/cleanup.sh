@@ -7,7 +7,13 @@ for repo in $(zypper repos | awk '{print $3}' | grep -E '^buildonly'); do
     zypper -n rr $repo
 done
 
-# Zero out the free space to save space in the final image:
+SLES_VERSION=$(grep -i VERSION= /etc/os-release | tr -d '"' | cut -d '-' -f2)
+echo "purging $SLES_VERSION services repos"
+for repo in $(zypper ls | awk '{print $3}' | grep -E $SLES_VERSION); do
+    zypper rs $repo
+done
+
+echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
 rm -rf /var/adm/autoinstall/cache
 
 echo "cleanup all the downloaded RPMs"
