@@ -17,7 +17,7 @@ source "virtualbox-iso" "sles15-base" {
   headless = "${var.headless}"
   http_directory = "${path.root}http"
   iso_checksum = "${var.source_iso_checksum}"
-  iso_url = "${var.source_iso_uri}"
+  iso_url = "${var.source_image_uri}"
   sata_port_count = 8
   shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
@@ -65,7 +65,7 @@ source "qemu" "sles15-base" {
   headless = "${var.headless}"
   http_directory = "${path.root}http"
   iso_checksum = "${var.source_iso_checksum}"
-  iso_url = "${var.source_iso_uri}"
+  iso_url = "${var.source_image_uri}"
   shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_port = 22
