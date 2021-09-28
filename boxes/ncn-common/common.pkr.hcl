@@ -110,6 +110,15 @@ build {
 
   provisioner "shell" {
     inline = [
+      "bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
+    only = [
+      "qemu.ncn-common",
+      "virtualbox-ovf.ncn-common"
+    ]
+  }
+
+  provisioner "shell" {
+    inline = [
       "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
   }
 
