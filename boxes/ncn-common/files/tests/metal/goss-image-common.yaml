@@ -1,3 +1,4 @@
+file:
 service:
   kdump:
     enabled: true
@@ -6,11 +7,11 @@ service:
     enabled: true
     running: true
   amsd:
-      enabled: false
-      running: false
+    enabled: false
+    running: false
   ahslog:
-      enabled: false
-      running: false
+    enabled: false
+    running: false
   sma:
-      enabled: false
-      running: false
+    enabled: false
+    running: false
