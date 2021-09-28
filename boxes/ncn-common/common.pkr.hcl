@@ -195,6 +195,11 @@ build {
   }
 
   provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-all-repos'"]
+  }
+
+  provisioner "shell" {
     script = "${path.root}/files/scripts/common/cleanup.sh"
   }
 
