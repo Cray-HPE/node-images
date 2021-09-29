@@ -7,6 +7,11 @@ for repo in $(zypper repos | awk '{print $3}' | grep -E '^buildonly'); do
     zypper -n rr $repo
 done
 
+echo "purging services repos"
+for repo in $(zypper ls | awk '{print $3}' | grep -E 'SP3'); do
+    zypper rs $repo
+done
+
 echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
 rm -rf /var/adm/autoinstall/cache
 
