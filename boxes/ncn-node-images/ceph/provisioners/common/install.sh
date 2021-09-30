@@ -54,16 +54,16 @@ podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12
 podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12 registry.local/ceph/ceph:v15.2.12
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12
 podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
-podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0 registry.local/prometheus/alertmanager:v0.20.0
+podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0 registry.local/quay.io/prometheus/alertmanager:v0.20.0
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
 podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.21.0
-podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.21.0 registry.local/prometheus/alertmanager:v0.21.0
+podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.21.0 registry.local/quay.io/prometheus/alertmanager:v0.21.0
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.21.0
 podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v0.18.1
-podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v0.18.1 registry.local/prometheus/node-exporter:v0.18.1
+podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v0.18.1 registry.local/quay.io/prometheus/node-exporter:v0.18.1
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v0.18.1
 podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v1.2.2
-podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v1.2.2 registry.local/prometheus/node-exporter:v1.2.2
+podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v1.2.2 registry.local/quay.io/prometheus/node-exporter:v1.2.2
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v1.2.2
 podman pull arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2
 podman tag arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2 registry.local/ceph/ceph-grafana:6.6.2
@@ -72,21 +72,12 @@ podman pull arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.7.4
 podman tag arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.7.4 registry.local/ceph/ceph-grafana:6.7.4
 podman rmi arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.7.4
 podman pull arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
-podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/prometheus/prometheus:v2.18.1
 podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1 
 
 podman rmi arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
 echo "Image pull complete"
 
-echo "Saving ceph image to tar file as backup"
-# Commenting out for troubleshooting.  will do a manual save per image for now.
-#for image in $(podman images --format "{{.Repository}}")
-# do
-#  read -r name vers <<<$(podman images --format "{{.Repository}} {{.Tag}}" $image|grep registry)
-#  read -r image_name <<<$(echo "$name"|awk -F"/" '{print $NF}')
-#  echo "saving image $image_dir$image_name $vers"
-#  podman save $name":"$vers -o "$image_dir$image_name"_$vers".tar"
-# done
+echo "Saving ceph image to tar file as backup"V
 
 podman save registry.local/ceph/ceph:v15.2.8 -o /srv/cray/resources/common/images/ceph_v15.2.8.tar
 podman save registry.local/ceph/ceph:v15.2.12 -o /srv/cray/resources/common/images/ceph_v15.2.12.tar
