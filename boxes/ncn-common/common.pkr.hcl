@@ -56,13 +56,13 @@ build {
     "source.qemu.ncn-common"]
 
   provisioner "file" {
-    source = "${path.root}files"
+    source = "${path.root}/files"
     destination = "/tmp/"
   }
 
   provisioner "file" {
-    source = "files"
-    destination = "/tmp/"
+    source = "csm-rpms"
+    destination = "/tmp/files/"
   }
 
   provisioner "shell" {
