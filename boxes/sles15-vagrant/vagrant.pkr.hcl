@@ -6,7 +6,7 @@ source "virtualbox-ovf" "kubernetes" {
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}/kubernetes"
-  output_filename = "${var.image_name}-kubernetes"
+  output_filename = "${var.image_name_k8s}"
   vboxmanage = [
     [
       "modifyvm",
@@ -30,7 +30,7 @@ source "virtualbox-ovf" "storage-ceph" {
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}/storage-ceph"
-  output_filename = "${var.image_name}-storage-ceph"
+  output_filename = "${var.image_name_ceph}"
   vboxmanage = [
     [
       "modifyvm",
