@@ -2,7 +2,7 @@
 
 pipeline {
     agent {
-        label "metal-gcp-builder"
+        label "metal-gcp-builder-large"
     }
 
     options {
@@ -65,6 +65,9 @@ pipeline {
             parallel {
                 stage('QEMU Base') {
                     steps {
+                        script {
+                            sh 'packer --version'
+                        }
                         withCredentials([
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
                         ]) {
