@@ -18,9 +18,14 @@ variable "headless" {
   default = true
 }
 
-variable "image_name" {
+variable "image_name_k8s" {
   type = string
-  default = "sles15-vbox"
+  default = "kubernetes"
+}
+
+variable "image_name_ceph" {
+  type = string
+  default = "storage-ceph"
 }
 
 variable "memory" {
@@ -61,7 +66,7 @@ variable "vbox_source_path" {
 
 variable "output_directory" {
   type = string
-  default = "output-sles15-images"
+  default = "output-ncn-node-images"
 }
 
 variable "artifact_version" {
