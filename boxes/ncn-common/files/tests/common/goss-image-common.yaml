@@ -1,6 +1,14 @@
 file:
   /var/adm/autoinstall/cache:
     exists: false
+  /etc/zypp/services.d/Basesystem_Module_15_SP3_x86_64.service:
+    exists: false
+  /etc/zypp/services.d/Server_Applications_Module_15_SP3_x86_64.service:
+    exists: false
+  /etc/zypp/services.d/Public_Cloud_Module_15_SP3_x86_64.service:
+    exists: false
+  /etc/zypp/services.d/SUSE_Linux_Enterprise_Server_15_SP3_x86_64.service:
+    exists: false
 service:
   cloud-config:
     enabled: true

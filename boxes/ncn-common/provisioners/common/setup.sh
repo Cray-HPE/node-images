@@ -71,7 +71,7 @@ chown -R root:root /root
 # Change hostname from lower layer to ncn.
 echo 'ncn' > /etc/hostname
 
-# Lock the kernel before we move onto installing anything for NCNs
+# Lock the kernel before we move onto installing anything []for NCNs
 uname -r
 rpm -qa kernel-default
 zypper addlock kernel-default

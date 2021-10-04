@@ -8,7 +8,7 @@ source "virtualbox-ovf" "kubernetes" {
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}/kubernetes"
-  output_filename = "${var.image_name}"
+  output_filename = "${var.image_name_k8s}"
   vboxmanage = [
     [
       "modifyvm",
@@ -33,8 +33,8 @@ source "virtualbox-ovf" "ceph" {
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/ceph"
-  output_filename = "${var.image_name}"
+  output_directory = "${var.output_directory}/storage-ceph"
+  output_filename = "${var.image_name_ceph}"
   vboxmanage = [
     [
       "modifyvm",
@@ -66,7 +66,7 @@ source "qemu" "kubernetes" {
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}/kubernetes"
-  vm_name = "${var.image_name}.${var.qemu_format}"
+  vm_name = "${var.image_name_k8s}.${var.qemu_format}"
   disk_image = true
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
@@ -90,8 +90,8 @@ source "qemu" "storage-ceph" {
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
-  output_directory = "${var.output_directory}/ceph"
-  vm_name = "${var.image_name}.${var.qemu_format}"
+  output_directory = "${var.output_directory}/storage-ceph"
+  vm_name = "${var.image_name_ceph}.${var.qemu_format}"
   disk_image = true
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
@@ -125,8 +125,8 @@ build {
   }
 
   provisioner "file" {
-    source = "files"
-    destination = "/tmp/"
+    source = "csm-rpms"
+    destination = "/tmp/files/"
   }
 
   provisioner "shell" {
