@@ -56,13 +56,13 @@ build {
     "source.qemu.ncn-common"]
 
   provisioner "file" {
-    source = "${path.root}files"
+    source = "${path.root}/files"
     destination = "/tmp/"
   }
 
   provisioner "file" {
-    source = "files"
-    destination = "/tmp/"
+    source = "csm-rpms"
+    destination = "/tmp/files/"
   }
 
   provisioner "shell" {
@@ -198,6 +198,11 @@ build {
   provisioner "shell" {
     inline = [
       "sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; cleanup-dns'"]
+  }
+
+  provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-all-repos'"]
   }
 
   provisioner "shell" {

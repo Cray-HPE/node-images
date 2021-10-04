@@ -8,9 +8,14 @@ variable "headless" {
   default = true
 }
 
-variable "image_name" {
+variable "image_name_k8s" {
   type = string
-  default = "ncn-vagrant"
+  default = "ncn-vagrant-kubernetes"
+}
+
+variable "image_name_ceph" {
+  type = string
+  default = "ncn-vagrant-storage-ceph"
 }
 
 variable "memory" {

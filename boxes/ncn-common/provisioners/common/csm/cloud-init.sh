@@ -23,3 +23,9 @@ function cloud {
     systemctl enable cloud-final
 }
 cloud
+
+function motd {
+    # Add motd/flair
+    cp -pv /srv/cray/resources/common/motd /etc/motd
+}
+motd
