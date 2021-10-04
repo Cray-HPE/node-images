@@ -2,7 +2,7 @@
 
 pipeline {
     agent {
-        label "metal-gcp-builder"
+        label "metal-gcp-builder-large"
     }
 
     options {
@@ -18,6 +18,7 @@ pipeline {
         VERSION = setImageVersion(commitHashShort: env.GIT_COMMIT[0..6])
         ARTIFACTS_DIRECTORY_BASE = "output-sles15-base/*"
         ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common/*"
+        NPROC = sh(returnStdout: true, script: "nproc").trim()
         ARTIFACTS_DIRECTORY_STORAGE_CEPH = "output-ncn-images/storage-ceph/*"
         ARTIFACTS_DIRECTORY_K8S = "output-ncn-images/kubernetes/*"
         SLES15_KERNEL_VERSION = "5.3.18-24.75.3"
@@ -52,10 +53,6 @@ pipeline {
                     string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                 ]) {
                     sh """
-                        SLES15_INITIAL_ROOT_PASSWORD=${SLES15_INITIAL_ROOT_PASSWORD} \
-                        SLES15_REGISTRATION_CODE=${SLES15_REGISTRATION_CODE} \
-                        ARTIFACTORY_USER=${ARTIFACTORY_USER} \
-                        ARTIFACTORY_TOKEN=${ARTIFACTORY_TOKEN} \
                         ./scripts/render-templates.sh
                     """
                 }
@@ -69,7 +66,7 @@ pipeline {
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
                         ]) {
                             sh """
-                                packer build -only=qemu.sles15-base -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-base/
+                                packer build -only=qemu.sles15-base -var 'artifact_version=${VERSION}' -var 'cpus=${NPROC}' -var 'memory=4096' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' boxes/sles15-base/
                             """
                         }
                     }
@@ -86,7 +83,7 @@ pipeline {
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             sh """
-                                  packer build -only=qemu.ncn-common -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-common/
+                                  packer build -only=qemu.ncn-common -var 'artifact_version=${VERSION}' -var 'cpus=${NPROC}' -var 'memory=4096' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-common/
                             """
                         }
                     }
@@ -103,7 +100,7 @@ pipeline {
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             sh """
-                                packer build -only=qemu.kubernetes -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-images/
+                                packer build -only=qemu.kubernetes -var 'artifact_version=${VERSION}' -var 'cpus=${NPROC}' -var 'memory=4096' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-images/
                             """
                         }
                     }
@@ -116,7 +113,7 @@ pipeline {
                             string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             sh """
-                                packer build -only=qemu.storage-ceph -var 'artifact_version=${env.VERSION}' -var 'cpus=4' -var 'memory=8192' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-images/
+                                packer build -only=qemu.storage-ceph -var 'artifact_version=${VERSION}' -var 'cpus=${NPROC}' -var 'memory=4096' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' boxes/ncn-images/
                             """
                         }
                     }
@@ -127,11 +124,11 @@ pipeline {
             steps {
                 script {
                     def qemuSourceArtifact = "local"
-                    def props = "build.url=${env.BUILD_URL};vcs.revision-short=${env.VERSION};build.source-artifact=${qemuSourceArtifact}"
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: env.VERSION, props: props)
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_COMMON, imageName: 'ncn-common', version: env.VERSION, props: props)
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_STORAGE_CEPH, imageName: 'storage-ceph', version: env.VERSION, props: props)
-                    publishCsmImages(pattern: env.ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
+                    def props = "build.url=${BUILD_URL};vcs.revision-short=${VERSION};build.source-artifact=${qemuSourceArtifact}"
+                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: VERSION, props: props)
+                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_COMMON, imageName: 'ncn-common', version: VERSION, props: props)
+                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_STORAGE_CEPH, imageName: 'storage-ceph', version: VERSION, props: props)
+                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: VERSION, props: props)
                 }
             }
         }
