@@ -122,7 +122,7 @@ spec:
       serviceAccountName: multus
       containers:
       - name: kube-multus
-        image: "docker.io/nfvpe/multus:v3.1"
+        image: "docker.io/nfvpe/multus:${MULTUS_VERSION}"
         command: ["/entrypoint.sh"]
         args:
         - "--cni-conf-dir=/host/etc/cni/net.d"
