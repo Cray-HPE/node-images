@@ -4,7 +4,7 @@ fslabel=BOOTRAID
 working_path=/metal/recovery
 trap 'umount -v $working_path && rmdir -f /tmp/mount 2>/dev/null && echo && exit 0' EXIT
 
-set -e
+set -eu
 
 mkdir -pv $working_path
 mount -v -L $fslabel $working_path || echo 'continuing ...'
