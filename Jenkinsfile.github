@@ -52,10 +52,6 @@ pipeline {
                     string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
                 ]) {
                     sh """
-                        SLES15_INITIAL_ROOT_PASSWORD=${SLES15_INITIAL_ROOT_PASSWORD} \
-                        SLES15_REGISTRATION_CODE=${SLES15_REGISTRATION_CODE} \
-                        ARTIFACTORY_USER=${ARTIFACTORY_USER} \
-                        ARTIFACTORY_TOKEN=${ARTIFACTORY_TOKEN} \
                         ./scripts/render-templates.sh
                     """
                 }
