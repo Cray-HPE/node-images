@@ -23,7 +23,6 @@ done
 
 # Install grub2.
 name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
-vendor=$(ipmitool fru | grep -i 'board mfg' | tail -n 1 | cut -d ':' -f2 | tr -d ' ')
 [ -z "$name" ] && name='CRAY Linux'
 for disk in $(mdadm --detail $(blkid -L $fslabel) | grep /dev/sd | awk '{print $NF}'); do
     # Add '--suse-enable-tpm' to grub2-install once we need TPM.
