@@ -68,6 +68,8 @@ else
   mark_initialized $ceph_installed_file
 fi
 
+. /srv/cray/scripts/common/ceph-enable-services.sh
+
 # Wait for workers
 wait_for_k8s_worker
 
