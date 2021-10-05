@@ -94,7 +94,7 @@ menuentry "$name" --class sles --class gnu-linux --class gnu {
     echo    'Loading kernel ...'
     linuxefi \$prefix/../$disk_cmdline
     echo    'Loading initial ramdisk ...'
-    initrdefi \$prefix/../\$initrd
+    initrdefi \$prefix/../$initrd
 }
 EOF
 }
