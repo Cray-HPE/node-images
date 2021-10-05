@@ -84,7 +84,6 @@ function update_auxiliary_fstab {
 function get_boot_artifacts {
     # TODO: Grab rd.live.dir from cmdline and remove LiveOS hardcode.
     local squashfs_storage
-    local initrd
     local base_dir
     local live_dir
     local artifact_error=0
