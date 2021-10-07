@@ -1,6 +1,5 @@
 #!/bin/bash
 # Copyright 2020-2021 Hewlett Packard Enterprise Development LP
-#
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
@@ -46,7 +45,6 @@ install_grub2() {
 
     # Install grub2.
     local name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
-    local vendor=$(ipmitool fru | grep -i 'board mfg' | tail -n 1 | cut -d ':' -f2 | tr -d ' ')
     [ -z "$name" ] && name='CRAY Linux'
     for disk in $(mdadm --detail $(blkid -L $fslabel) | grep /dev/sd | awk '{print $NF}'); do
         # Add '--suse-enable-tpm' to grub2-install once we need TPM.
@@ -271,7 +269,10 @@ function efi_remove {
 }
 
 function efi_enforce {
-    echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o 0000,$(cat /tmp/bbs* | awk '!x[$0]++' | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*\n' | sed -r 's/(.{4})/\1,/g;s/,$//') | grep -i bootorder
+    # IMPORTANT: The ENTIRE list of entries needs to exist, otherwise iLO/HPE servers will undo any changes.
+    # both /tmp/bbs* and /tmp/rbbs* are concatenated together; the ordinal order of the /tmp/bbsNUM files
+    # will enforce NICs first.
+    echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o 0000,$(cat /tmp/bbs* /tmp/rbbs* | awk '!x[$0]++' | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*\n' | sed -r 's/(.{4})/\1,/g;s/,$//') | grep -i bootorder
     echo activating boot entries && cat /tmp/bbs* | awk '!x[$0]++' | sed 's/^Boot//g' | tr -d '*' | awk '{print $1}' | xargs -r -i efibootmgr -b {} -a
 }
 
@@ -339,7 +340,6 @@ EOM
             # Removal file(s) ...
             efibootmgr | grep -vi 'pxe ipv4' | grep -i adapter |tee /tmp/rbbs1
             efibootmgr | grep -iP '(sata|nvme)' | tee /tmp/rbbs2
-            no_enforce=1
             efi_trim
             efi_specials
             efi_remove
