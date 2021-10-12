@@ -8,14 +8,24 @@ variable "disk_cache" {
   default = "unsafe"
 }
 
+variable "disk_size" {
+  type = string
+  default = "42000"
+}
+
 variable "headless" {
   type = bool
   default = true
 }
 
-variable "image_name" {
+variable "image_name_k8s" {
   type = string
-  default = "sles15-vbox"
+  default = "kubernetes"
+}
+
+variable "image_name_ceph" {
+  type = string
+  default = "storage-ceph"
 }
 
 variable "memory" {
@@ -56,7 +66,7 @@ variable "vbox_source_path" {
 
 variable "output_directory" {
   type = string
-  default = "output-ncn-images"
+  default = "output-ncn-node-images"
 }
 
 variable "artifact_version" {

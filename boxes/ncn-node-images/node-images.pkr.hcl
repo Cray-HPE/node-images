@@ -3,12 +3,12 @@ source "virtualbox-ovf" "kubernetes" {
   format = "${var.vbox_format}"
   checksum = "none"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}/kubernetes"
-  output_filename = "${var.image_name}"
+  output_filename = "${var.image_name_k8s}"
   vboxmanage = [
     [
       "modifyvm",
@@ -24,17 +24,17 @@ source "virtualbox-ovf" "kubernetes" {
   guest_additions_mode = "disable"
 }
 
-source "virtualbox-ovf" "storage-ceph" {
+source "virtualbox-ovf" "ceph" {
   source_path = "${var.vbox_source_path}"
   format = "${var.vbox_format}"
   checksum = "none"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}/storage-ceph"
-  output_filename = "${var.image_name}"
+  output_filename = "${var.image_name_ceph}"
   vboxmanage = [
     [
       "modifyvm",
@@ -56,23 +56,23 @@ source "qemu" "kubernetes" {
   display = "${var.qemu_display}"
   cpus = "${var.cpus}"
   disk_cache = "${var.disk_cache}"
+  disk_size = "${var.disk_size}"
   memory = "${var.memory}"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}/kubernetes"
-  vm_name = "${var.image_name}.${var.qemu_format}"
+  vm_name = "${var.image_name_k8s}.${var.qemu_format}"
   disk_image = true
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
-  disk_compression = "${var.qemu_disk_compression}"
-  skip_compaction = "${var.qemu_skip_compaction}"
+  disk_compression = true
+  skip_compaction = false
   vnc_bind_address = "${var.vnc_bind_address}"
-  format = "${var.qemu_format}"
 }
 
 source "qemu" "storage-ceph" {
@@ -81,35 +81,35 @@ source "qemu" "storage-ceph" {
   display = "${var.qemu_display}"
   cpus = "${var.cpus}"
   disk_cache = "${var.disk_cache}"
+  disk_size = "${var.disk_size}"
   memory = "${var.memory}"
   iso_url = "${var.source_iso_uri}"
   iso_checksum = "none"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}/storage-ceph"
-  vm_name = "${var.image_name}.${var.qemu_format}"
+  vm_name = "${var.image_name_ceph}.${var.qemu_format}"
   disk_image = true
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
-  disk_compression = "${var.qemu_disk_compression}"
-  skip_compaction = "${var.qemu_skip_compaction}"
+  disk_compression = true
+  skip_compaction = false
   vnc_bind_address = "${var.vnc_bind_address}"
-  format = "${var.qemu_format}"
 }
 
 build {
   sources = [
     "source.virtualbox-ovf.kubernetes",
-    "source.virtualbox-ovf.storage-ceph",
+    "source.virtualbox-ovf.ceph",
     "source.qemu.kubernetes",
     "source.qemu.storage-ceph"
   ]
 
   provisioner "file" {
-    source = "${path.root}/k8s/files"
+    source = "${path.root}k8s/files"
     destination = "/tmp/"
     only = [
       "virtualbox-ovf.kubernetes",
@@ -117,10 +117,10 @@ build {
   }
 
   provisioner "file" {
-    source = "${path.root}/storage-ceph/files"
+    source = "${path.root}storage-ceph/files"
     destination = "/tmp/"
     only = [
-      "virtualbox-ovf.storage-ceph",
+      "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]
   }
 
@@ -131,26 +131,26 @@ build {
 
   provisioner "shell" {
     inline = [
-      "bash -c 'if [ -f /root/zero.file ]; then rm /root/zero.file; fi'"]
+      "sudo -S bash -c 'if [ -f /root/zero.file ]; then rm /root/zero.file; fi'"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/k8s/provisioners/common/setup.sh"
+    script = "${path.root}k8s/provisioners/common/setup.sh"
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/common/setup.sh"
+    script = "${path.root}storage-ceph/provisioners/common/setup.sh"
     only = [
-      "virtualbox-ovf.storage-ceph",
+      "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
+      "sudo -E bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
   }
 
   provisioner "shell" {
@@ -159,19 +159,19 @@ build {
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; set -e; setup-package-repos'"]
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; set -e; setup-package-repos'"]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
     ]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/base.packages'"]
+      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/base.packages'"]
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes"]
@@ -179,7 +179,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/metal.packages'"]
+      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/metal.packages'"]
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes"]
@@ -187,74 +187,60 @@ build {
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/base.packages'"]
+      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/base.packages'"]
     only = [
-      "virtualbox-ovf.storage-ceph",
+      "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/metal.packages'"]
+      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/metal.packages'"]
     only = [
-      "virtualbox-ovf.storage-ceph",
+      "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/k8s/provisioners/common/install.sh"
+    script = "${path.root}k8s/provisioners/common/install.sh"
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/metal/ses.sh"
+    script = "${path.root}storage-ceph/provisioners/common/install.sh"
     only = [
-      "virtualbox-ovf.storage-ceph",
+      "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/common/resize.sh"
-    only = [
-      "virtualbox-ovf.storage-ceph",
-      "qemu.storage-ceph"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/common/install.sh"
-    only = [
-      "virtualbox-ovf.storage-ceph",
-      "qemu.storage-ceph"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/k8s/provisioners/common/sdu/install.sh"
+    script = "${path.root}k8s/provisioners/common/sdu/install.sh"
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/k8s/provisioners/metal/install.sh"
+    script = "${path.root}k8s/provisioners/metal/install.sh"
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/metal/install.sh"
+    script = "${path.root}storage-ceph/provisioners/metal/install.sh"
     only = [
-      "virtualbox-ovf.storage-ceph",
+      "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.packages explicit'",
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.deps.packages deps'",
-      "bash -c 'zypper lr -e /tmp/installed.repos'"
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.packages explicit'",
+      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.deps.packages deps'",
+      "sudo -E bash -c 'zypper lr -e /tmp/installed.repos'"
     ]
   }
 
@@ -277,29 +263,29 @@ build {
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-package-repos'"]
+      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-package-repos'"]
   }
 
   //This does nothing on metal, specific to gcp
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/scripts/common/build-functions.sh; cleanup-dns'"]
+      "sudo -S bash -c '. /srv/cray/scripts/common/build-functions.sh; cleanup-dns'"]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-all-repos'"]
+      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-all-repos'"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/storage-ceph/files/scripts/common/cleanup.sh"
+    script = "${path.root}storage-ceph/files/scripts/common/cleanup.sh"
     only = [
-      "virtualbox-ovf.storage-ceph",
+      "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/k8s/files/scripts/common/cleanup.sh"
+    script = "${path.root}k8s/files/scripts/common/cleanup.sh"
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes"]
@@ -307,23 +293,34 @@ build {
 
   provisioner "shell" {
     inline = [
-      "bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh'"]
+      "sudo -S bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh'"]
+    only = [
+      "qemu.kubernetes",
+      "qemu.storage-ceph"
+    ]
   }
-
   provisioner "file" {
     direction = "download"
-    source = "/squashfs/*"
-    destination = "${var.output_directory}/${source.name}/kis/"
+    source = "/tmp/kis.tar.gz"
+    destination = "${var.output_directory}/${source.name}/"
+    only = [
+      "qemu.kubernetes",
+      "qemu.storage-ceph"
+    ]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '/srv/cray/scripts/common/cleanup-kis-artifacts.sh'"]
+      "sudo -S bash -c '/srv/cray/scripts/common/cleanup-kis-artifacts.sh'"]
+    only = [
+      "qemu.kubernetes",
+      "qemu.storage-ceph"
+    ]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '/srv/cray/scripts/common/zeros.sh'"]
+      "sudo -S bash -c '/srv/cray/scripts/common/zeros.sh'"]
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes"]
@@ -331,19 +328,33 @@ build {
 
   provisioner "shell" {
     inline = [
-      "bash -c '/srv/cray/scripts/metal/zeros.sh'"]
+      "sudo -S bash -c '/srv/cray/scripts/metal/zeros.sh'"]
     only = [
-      "virtualbox-ovf.storage-ceph",
+      "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]
   }
 
   post-processors {
+    post-processor "shell-local" {
+      inline = [
+        "echo 'Extracting KIS artifacts package'",
+        "echo 'Putting image name into the squashFS filename.'",
+        "ls -lR ./${var.output_directory}/${source.name}",
+        "tar -xzvf ${var.output_directory}/${source.name}/kis.tar.gz -C ${var.output_directory}/${source.name}",
+        "mv ${var.output_directory}/${source.name}/filesystem.squashfs ${var.output_directory}/${source.name}/${source.name}.squashfs",
+        "rm ${var.output_directory}/${source.name}/kis.tar.gz"
+      ]
+      only   = [
+        "qemu.kubernetes",
+        "qemu.storage-ceph"
+      ]
+    }
     post-processor "manifest" {
       output = "${var.output_directory}/${source.name}/manifest.json"
     }
-    post-processor "compress" {
-      output = "${var.output_directory}/${source.name}/${source.name}-${var.artifact_version}.tar.gz"
-      keep_input_artifact = true
-    }
+#    post-processor "compress" {
+#      output = "${var.output_directory}/${source.name}/${source.name}-${var.artifact_version}.tar.gz"
+#      keep_input_artifact = true
+#    }
   }
 }
