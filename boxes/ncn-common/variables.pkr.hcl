@@ -8,6 +8,11 @@ variable "disk_cache" {
   default = "unsafe"
 }
 
+variable "disk_size" {
+  type = string
+  default = "42000"
+}
+
 variable "headless" {
   type = bool
   default = true
@@ -92,16 +97,6 @@ variable "qemu_default_display" {
 variable "qemu_display" {
   type = string
   default = "none"
-}
-
-variable "qemu_disk_compression" {
-  type = bool
-  default = true
-}
-
-variable "qemu_skip_compaction" {
-  type = bool
-  default = false
 }
 
 variable "vnc_bind_address" {
