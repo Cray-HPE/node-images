@@ -35,7 +35,7 @@ variable "memory" {
 
 variable "source_iso_checksum" {
   type = string
-  default = "2a6259fc849fef6ce6701b8505f64f89de0d2882857def1c9e4379d26e74fa56"
+  default = "none"
 }
 
 variable "source_iso_uri" {
