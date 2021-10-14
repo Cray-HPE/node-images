@@ -57,8 +57,7 @@ pipeline {
             steps {
                 dir('iso') {
                     withCredentials([
-                        string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
-                        string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
+                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                     ]) {
                         sh "curl -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O ${ISO_URL}"
                     }
@@ -73,8 +72,7 @@ pipeline {
                 withCredentials([
                     string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
                     string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE'),
-                    string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
-                    string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
+                    usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                 ]) {
                     sh '''
                         ./scripts/render-templates.sh
@@ -118,8 +116,7 @@ pipeline {
                     steps {
                         withCredentials([
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                            string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
-                            string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
+                            usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             script {
                                 // If we didn't rebuild in this build, then always grab latest stable base.
@@ -149,8 +146,7 @@ pipeline {
                     steps {
                         withCredentials([
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                            string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
-                            string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
+                            usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             script {
                                 def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/[RELEASE]/ncn-common-[RELEASE].qcow2"
@@ -172,8 +168,7 @@ pipeline {
                     steps {
                         withCredentials([
                             string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                            string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
-                            string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
+                            usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             script {
                                 def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/[RELEASE]/ncn-common-[RELEASE].qcow2"
@@ -196,8 +191,7 @@ pipeline {
             when { tag "*" }
             steps {
                 withCredentials([
-                        string(credentialsId: 'artifactory-user', variable: 'ARTIFACTORY_USER'),
-                        string(credentialsId: 'artifactory-token', variable: 'ARTIFACTORY_TOKEN')
+                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                 ]) {
                     script {
                         publishCsmImages.release('sles15-base', GIT_COMMIT[0..6], env.TAG_NAME)
@@ -210,3 +204,4 @@ pipeline {
         }
     }
 }
+
