@@ -33,7 +33,7 @@ variable "vbox_source_path" {
   default = "output-sles15-base/sles15-base.ovf"
 }
 
-variable "source_iso_checksum" {
+variable "source_checksum" {
   type = string
   default = "none"
 }
@@ -99,6 +99,16 @@ variable "qemu_display" {
   default = "none"
 }
 
+variable "qemu_disk_compression" {
+  type = bool
+  default = true
+}
+
+variable "qemu_skip_compaction" {
+  type = bool
+  default = false
+}
+
 variable "vnc_bind_address" {
   type = string
   default = "0.0.0.0"
@@ -115,6 +125,70 @@ variable "artifactory_token" {
 }
 
 variable "custom_repos_file" {
+  type = string
+  default = ""
+}
+
+variable "google_destination_image_family" {
+  type = string
+  default = "vshasta-sles15-sp2"
+}
+variable "google_destination_project_network" {
+  type = string
+  default = "projects/shared-vpc-interconnect-202004/global/networks/default-network"
+}
+variable "google_subnetwork" {
+  type = string
+  default = "projects/shared-vpc-interconnect-202004/regions/us-central1/subnetworks/artifactory-subnet"
+}
+variable "google_zone" {
+  type = string
+  default = "us-central1-a"
+}
+variable "google_destination_project_id" {
+  type = string
+  default = "artifactory-202004"
+}
+
+variable "google_network_project_id" {
+  type = string
+  default = "shared-vpc-interconnect-202004"
+}
+
+variable "google_service_account_email" {
+  type = string
+  default = "image-manager@artifactory-202004.iam.gserviceaccount.com"
+}
+
+variable "google_use_internal_ip" {
+  type = bool
+  default = true
+}
+
+variable "google_source_image_project_id" {
+  type = list(string)
+  default = ["artifactory-202004"]
+}
+
+variable "google_source_image_family" {
+  type = string
+  default = "vshasta-sles15-sp2"
+}
+
+variable "google_source_image_name" {
+  type = string
+  default = ""
+}
+variable "google_disk_size_gb" {
+  type = string
+  default = "100"
+}
+variable "google_source_image_url" {
+  type = string
+  default = ""
+}
+
+variable "build_url" {
   type = string
   default = ""
 }
