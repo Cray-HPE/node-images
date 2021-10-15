@@ -8,8 +8,6 @@ file:
   /etc/zypp/services.d/SUSE_Linux_Enterprise_Server_15_SP2_x86_64.service:
     exists: false
 service:
-  metalfs:
-    enabled: true
   cloud-config:
     enabled: true
     running: false

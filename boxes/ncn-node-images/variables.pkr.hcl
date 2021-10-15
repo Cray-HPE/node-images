@@ -128,3 +128,66 @@ variable "custom_repos_file" {
   type = string
   default = ""
 }
+
+variable "google_subnetwork" {
+  type = string
+  default = "artifactory-subnet"
+}
+
+variable "google_destination_image_family" {
+  type = string
+  default = "vshasta-sles15-sp2"
+}
+
+variable "google_zone" {
+  type = string
+  default = "us-central1-a"
+}
+
+variable "google_destination_project_id" {
+  type = string
+  default = "artifactory-202004"
+}
+
+variable "google_network_project_id" {
+  type = string
+  default = "shared-vpc-interconnect-202004"
+}
+
+variable "google_service_account_email" {
+  type = string
+  default = "image-manager@artifactory-202004.iam.gserviceaccount.com"
+}
+
+variable "google_use_internal_ip" {
+  type = bool
+  default = true
+}
+
+variable "google_source_image_project_id" {
+  type = list(string)
+  default = ["artifactory-202004"]
+}
+
+variable "google_source_image_family" {
+  type = string
+  default = "vshasta-sles15-sp2"
+}
+
+variable "google_source_image_name" {
+  type = string
+  default = ""
+}
+variable "google_disk_size_gb" {
+  type = string
+  default = "150"
+}
+variable "google_source_image_url" {
+  type = string
+  default = ""
+}
+
+variable "build_url" {
+  type = string
+  default = ""
+}
