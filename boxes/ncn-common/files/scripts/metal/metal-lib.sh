@@ -56,14 +56,18 @@ install_grub2() {
     local init_cmdline=$(cat /proc/cmdline)
     local disk_cmdline=''
     for cmd in $init_cmdline; do
-        # cleans up first argument when running this script on an grub-booted system
+        # cleans up first argument when running this script on a disk-booted system
         if [[ $cmd =~ kernel$ ]]; then
             cmd=$(basename "$(echo $cmd  | awk '{print $1}')")
         fi
+        if [[ $cmd =~ ^rd.live.overlay.reset ]] ; then :
+        elif [[ $cmd =~ ^rd.debug ]] ; then :
         # removes all metal vars, and escapes anything that iPXE was escaping
+        # metal vars are used for customizing nodes on deployment, they don't need
+        # to stick around for runtime.
         # (i.e. ds=nocloud-net;s=http://$url will get the ; escaped)
         # removes netboot vars
-        if [[ ! $cmd =~ ^metal. ]] && [[ ! $cmd =~ ^ip=.*:dhcp ]] && [[ ! $cmd =~ ^bootdev= ]]; then
+        elif [[ ! $cmd =~ ^metal. ]] && [[ ! $cmd =~ ^ip=.*:dhcp ]] && [[ ! $cmd =~ ^bootdev= ]]; then
             disk_cmdline="$(trim $disk_cmdline) ${cmd//;/\\;}"
         fi
     done
