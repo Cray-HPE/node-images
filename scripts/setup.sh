@@ -19,11 +19,3 @@ if [ -z "$SLES15_REGISTRATION_CODE" ]; then
 fi
 
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst.xml
-
-if [ -n "$CSM_RPMS_SHA" ]; then
-  if [ -d "csm-rpms" ]; then
-    echo "Setting csm-rpms to expected hash: $CSM_RPMS_SHA"
-    cd csm-rpms
-    git checkout "$CSM_RPMS_SHA" --quiet
-  fi
-fi

@@ -1,0 +1,35 @@
+nameOverride: "gce-ingress"
+fullnameOverride: "gce-ingress"
+
+# gce-ingress needs credentials to log into GCE.  Create a secret with the key
+# of key.json with the contents of a GCE service account that has permissions to create
+# and modify load balancers.  The key should be in the JSON format.
+# Example:
+# Your secret should look like:
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: gce-key
+# type: Opaque
+# data:
+#   key.json: < base64 encoded JSON service account key>
+secretName: "${GCE_INGRESS_SECRET_NAME}"
+configMapName: "${GCE_INGRESS_CONFIGMAP_NAME}"
+
+controller:
+  replicas: 1
+  image:
+    repository: k8s.gcr.io/ingress-gce-glbc-amd64
+    tag: v1.6.1
+    pullPolicy: IfNotPresent
+
+backend:
+  replicas: 1
+  image:
+    repository: k8s.gcr.io/defaultbackend-amd64
+    tag: "1.5"
+    pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80

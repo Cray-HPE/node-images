@@ -1,16 +1,7 @@
 file:
   /var/adm/autoinstall/cache:
 service:
-  cloud-config:
-    enabled: true
-    running: false
-  cloud-init:
-    enabled: true
-    running: false
-  cloud-final:
-    enabled: true
-    running: false
-  cloud-init-local:
+  chronyd:
     enabled: true
     running: false
   ca-certificates:
@@ -20,18 +11,6 @@ service:
     enabled: true
     running: false
   ca-certificates:
-    enabled: true
-    running: false
-  cloud-config:
-    enabled: true
-    running: false
-  cloud-init:
-    enabled: true
-    running: false
-  cloud-init-local:
-    enabled: true
-    running: false
-  cloud-final:
     enabled: true
     running: false
   issue-generator:
@@ -72,9 +51,6 @@ service:
     running: true
   postfix:
     enabled: false
-    running: false
-  chronyd:
-    enabled: true
     running: false
   spire-agent:
     enabled: true
