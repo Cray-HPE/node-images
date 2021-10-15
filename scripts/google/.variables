@@ -1,0 +1,9 @@
+google_destination_project_id=artifactory-202004
+output_directory=output-sles15-base
+image_name=sles15-base
+version=710eec5
+qemu_format=qcow2
+google_destination_image_family=vshasta-sles15-base-rc
+google_network=projects/shared-vpc-interconnect-202004/global/networks/default-network
+google_subnetwork=projects/shared-vpc-interconnect-202004/regions/us-central1/subnetworks/artifactory-subnet
+google_zone=us-central1-a

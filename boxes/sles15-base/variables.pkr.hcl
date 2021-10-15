@@ -113,3 +113,24 @@ variable "vnc_bind_address" {
   type = string
   default = "0.0.0.0"
 }
+
+variable "google_destination_image_family" {
+  type = string
+  default = "vshasta-sles15-base-rc"
+}
+variable "google_destination_project_network" {
+  type = string
+  default = "projects/shared-vpc-interconnect-202004/global/networks/default-network"
+}
+variable "google_subnetwork" {
+  type = string
+  default = "projects/shared-vpc-interconnect-202004/regions/us-central1/subnetworks/artifactory-subnet"
+}
+variable "google_zone" {
+  type = string
+  default = "us-central1-a"
+}
+variable "google_destination_project_id" {
+  type = string
+  default = "artifactory-202004"
+}

@@ -3,7 +3,7 @@
 set -ex
 
 # install required packages
-packages=( jq )
+packages=( jq vim )
 zypper --non-interactive install --no-recommends --force-resolution "${packages[@]}"
 
 KERNEL_PACKAGES=(kernel-default-debuginfo-"$SLES15_KERNEL_VERSION"
