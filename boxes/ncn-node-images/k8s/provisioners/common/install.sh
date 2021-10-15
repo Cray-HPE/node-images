@@ -2,14 +2,9 @@
 
 set -e
 
-etcd_version="v3.4.14"
-kubernetes_version="1.19.9-0"
-kubernetes_pull_version="v1.19.9"
-containerd_version="1.4.3"
-helm_v3_version="3.2.4"
-velero_version="v1.5.2"
-coredns_previous_version="1.6.7"
-coredns_version="1.7.0"
+. /srv/cray/resources/common/vars.sh
+kubernetes_version="${KUBERNETES_PULL_VERSION}-0"
+kubernetes_pull_version="v${KUBERNETES_PULL_VERSION}"
 
 . /srv/cray/scripts/common/build-functions.sh
 
@@ -27,17 +22,17 @@ mkdir -p /var/run/sds
 
 echo "Installing etcd binaries"
 mkdir -p /tmp/etcd
-wget -q -O /tmp/etcd/etcd-${etcd_version}-linux-amd64.tar.gz https://github.com/etcd-io/etcd/releases/download/${etcd_version}/etcd-${etcd_version}-linux-amd64.tar.gz
-tar --no-overwrite-dir -C /tmp/etcd -xvzf /tmp/etcd/etcd-${etcd_version}-linux-amd64.tar.gz
-rm /tmp/etcd/etcd-${etcd_version}-linux-amd64.tar.gz
-cp /tmp/etcd/etcd-v3.4.14-linux-amd64/etcd /usr/bin
-cp /tmp/etcd/etcd-v3.4.14-linux-amd64/etcdctl /usr/bin
+wget -q -O /tmp/etcd/etcd-${ETCD_VERSION}-linux-amd64.tar.gz https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz
+tar --no-overwrite-dir -C /tmp/etcd -xvzf /tmp/etcd/etcd-${ETCD_VERSION}-linux-amd64.tar.gz
+rm /tmp/etcd/etcd-${ETCD_VERSION}-linux-amd64.tar.gz
+cp /tmp/etcd/etcd-${ETCD_VERSION}-linux-amd64/etcd /usr/bin
+cp /tmp/etcd/etcd-${ETCD_VERSION}-linux-amd64/etcdctl /usr/bin
 chmod 750 /usr/bin/etcd
 chmod 750 /usr/bin/etcdctl
 rm -rf /tmp/etcd
 
 echo "Installing the helm binary"
-wget -q https://get.helm.sh/helm-v${helm_v3_version}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/bin/helm
+wget -q https://get.helm.sh/helm-v${HELM_V3_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/bin/helm
 chmod +x /usr/bin/helm
 helm version
 
@@ -46,7 +41,7 @@ curl -L git.io/weave -o /usr/bin/weave
 chmod a+x /usr/bin/weave
 
 echo "Installing Velero cli utility"
-wget -q "https://github.com/vmware-tanzu/velero/releases/download/${velero_version}/velero-${velero_version}-linux-amd64.tar.gz" -O - | tar -xzO "velero-${velero_version}-linux-amd64/velero" > /usr/bin/velero
+wget -q "https://github.com/vmware-tanzu/velero/releases/download/${VELERO_VERSION}/velero-${VELERO_VERSION}-linux-amd64.tar.gz" -O - | tar -xzO "velero-${VELERO_VERSION}-linux-amd64/velero" > /usr/bin/velero
 chmod 750 /usr/bin/velero
 
 echo "Ensuring that the kubernetes package repo exists in zypper"
@@ -108,7 +103,7 @@ modprobe $(tr '\n' ' '< /usr/lib/modules-load.d/01-ipvs.conf)
 echo "Ensuring swap is off" && swapoff -a
 
 echo "Installing containerd CRI and configuring the system for containerd"
-wget -q -O /tmp/cri-containerd.tar.gz https://github.com/containerd/containerd/releases/download/v${containerd_version}/cri-containerd-cni-${containerd_version}-linux-amd64.tar.gz
+wget -q -O /tmp/cri-containerd.tar.gz https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz
 tar --no-overwrite-dir -C / -xvzf /tmp/cri-containerd.tar.gz
 rm /tmp/cri-containerd.tar.gz
 ln -svnf /srv/cray/resources/common/containerd/containerd.service /etc/systemd/system/containerd.service
@@ -149,12 +144,12 @@ systemctl start containerd
 . /srv/cray/resources/common/vars.sh
 
 echo "Pre-pulling previous version containerd images, will continue to retry if it fails..."
-while ! kubeadm config images pull --kubernetes-version ${KUBERNETES_PULL_PREVIOUS_VERSION}; do
+while ! kubeadm config images pull --kubernetes-version "v${KUBERNETES_PULL_PREVIOUS_VERSION}"; do
   sleep 5
 done
 
 echo "Pre-pulling containerd images, will continue to retry if it fails..."
-while ! kubeadm config images pull --kubernetes-version ${KUBERNETES_PULL_VERSION}; do
+while ! kubeadm config images pull --kubernetes-version "v${KUBERNETES_PULL_VERSION}"; do
   sleep 5
 done
 
@@ -162,7 +157,8 @@ echo "Pre-pulling other images"
 #
 # docker.io rate limits us, let's pull weave from dtr...
 #
-pre-pull-internal-images weaveworks/weave-npc:${WEAVE_VERSION} weaveworks/weave-kube:${WEAVE_VERSION} nfvpe/multus:v3.1
+pre-pull-internal-images weaveworks/weave-npc:${WEAVE_VERSION} weaveworks/weave-kube:${WEAVE_VERSION}
+crictl pull docker.io/nfvpe/multus:${MULTUS_VERSION}
 crictl pull k8s.gcr.io/sig-storage/csi-provisioner:v1.6.0
 crictl pull k8s.gcr.io/sig-storage/csi-attacher:v2.2.0
 crictl pull k8s.gcr.io/sig-storage/csi-resizer:v0.5.0
@@ -173,8 +169,8 @@ crictl pull k8s.gcr.io/sig-storage/csi-attacher:v3.0.2
 crictl pull k8s.gcr.io/sig-storage/csi-resizer:v1.0.1
 crictl pull k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.2
 crictl pull k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.0.1
-crictl pull k8s.gcr.io/coredns:${coredns_previous_version}
-crictl pull k8s.gcr.io/coredns:${coredns_version}
+crictl pull k8s.gcr.io/coredns:${COREDNS_PREVIOUS_VERSION}
+crictl pull k8s.gcr.io/coredns:${COREDNS_VERSION}
 crictl pull quay.io/cephcsi/cephcsi:v3.1.1
 
 echo "Displaying list of pre-cached images"

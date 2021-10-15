@@ -255,7 +255,7 @@ function configure-external-etcd() {
 
   if [[ "$(hostname)" == $FIRST_MASTER_HOSTNAME ]] || [[ "$(hostname)" =~ ^$FIRST_MASTER_HOSTNAME-.* ]]; then
     echo "Generating the kubeadm certificate authority"
-    kubeadm init phase certs etcd-ca --kubernetes-version=${KUBERNETES_PULL_VERSION}
+    kubeadm init phase certs etcd-ca --kubernetes-version="v${KUBERNETES_PULL_VERSION}"
   else
     echo "Copying kubeadm certificate authority from first master"
     wait-for-remote-file "${FIRST_MASTER_HOSTNAME}:/etc/kubernetes/pki/etcd/ca.crt" "/etc/kubernetes/pki/etcd/ca.crt" "BEGIN CERTIFICATE" 10
@@ -357,21 +357,7 @@ if [[ "$(hostname)" == $FIRST_MASTER_HOSTNAME ]] || [[ "$(hostname)" =~ ^$FIRST_
   echo "Initializing Kubernetes on the first control plane node, pod cidr $PODS_CIDR, service cidr $SERVICES_CIDR"
   kubeadm init --config /etc/cray/kubernetes/kubeadm.yaml --upload-certs | tee /etc/cray/kubernetes/init-result
 
-  echo "Installing Multus DaemonSet"
-  envsubst < /srv/cray/resources/common/multus/multus-daemonset.yml > /etc/cray/kubernetes/multus-daemonset.yml
-  kubectl apply -f /etc/cray/kubernetes/multus-daemonset.yml
-  echo "Wait for initial Multus Daemonset pod to be ready..."
-  while ! kubectl get pods -n kube-system -l app=multus | grep 'Running' &>/dev/null; do
-    sleep 5
-  done
-
-  echo "Installing Kubernetes CNI w/ pod cidr $PODS_CIDR, MTU: ${WEAVE_MTU}"
-  envsubst < /srv/cray/resources/common/weave.yaml > /etc/cray/kubernetes/weave.yaml
-  kubectl apply -f /etc/cray/kubernetes/weave.yaml
-  echo "Wait for Weave Net to be ready..."
-  while ! kubectl get pods -n kube-system -l name=weave-net | grep 'Running' &>/dev/null; do
-    sleep 5
-  done
+  /srv/cray/scripts/common/apply-networking-manifests.sh
 
   post-kubeadm-init
 

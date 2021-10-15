@@ -1,6 +1,6 @@
 apiVersion: "kubeadm.k8s.io/v1beta2"
 kind: ClusterConfiguration
-kubernetesVersion: ${KUBERNETES_PULL_VERSION}
+kubernetesVersion: "v${KUBERNETES_PULL_VERSION}"
 etcd:
     local:
         serverCertSANs:
