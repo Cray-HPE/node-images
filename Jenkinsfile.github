@@ -35,6 +35,7 @@ pipeline {
         ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/SLE-15-SP3-Full-x86_64-GM-Media1.iso"
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
+        SLES15_KERNEL_VERSION = "5.3.18-59.19.1"
         NRAM = '4096'
     }
 

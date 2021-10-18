@@ -27,3 +27,6 @@ envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/bo
 
 export SLES15_SP_VERSION="15.2"
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst-google.xml
+
+# Make the qemu.sh file.
+envsubst < $root_dir/boxes/sles15-base/scripts/qemu.template.sh > $root_dir/boxes/sles15-base/scripts/qemu.sh
