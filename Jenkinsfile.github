@@ -3,7 +3,16 @@
 def promotionToken = ~"(master|main|develop|lts\\/.*)"
 def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
 def rebuildBaseImage = buildAndPublish ? true : false
+
+// Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
+if ( env.BRANCH_NAME ==~ ~"^PR-\\d+" ) {
+    currentBuild.result = 'SUCCESS'
+    echo "Pull-Requests are not built for node-image-build; this is a no-op build."
+    return
+}
+
 pipeline {
+
     agent {
         label "metal-gcp-builder-large"
     }
