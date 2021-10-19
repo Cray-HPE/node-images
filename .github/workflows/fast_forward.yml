@@ -1,6 +1,10 @@
 name: Image Merge Strategy
 on:
   pull_request:
+    branches:
+      - develop
+      - main
+      - lts/csm-1.0
   issue_comment:
     types: [created]
 jobs:
