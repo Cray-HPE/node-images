@@ -7,10 +7,15 @@ host=$(hostname)
 > ~/.ssh/known_hosts
 
 for node in ncn-s001 ncn-s002 ncn-s003; do
+  ssh-keyscan -H "$node" >> ~/.ssh/known_hosts
+  pdsh -w $node > ~/.ssh/known_hosts
+  if [[ "$host" == "$node" ]]; then
+    continue
+  fi
+
   if [[ $(nc -z -w 10 $node 22) ]] || [[ $counter -lt 3 ]]
   then
-    ssh-keyscan -H "$node" >> ~/.ssh/known_hosts
-    if [[ "$host" =~ ^("ncn-s001"|"ncn-s002"|"ncn-s003")$ ]] && [[ "$host" != "$node" ]]
+    if [[ "$host" =~ ^("ncn-s001"|"ncn-s002"|"ncn-s003")$ ]]
     then
       scp $node:/etc/ceph/* /etc/ceph
     else
@@ -62,3 +67,4 @@ for service in $(cephadm ls | jq -r '.[].systemd_unit')
 do
   systemctl enable $service
 done
+
