@@ -32,6 +32,7 @@ apiServer:
   - ${K8S_NODE_IP}
   extraArgs:
     runtime-config: "apps/v1beta1=true,apps/v1beta2=true,extensions/v1beta1/daemonsets=true,extensions/v1beta1/deployments=true,extensions/v1beta1/replicasets=true,extensions/v1beta1/networkpolicies=true,extensions/v1beta1/podsecuritypolicies=true"
+    api-audiences: "api,istio-ca"
 controllerManager:
   extraArgs: ${CONTROLLER_MANAGER_EXTRA_ARGS}
   extraVolumes:
