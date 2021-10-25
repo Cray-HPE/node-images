@@ -23,6 +23,6 @@ network:
       id: {{ network.vlanid }}
       name: {{ name }}0
       link: {{ network.parent_device }}
-      dhcp4: yes
+      dhcp4: false
       addresses: [ {{ network.ip }} ]
   {% endfor %}
