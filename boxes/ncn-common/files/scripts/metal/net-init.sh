@@ -9,6 +9,10 @@ cloud-init query --format="$(cat /etc/cloud/templates/cloud-init-network.tmpl)" 
 printf 'net-init: [ % -20s ]\n' 'running: netconfig'
 # FIXME: MTL-1439 Use the default resolv_conf module.
 sed -i 's/NETCONFIG_DNS_POLICY=.*/NETCONFIG_DNS_POLICY=""/g' /etc/sysconfig/network/config
+# CASMTRIAGE-2521 - Break resolv.conf symlink to /run/netconf so cloud-init change persists across reboot.
+if [[ -f /etc/resolv.conf ]]; then
+    rm /etc/resolv.conf
+fi
 cloud-init query --format="$(cat /etc/cloud/templates/resolv.conf.tmpl)" >/etc/resolv.conf
 # Cease updating the default route; use the templated config files.
 sed -i 's/^DHCLIENT_SET_DEFAULT_ROUTE=.*/DHCLIENT_SET_DEFAULT_ROUTE="no"/' /etc/sysconfig/network/dhcp
