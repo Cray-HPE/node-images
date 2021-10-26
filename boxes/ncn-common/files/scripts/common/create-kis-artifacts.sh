@@ -11,7 +11,7 @@ mount -o bind / /mnt/squashfs
 
 # NOTE: These may be ran on a system; on a PIT or NCN node. Locking the kernel will assist
 #       in chroot envs with newer kernels.
-version_full=$(rpm -qa | grep kernel-default | grep -v devel | tail -n 1 | cut -f3- -d'-')
+version_full=$(rpm -q kernel-default | cut -f3- -d'-')
 version_base=${version_full%%-*}
 version_suse=${version_full##*-}
 version_suse=${version_suse%.*.*}
