@@ -26,4 +26,4 @@ set -e
 echo "Enabling HPE Cray OS services"
 systemctl enable acpid.service
 systemctl enable cray-heartbeat.service
-# FIXME "causing build failures on main:release/1.2": systemctl enable cray-node-identity.service
+systemctl enable csm-node-identity.service
