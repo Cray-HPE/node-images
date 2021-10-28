@@ -86,6 +86,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "${path.root}scripts/kernel.sh"
+  }
+
+  provisioner "shell" {
     script = "${path.root}scripts/virtualbox.sh"
     only = [
       "virtualbox-iso.sles15-base"]
@@ -99,15 +103,5 @@ build {
 
   provisioner "shell" {
     script = "${path.root}scripts/cleanup.sh"
-  }
-
-  post-processors {
-    post-processor "manifest" {
-      output = "${var.output_directory}/manifest.json"
-    }
-    post-processor "compress" {
-      output = "${var.output_directory}/{{.BuildName}}-${var.artifact_version}.tar.gz"
-      keep_input_artifact = true
-    }
   }
 }
