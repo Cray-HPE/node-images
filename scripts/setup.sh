@@ -9,10 +9,12 @@ if ! command -v envsubst &>/dev/null; then
   echo "Error: the envsubst command is necessary to run this build"
   exit 1
 fi
+
 if [ -z "$SLES15_INITIAL_ROOT_PASSWORD" ]; then
   echo "Error: the variable SLES15_INITIAL_ROOT_PASSWORD must be set"
   exit 1
 fi
+
 if [ -z "$SLES15_REGISTRATION_CODE" ]; then
   echo "Error: the variable SLES15_REGISTRATION_CODE must be set"
   exit 1
@@ -20,13 +22,20 @@ fi
 
 # GOOGLE is always a "teeny bit" behind in adopting the latest SLES release,
 # therefore VSHASTA images need to "lag" behind for a moment. Eventually Google
-# does catch-up, so the values above and below for SLES15_SP_VERSION _do_ and _don't_ 
+# does catch-up, so the values above and below for SLES15_SP_VERSION _do_ and _don't_
 # match ... from time-to-time.
+
 export SLES15_SP_VERSION="15.3"
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst.xml
 
 export SLES15_SP_VERSION="15.2"
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst-google.xml
 
-# Make the qemu.sh file.
-envsubst < $root_dir/boxes/sles15-base/scripts/qemu.template.sh > $root_dir/boxes/sles15-base/scripts/qemu.sh
+if [ -n "$CSM_RPMS_SHA" ]; then
+  if [ -d "csm-rpms" ]; then
+    echo "Setting csm-rpms to expected hash: $CSM_RPMS_SHA"
+    cd csm-rpms
+    git checkout "$CSM_RPMS_SHA" --quiet
+  fi
+fi
+

@@ -7,15 +7,16 @@
 This repository contains the https://www.packer.io/[Packer] pipepline code for building CRAY High-Performance Computing as a Service (HPCaaS)
 images for any distributable medium.
 
-The listed software below will equip a local machine or buildserver to build for any medium (`.squashfs`, `.vbox`, `.qcow2`, `.iso`, etc.).
+The listed software below will equip a local machine or buildserver to build for any medium (`.squashfs`, `.vbox`, `.qcow2`, `.iso`, and `vagrant`).
 
 === Necessary Software
 
 * media (`.iso` or `.qcow2`) (depending on the layer)
 * packer
 * qemu
-* vagrant
-* virtualbox
+* envsubst
+* (optional) virtualbox
+* (optional) vagrant
 
 === Media
 
@@ -29,9 +30,23 @@ The file name is either:
  - `SLE-15-SP2-Full-x86_64-GM-Media1.iso`
  - `SLE-15-SP3-Full-x86_64-GM-Media1.iso`
 
-==== RHEL/CentOS
+=== Repositories
 
-_Coming soon …_ (?)
+You will need access to the appropriate SLES repositories in the form of official access, self-hosted access, or the provided Nexus access.
+
+If you are using the default internal servers then you only need to pass `artifactory_user` and `artifactory_token` as variables with the packer command.
+
+- `-var 'artifactory_user=user' -var 'artifactory_token=token'`
+
+If you are building locally and want to provide your own repositories then the `custom_repos_file` variable must be passed with the packer command. The `custom_repos_file` variable is a filename that is placed into the `custom` folder of the project. The file must follow the same format as repos included in `csm-rpms` with the following fields: `url name flags`
+
+- `-var 'custom_repos_file=custom.repos'`
+
+And example entry for a custom repo:
+
+`https://myserver.net/sles-mirror/Products/SLE-Module-Basesystem/15-SP3/x86_64/product     SUSE-SLE-Module-Basesystem-15-SP3-x86_64-Pool     -g -p 99  suse/SLE-Module-Basesystem/15-SP3/x86_64/product`
+
+Furthermore, there may be additional repos used that are defined in `csm-rpms` which is checked out in the Quick Start section. You may be required to replace some or all of these files in `csm-rpms/repos/*.repos` to work with your environment.
 
 === Build Steps
 
@@ -41,32 +56,33 @@ If you are building QEMU images in MacOS, you will need to adjust specific QEMU 
 
 * MacOS requires HVF for acceleration
 * MacOS uses Cocoa for output
-* Run `packer build -only=qemu.sles15-base -force -var 'ssh_password=something' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/`
+* Run `packer build -only=qemu.sles15-base -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/`
 
 ==== Base Box
 
 ===== Prerequisites
 
-* Setup environment variables
+* Setup environment variables by copying `scripts/environment.template` to `scripts/environment` and modifying the values for your environment.
 * Ensure that `SLE-15-SP3-Full-x86_64-GM-Media1.iso` is in the `iso/` folder
 * Check out `csm-rpms` repository and create a symlink to it in the root directory of the project.
+* Execute `source scripts/environment`
+* Execute `./scripts/setup.sh`
 * Render the autoinst template
 
 
 ===== Quick Start
 
 ```bash
-export SLES15_INITIAL_ROOT_PASSWORD=mypassword
-export SLES15_REGISTRATION_CODE=mycode
-export ARTIFACTORY_USER=myuser
-export ARTIFACTORY_TOKEN=mytoken
 git clone <csm-rpms-repo>
 git clone https://github.com/Cray-HPE/node-image-build.git
 cd node-image-build
 ln -s ../csm-rpms/ csm-rpms
+cp scripts/environment.template scripts/environment
+vim scripts/environment
+source scripts/environment
 mkdir -p iso
 wget https://<somepath>/SLE-15-SP3-Full-x86_64-GM-Media1.iso -O iso/SLE-15-SP3-Full-x86_64-GM-Media1.iso
-./scripts/render-templates.sh
+./scripts/setup.sh
 ```
 
 ===== Build
@@ -84,19 +100,19 @@ N/A
 The `packer build` command will create both VirtualBox and QEMU versions of the base image.
 Execute the following command from the top level of the project to build both.
 
-* Run `packer build -force -var 'ssh_password=something' boxes/sles15-base/`
+* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-base/`
 
 To only build VirtualBox, run the following command.
 
-* Run `packer build -only=virtualbox-iso.sles15-base -force -var 'ssh_password=something' boxes/sles15-base/`
+* Run `packer build -only=virtualbox-iso.sles15-base -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-base/`
 
 To only build QEMU, run the following command.
 
-* Run `packer build -only=qemu.sles15-base -force -var 'ssh_password=something' boxes/sles15-base/`
+* Run `packer build -only=qemu.sles15-base -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-base/`
 
 If you want to view the output of the build, disable `headless` mode:
 
-* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/sles15-base/`
+* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' boxes/sles15-base/`
 
 Once the images are built, the output will be placed in the `output-sles15-base` directory in the root of the project.
 
@@ -113,19 +129,19 @@ N/A
 
 Execute the following command from the top level of the project
 
-* Run `packer build -force -var 'ssh_password=something' boxes/ncn-node-images/`
+* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-node-images/`
 
 To only build VirtualBox, run the following command.
 
-* Run `packer build -only=virtualbox-ovf.* -force -var 'ssh_password=something' boxes/ncn-node-images/`
+* Run `packer build -only=virtualbox-ovf.* -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-node-images/`
 
 To only build QEMU, run the following command.
 
-* Run `packer build -only=qemu.* -force -var 'ssh_password=something' boxes/ncn-node-images/`
+* Run `packer build -only=qemu.* -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-node-images/`
 
 If you want to view the output of the build, disable `headless` mode:
 
-* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/ncn-node-images/`
+* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' boxes/ncn-node-images/`
 
 Once the images are built, the output will be placed in the `output-sles15-images` directory in the root of the project.
 
@@ -136,15 +152,15 @@ you will first need to create the base image and the relevant node-image for Kub
 
 To build vagrant boxes, run the following command:
 
-* Run `packer build -force -var 'ssh_password=something'; boxes/sles15-vagrant/`
+* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD'; boxes/sles15-vagrant/`
 
 If you only want to build Kubernetes or Ceph, limit the build:
 
-* Run `packer build -only=virtualbox-ovf.kubernetes -force -var 'ssh_password=something' boxes/sles15-vagrant/`
+* Run `packer build -only=virtualbox-ovf.kubernetes -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-vagrant/`
 
 If you want to view the output of the build, disable `headless` mode:
 
-* Run `packer build -force -var 'ssh_password=something' -var 'headless=false' boxes/sles15-vagrant/`
+* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' boxes/sles15-vagrant/`
 
 `# vagrant box add --force --name sles15sp3 ./sles15-base-virtualbox.box`
 
@@ -163,7 +179,7 @@ If you want to view the output of the build, disable `headless` mode:
 
 [source,bash]
 ----
-packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short HEAD`" -var 'ssh_password=initial0' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/
+packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short HEAD`" -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/
 ----
 
 * If no version is passed to the builder then the version `none` is used when generating the archive.
@@ -171,7 +187,7 @@ packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short H
 === Base OS Layer
 
 * `boxes/sles15-base`
-* The base OS is essentially unchanging unless something fundamental needs to be changed, such as partitions,
+* The base OS is essentially unchanging unless $SLES15_INITIAL_ROOT_PASSWORD fundamental needs to be changed, such as partitions,
  filesystems, boot loaders, core users, kernels, qemu/vbox drivers, etc.
 * The base OS should be built once and everything else should be built on top of it.
 * Base OS install requires the full media offline version of SLES 15 SP3
