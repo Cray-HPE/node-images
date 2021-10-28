@@ -34,19 +34,15 @@ The file name is either:
 
 You will need access to the appropriate SLES repositories in the form of official access, self-hosted access, or the provided Nexus access.
 
-If you are using the default internal servers then you only need to pass `artifactory_user` and `artifactory_token` as variables with the packer command.
+If you are using the default internal servers then you only need to pass `ARTIFACTORY_USER` and `ARTIFACTORY_TOKEN` as environment variables.
 
-- `-var 'artifactory_user=user' -var 'artifactory_token=token'`
-
-If you are building locally and want to provide your own repositories then the `custom_repos_file` variable must be passed with the packer command. The `custom_repos_file` variable is a filename that is placed into the `custom` folder of the project. The file must follow the same format as repos included in `csm-rpms` with the following fields: `url name flags`
-
-- `-var 'custom_repos_file=custom.repos'`
+If you are building locally and want to provide your own repositories then the `CUSTOM_REPOS_FILE` environment variable must be set. The `CUSTOM_REPOS_FILE` environment variable is a filename that is placed into the `custom` folder of the project. The file must follow the same format as repos included in `csm-rpms` with the following fields: `url name flags`
 
 And example entry for a custom repo:
 
 `https://myserver.net/sles-mirror/Products/SLE-Module-Basesystem/15-SP3/x86_64/product     SUSE-SLE-Module-Basesystem-15-SP3-x86_64-Pool     -g -p 99  suse/SLE-Module-Basesystem/15-SP3/x86_64/product`
 
-Furthermore, there may be additional repos used that are defined in `csm-rpms` which is checked out in the Quick Start section. You may be required to replace some or all of these files in `csm-rpms/repos/*.repos` to work with your environment.
+Furthermore, they may be additional repos used that are defined in `csm-rpms` which is checked out in the Quick Start section. You may be required to replace some or all of these files in `csm-rpms/repos/*.repos` to work with your environment.
 
 === Build Steps
 
@@ -187,7 +183,7 @@ packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short H
 === Base OS Layer
 
 * `boxes/sles15-base`
-* The base OS is essentially unchanging unless $SLES15_INITIAL_ROOT_PASSWORD fundamental needs to be changed, such as partitions,
+* The base OS is essentially unchanging unless something fundamental needs to be changed, such as partitions,
  filesystems, boot loaders, core users, kernels, qemu/vbox drivers, etc.
 * The base OS should be built once and everything else should be built on top of it.
 * Base OS install requires the full media offline version of SLES 15 SP3
