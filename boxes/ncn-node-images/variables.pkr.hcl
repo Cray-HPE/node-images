@@ -123,3 +123,8 @@ variable "artifactory_token" {
   type = string
   default = ""
 }
+
+variable "custom_repos_file" {
+  type = string
+  default = ""
+}

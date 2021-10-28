@@ -65,20 +65,18 @@ build {
     destination = "/tmp/files/"
   }
 
+  provisioner "file" {
+    source = "custom"
+    destination = "/tmp/files/"
+  }
+
   provisioner "shell" {
     script = "${path.root}provisioners/common/setup.sh"
   }
 
-// TODO: This runs only on Google.
-//  provisioner "shell" {
-//    script = "${path.root}provisioners/google/setup.sh"
-//    only = ["google"]
-//  }
-
   // This runs only on metal and vbox.
   provisioner "shell" {
     script = "${path.root}provisioners/metal/setup.sh"
-    only = ["qemu.ncn-common"]
   }
 
   provisioner "shell" {
@@ -93,11 +91,11 @@ build {
 
   provisioner "shell" {
     environment_vars = [
+      "CUSTOM_REPOS_FILE=${var.custom_repos_file}",
       "ARTIFACTORY_USER=${var.artifactory_user}",
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
-    inline = [
-      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; set -e; setup-package-repos'"]
+    inline = ["bash -c /srv/cray/custom/repos.sh"]
   }
 
   provisioner "shell" {
@@ -265,13 +263,6 @@ build {
     post-processor "shell-local" {
       inline = [
         "if cat ${var.output_directory}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
-    }
-    post-processor "manifest" {
-      output = "${var.output_directory}/manifest.json"
-    }
-    post-processor "compress" {
-      output = "${var.output_directory}/{{.BuildName}}-${var.artifact_version}.tar.gz"
-      keep_input_artifact = true
     }
   }
 }

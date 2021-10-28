@@ -2,9 +2,7 @@
 
 set -ex
 
-# install required packages
-packages=( jq )
-zypper --non-interactive install --no-recommends --force-resolution "${packages[@]}"
+SLES15_KERNEL_VERSION="5.3.18-59.19.1"
 
 KERNEL_PACKAGES=(kernel-default-debuginfo-"$SLES15_KERNEL_VERSION"
 kernel-default-devel-"$SLES15_KERNEL_VERSION"
