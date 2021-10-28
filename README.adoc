@@ -7,15 +7,16 @@
 This repository contains the https://www.packer.io/[Packer] pipepline code for building CRAY High-Performance Computing as a Service (HPCaaS)
 images for any distributable medium.
 
-The listed software below will equip a local machine or buildserver to build for any medium (`.squashfs`, `.vbox`, `.qcow2`, `.iso`, etc.).
+The listed software below will equip a local machine or buildserver to build for any medium (`.squashfs`, `.vbox`, `.qcow2`, `.iso`, and `vagrant`).
 
 === Necessary Software
 
 * media (`.iso` or `.qcow2`) (depending on the layer)
 * packer
 * qemu
-* vagrant
-* virtualbox
+* envsubst
+* (optional) virtualbox
+* (optional) vagrant
 
 === Media
 
@@ -29,9 +30,19 @@ The file name is either:
  - `SLE-15-SP2-Full-x86_64-GM-Media1.iso`
  - `SLE-15-SP3-Full-x86_64-GM-Media1.iso`
 
-==== RHEL/CentOS
+=== Repositories
 
-_Coming soon …_ (?)
+You will need access to the appropriate SLES repositories in the form of official access, self-hosted access, or the provided Nexus access.
+
+If you are using the default internal servers then you only need to pass `ARTIFACTORY_USER` and `ARTIFACTORY_TOKEN` as environment variables.
+
+If you are building locally and want to provide your own repositories then the `CUSTOM_REPOS_FILE` environment variable must be set. The `CUSTOM_REPOS_FILE` environment variable is a filename that is placed into the `custom` folder of the project. The file must follow the same format as repos included in `csm-rpms` with the following fields: `url name flags`
+
+And example entry for a custom repo:
+
+`https://myserver.net/sles-mirror/Products/SLE-Module-Basesystem/15-SP3/x86_64/product     SUSE-SLE-Module-Basesystem-15-SP3-x86_64-Pool     -g -p 99  suse/SLE-Module-Basesystem/15-SP3/x86_64/product`
+
+Furthermore, they may be additional repos used that are defined in `csm-rpms` which is checked out in the Quick Start section. You may be required to replace some or all of these files in `csm-rpms/repos/*.repos` to work with your environment.
 
 === Build Steps
 
@@ -47,26 +58,26 @@ If you are building QEMU images in MacOS, you will need to adjust specific QEMU 
 
 ===== Prerequisites
 
-* Setup environment variables
+* Setup environment variables by copying `scripts/environment.template` to `scripts/environment` and modifying the values for your environment.
 * Ensure that `SLE-15-SP3-Full-x86_64-GM-Media1.iso` is in the `iso/` folder
 * Check out `csm-rpms` repository and create a symlink to it in the root directory of the project.
+* Execute `source scripts/environment`
+* Execute `./scripts/setup.sh`
 * Render the autoinst template
 
 
 ===== Quick Start
 
 ```bash
-export SLES15_INITIAL_ROOT_PASSWORD=mypassword
-export SLES15_REGISTRATION_CODE=mycode
-export ARTIFACTORY_USER=myuser
-export ARTIFACTORY_TOKEN=mytoken
 git clone <csm-rpms-repo>
 git clone https://github.com/Cray-HPE/node-image-build.git
 cd node-image-build
 ln -s ../csm-rpms/ csm-rpms
+cp scripts/environment.template scripts/environment
+vim scripts/environment
 mkdir -p iso
 wget https://<somepath>/SLE-15-SP3-Full-x86_64-GM-Media1.iso -O iso/SLE-15-SP3-Full-x86_64-GM-Media1.iso
-./scripts/render-templates.sh
+./scripts/setup.sh
 ```
 
 ===== Build

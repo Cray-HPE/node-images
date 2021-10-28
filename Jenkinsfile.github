@@ -35,7 +35,6 @@ pipeline {
         ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/SLE-15-SP3-Full-x86_64-GM-Media1.iso"
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
-        SLES15_KERNEL_VERSION = "5.3.18-59.19.1"
         NRAM = '4096'
     }
 
@@ -81,11 +80,10 @@ pipeline {
             steps {
                 withCredentials([
                     string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                    string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE'),
-                    usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
+                    string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE')
                 ]) {
                     sh '''
-                        ./scripts/render-templates.sh
+                        ./scripts/setup.sh
                     '''
                 }
             }
