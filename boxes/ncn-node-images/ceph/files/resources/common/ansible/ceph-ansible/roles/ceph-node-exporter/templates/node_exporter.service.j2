@@ -18,7 +18,7 @@ ExecStart=/usr/bin/{{ container_binary }} run --rm --name=node-exporter \
   {{ node_exporter_container_image }} \
   --path.procfs=/host/proc \
   --path.sysfs=/host/sys \
-  ----collector.filesystem.fs-types-exclude=^(overlay) \
+  --collector.filesystem.fs-types-exclude=^(overlay) \
   --no-collector.timex \
   --web.listen-address=:{{ node_exporter_port }}
 ExecStop=-/usr/bin/{{ container_binary }} stop node-exporter
