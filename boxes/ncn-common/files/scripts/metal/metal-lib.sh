@@ -246,12 +246,14 @@ function drop_metal_tcp_ip {
     fi
 }
 
-function write_can_route {
+function write_default_route {
     # Setup the route
     # ALWAYS CLOBBER; ROUTE SHOULD ALWAYS BE THE SAME
     # CLOBBER=UPDATE; ALWAYS UPDATE.
-    local cangw=$(craysys metadata get can-gw)
-    [ -z "${canif}" ] || echo "default ${cangw} - bond0.can0" >>/etc/sysconfig/network/ifroute-bond0.can0 && wicked ifreload all || systemctl restart wickedd && sleep 3
+    local gw
+    local nic=bond0.cmn0
+    gw=$(craysys metadata get --level node ipam | jq .cmn.gateway | tr -d '"')
+    echo "default ${gw} - $nic" >/etc/sysconfig/network/ifroute-$nic && wicked ifreload all || systemctl restart wickedd && sleep 3
 }
 
 # This will let the order fall into however the BIOS wants it; grouping netboot, disk, and removable options.
