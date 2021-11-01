@@ -41,9 +41,9 @@ function get_ip_from_metadata() {
 function pre-configure-node() {
   echo "In pre-configure-node()"
 
-  cangw=$(craysys metadata get can-gw)
-  if ! ip route replace default via ${cangw} dev bond0.can0; then
-    echo "Replacing default route via '$cangw' on device bond0.can0 failed"
+  cmngw=$(craysys metadata get --level node ipam | jq .cmn.gateway | tr -d '"')
+  if ! ip route replace default via ${cmngw} dev bond0.can0; then
+    echo "Replacing default route via '$cmngw' on device bond0.can0 failed"
   fi
 }
 
