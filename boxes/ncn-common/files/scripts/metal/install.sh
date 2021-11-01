@@ -14,6 +14,7 @@ breakaway() {
         set -x
         clean_bogies
         drop_metal_tcp_ip bond0
+        write_default_route
     ) 2>/var/log/cloud-init-metal-breakaway.error
 }
 
