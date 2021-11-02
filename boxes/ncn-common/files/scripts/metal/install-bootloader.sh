@@ -23,11 +23,13 @@ done
 
 # Install grub2.
 name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
-[ -z "$name" ] && name='CRAY Linux'
+index=0
+[ -z "$name" ] & name='CRAY Linux'
 for disk in $(mdadm --detail $(blkid -L $fslabel) | grep /dev/sd | awk '{print $NF}'); do
     # Add '--suse-enable-tpm' to grub2-install once we need TPM.
     grub2-install --no-rs-codes --suse-force-signed --root-directory $working_path --removable "$disk"
-    efibootmgr -c -D -d "$disk" -p 1 -L "cray ($(basename $disk))" -l '\efi\boot\bootx64.efi' | grep cray
+    efibootmgr -c -D -d "$disk" -p 1 -L "CRAY UEFI OS $index" -l '\efi\boot\bootx64.efi' | grep CRAY
+    index=$(($index + 1))
 done
 
 # Get the kernel command we used to boot.
