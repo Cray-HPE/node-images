@@ -45,11 +45,13 @@ install_grub2() {
 
     # Install grub2.
     local name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
-    [ -z "$name" ] && name='CRAY Linux'
+    local index=0
+    [ -z "$name" ] & name='CRAY Linux'
     for disk in $(mdadm --detail $(blkid -L $fslabel) | grep /dev/sd | awk '{print $NF}'); do
         # Add '--suse-enable-tpm' to grub2-install once we need TPM.
         grub2-install --no-rs-codes --suse-force-signed --root-directory $working_path --removable "$disk"
-        efibootmgr -c -D -d "$disk" -p 1 -L "cray ($(basename $disk))" -l '\efi\boot\bootx64.efi' | grep cray
+        efibootmgr -c -D -d "$disk" -p 1 -L "CRAY UEFI OS $index" -l '\efi\boot\bootx64.efi' | grep CRAY
+        index=$(($index + 1))
     done
 
     # Get the kernel command we used to boot.
@@ -260,6 +262,7 @@ function write_default_route {
 
 # Set to 1 to skip enforcing the order, but still cleanup the boot menu.
 [ -z "$no_enforce" ] && export no_enforce=0
+[ -z "$efibootmgr_prefix" ] && export efibootmgr_prefix=''
 
 function efi_fail_host {
     echo >&2 "no prefix-driver for hostname: $hostname"
@@ -278,7 +281,7 @@ function efi_enforce {
     # IMPORTANT: The ENTIRE list of entries needs to exist, otherwise iLO/HPE servers will undo any changes.
     # both /tmp/bbs* and /tmp/rbbs* are concatenated together; the ordinal order of the /tmp/bbsNUM files
     # will enforce NICs first.
-    echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o 0000,$(cat /tmp/bbs* /tmp/rbbs* | awk '!x[$0]++' | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*\n' | sed -r 's/(.{4})/\1,/g;s/,$//') | grep -i bootorder
+    echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o $efibootmgr_prefix$(cat /tmp/bbs* | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//'),$(cat /tmp/rbbs* | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//') | grep -i bootorder
     echo activating boot entries && cat /tmp/bbs* | awk '!x[$0]++' | sed 's/^Boot//g' | tr -d '*' | awk '{print $1}' | xargs -r -i efibootmgr -b {} -a
 }
 
@@ -321,31 +324,36 @@ EOM
             # Removal file(s) ...
             efibootmgr | grep -ivP '(pxe ipv?4.*)' | grep -iP '(adapter|connection|nvme|sata)' | tee /tmp/rbbs1
             efibootmgr | grep -iP '(pxe ipv?4.*)' | grep -i connection | tee /tmp/rbbs2
+            efibootmgr_prefix=''
             efi_trim
             efi_specials
             efi_remove
             case $hostname in
-            ncn-m*)
-                efibootmgr | grep -iP '(pxe ipv?4.*adapter)' | tee /tmp/bbs1
-                efibootmgr | grep cray | tee /tmp/bbs2
-                ;;
-            ncn-s*)
-                efibootmgr | grep -iP '(pxe ipv?4.*adapter)' | tee /tmp/bbs1
-                efibootmgr | grep cray | tee /tmp/bbs2
-                ;;
-            ncn-w*)
-                efibootmgr | grep -iP '(pxe ipv?4.*adapter)' | tee /tmp/bbs1
-                efibootmgr | grep cray | tee /tmp/bbs2
-                ;;
-            *)
-                efi_fail_host
-                ;;
+                ncn-m*)
+                    efibootmgr | grep -iP '(pxe ipv?(4|6).*adapter)' | tee /tmp/bbs1
+                    efibootmgr | grep cray | tee /tmp/bbs2
+                    efibootmgr | grep 'UEFI OS' | tee /tmp/bbs3
+                    ;;
+                ncn-s*)
+                    efibootmgr | grep -iP '(pxe ipv?(4|6).*adapter)' | tee /tmp/bbs1
+                    efibootmgr | grep cray | tee /tmp/bbs2
+                    efibootmgr | grep 'UEFI OS' | tee /tmp/bbs3
+                    ;;
+                ncn-w*)
+                    efibootmgr | grep -iP '(pxe ipv?(4|6).*adapter)' | tee /tmp/bbs1
+                    efibootmgr | grep cray | tee /tmp/bbs2
+                    efibootmgr | grep 'UEFI OS' | tee /tmp/bbs3
+                    ;;
+                *)
+                    efi_fail_host
+                    ;;
             esac
             ;;
         *Marvell*|HP|HPE)
             # Removal file(s) ...
             efibootmgr | grep -vi 'pxe ipv4' | grep -i adapter |tee /tmp/rbbs1
             efibootmgr | grep -iP '(sata|nvme)' | tee /tmp/rbbs2
+            efibootmgr_prefix='0000,'
             efi_trim
             efi_specials
             efi_remove
@@ -371,6 +379,7 @@ EOM
             # Removal file(s) ...
             efibootmgr | grep -vi 'ipv4' | grep -iP '(sata|nvme|uefi)' | tee /tmp/rbbs1
             efibootmgr | grep -i baseboard | tee /tmp/rbbs2
+            efibootmgr_prefix=''
             efi_trim
             efi_specials
             efi_remove
