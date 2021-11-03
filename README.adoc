@@ -34,15 +34,19 @@ The file name is either:
 
 You will need access to the appropriate SLES repositories in the form of official access, self-hosted access, or the provided Nexus access.
 
-If you are using the default internal servers then you only need to pass `ARTIFACTORY_USER` and `ARTIFACTORY_TOKEN` as environment variables.
+If you are using the default internal servers then you only need to pass `artifactory_user` and `artifactory_token` as variables with the packer command.
 
-If you are building locally and want to provide your own repositories then the `CUSTOM_REPOS_FILE` environment variable must be set. The `CUSTOM_REPOS_FILE` environment variable is a filename that is placed into the `custom` folder of the project. The file must follow the same format as repos included in `csm-rpms` with the following fields: `url name flags`
+- `-var 'artifactory_user=user' -var 'artifactory_token=token'`
+
+If you are building locally and want to provide your own repositories then the `custom_repos_file` variable must be passed with the packer command. The `custom_repos_file` variable is a filename that is placed into the `custom` folder of the project. The file must follow the same format as repos included in `csm-rpms` with the following fields: `url name flags`
+
+- `-var 'custom_repos_file=custom.repos'`
 
 And example entry for a custom repo:
 
 `https://myserver.net/sles-mirror/Products/SLE-Module-Basesystem/15-SP3/x86_64/product     SUSE-SLE-Module-Basesystem-15-SP3-x86_64-Pool     -g -p 99  suse/SLE-Module-Basesystem/15-SP3/x86_64/product`
 
-Furthermore, they may be additional repos used that are defined in `csm-rpms` which is checked out in the Quick Start section. You may be required to replace some or all of these files in `csm-rpms/repos/*.repos` to work with your environment.
+Furthermore, there may be additional repos used that are defined in `csm-rpms` which is checked out in the Quick Start section. You may be required to replace some or all of these files in `csm-rpms/repos/*.repos` to work with your environment.
 
 === Build Steps
 
@@ -75,6 +79,7 @@ cd node-image-build
 ln -s ../csm-rpms/ csm-rpms
 cp scripts/environment.template scripts/environment
 vim scripts/environment
+source scripts/environment
 mkdir -p iso
 wget https://<somepath>/SLE-15-SP3-Full-x86_64-GM-Media1.iso -O iso/SLE-15-SP3-Full-x86_64-GM-Media1.iso
 ./scripts/setup.sh
@@ -174,7 +179,7 @@ If you want to view the output of the build, disable `headless` mode:
 
 [source,bash]
 ----
-packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short HEAD`" -var 'ssh_password=initial0' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/
+packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short HEAD`" -var 'ssh_password=something' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/
 ----
 
 * If no version is passed to the builder then the version `none` is used when generating the archive.
