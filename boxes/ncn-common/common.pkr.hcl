@@ -72,7 +72,6 @@ build {
 
   provisioner "shell" {
     script = "${path.root}provisioners/common/setup.sh"
-    only = ["qemu.ncn-common"]
   }
 
   // This runs only on metal and vbox.
