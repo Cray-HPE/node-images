@@ -69,6 +69,8 @@ else
 fi
 
 . /srv/cray/scripts/common/ceph-enable-services.sh
+. /srv/cray/scripts/common/enable-ceph-mgr-modules.sh
+enable_ceph_prometheus
 
 # Wait for workers
 wait_for_k8s_worker
