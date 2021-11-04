@@ -25,7 +25,6 @@ pipeline {
         ARTIFACTS_DIRECTORY_K8S = "output-ncn-node-images/kubernetes"
         ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/SLE-15-SP2-Full-x86_64-GM-Media1.iso"
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
-        SLES15_KERNEL_VERSION = "5.3.18-24.75.3"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
         NRAM = '4096'
     }
@@ -76,7 +75,7 @@ pipeline {
                     usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                 ]) {
                     sh '''
-                        ./scripts/render-templates.sh
+                        ./scripts/setup.sh
                     '''
                 }
             }

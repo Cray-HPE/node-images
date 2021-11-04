@@ -129,6 +129,11 @@ build {
     destination = "/tmp/files/"
   }
 
+  provisioner "file" {
+    source = "custom"
+    destination = "/tmp/files/"
+  }
+
   provisioner "shell" {
     inline = [
       "sudo -S bash -c 'if [ -f /root/zero.file ]; then rm /root/zero.file; fi'"]
@@ -155,11 +160,11 @@ build {
 
   provisioner "shell" {
     environment_vars = [
+      "CUSTOM_REPOS_FILE=${var.custom_repos_file}",
       "ARTIFACTORY_USER=${var.artifactory_user}",
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
-    inline = [
-      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; set -e; setup-package-repos'"]
+    inline = ["bash -c '. /srv/cray/custom/repos.sh'"]
   }
 
   provisioner "shell" {
