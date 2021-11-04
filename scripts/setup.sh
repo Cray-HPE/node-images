@@ -17,10 +17,13 @@ if [ -z "$SLES15_REGISTRATION_CODE" ]; then
   echo "Error: the variable SLES15_SLES_REGISTRATION_CODE must be set"
   exit 1
 fi
-if [ -z "$SLES15_KERNEL_VERSION" ]; then
-  echo "Error: the variable SLES15_KERNEL_VERSION must be set"
-  exit 1
-fi
 
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst.xml
-envsubst < $root_dir/boxes/sles15-base/scripts/qemu.template.sh > $root_dir/boxes/sles15-base/scripts/qemu.sh
+
+if [ -n "$CSM_RPMS_SHA" ]; then
+  if [ -d "csm-rpms" ]; then
+    echo "Setting csm-rpms to expected hash: $CSM_RPMS_SHA"
+    cd csm-rpms
+    git checkout "$CSM_RPMS_SHA" --quiet
+  fi
+fi
