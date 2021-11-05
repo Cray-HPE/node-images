@@ -2,6 +2,7 @@
 # Author: Russell Bunch <doomslayer@hpe.com>
 trap "printf >&2 'Metal Install: [ % -20s ]' 'failed'" ERR TERM HUP INT
 trap "echo 'See logfile at: /var/log/cloud-init-metal.log'" EXIT
+BMC_RESET=${BMC_RESET:-'cold'}
 set -e
 
 # Load the metal library.
@@ -40,7 +41,28 @@ hardware() {
     ) 2>/var/log/cloud-init-metal-hardware.error
 }
 
-# 4. CSM Testing and dependencies
+# 4. BMC Reset for shaking off any preconditions.
+bmc_reset() {
+    cat >&2 << EOM
+NOTICE: The BMC is being RESET in order to cease and desist any further DHCPREQUESTs from the BMC.
+The remote management module controllers (a.k.a. RMMC and BMCs) have been known to continue 
+DHCPREQUESTs despite changing their IP source to STATIC.
+
+CONSOLES will cease working while the BMC is reset (8-20seconds).
+EOM
+    (
+        set -x
+        # One could `export BMC_RESET='warm'` to change the behavior here.
+        reset_bmc $BMC_RESET
+    ) 2>/var/log/cloud-init-metal-bmc_reset.error
+    printf 'Metal Install: [ % -20s ]\n' 'waiting: ipmitool' >&2 && sleep 5
+    while ipmitool >/dev/null 2>&1; do sleep 1; done
+    echo >&2 -e '\nBMC is now responding; conman consoles will reconnect imminently.' | tee -a /var/log/cloud-init-metal-bmc_reset.error
+    printf 'Metal Install: [ % -20s ]\n' 'waiting: consoles' >&2 && sleep 10
+}
+
+
+# 5. CSM Testing and dependencies
 csm() {
     (
         set -x
@@ -63,6 +85,10 @@ csm() {
     [ -n "$METAL_TIME" ] && time hardware || hardware
 
     # 4.
+    printf 'Metal Install: [ % -20s ]\n' "running: BMC Reset" >&2
+    [ -n "$METAL_TIME" ] && time bmc_reset || bmc_reset
+    
+    # 5. 
     printf 'Metal Install: [ % -20s ]\n' 'running: CSM layer' >&2
     [ -n "$METAL_TIME" ] && time csm || csm
 

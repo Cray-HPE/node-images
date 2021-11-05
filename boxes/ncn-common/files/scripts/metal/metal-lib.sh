@@ -190,6 +190,12 @@ function set_static_fallback() {
     rm -f $netconf
 }
 
+function reset_bmc() {
+    local reset=${1:-'cold'}
+    ipmitool mc reset "$reset"
+    sleep 5 # Allow the BMC to go offline to prevent false-positive for connectivity checks.
+}
+
 function enable_amsd() {
     if ! rpm -qi amsd >/dev/null 2>&1 ; then
         echo 'amsd is not installed, ignoring amsd services'
