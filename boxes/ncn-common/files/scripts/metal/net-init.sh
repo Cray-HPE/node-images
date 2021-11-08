@@ -31,4 +31,33 @@ cloud-init init
 printf 'net-init: [ % -20s ]\n' 'running: ifreload'
 wicked ifreload all || systemctl restart wicked
 
+# Checks whether IPs exist on all of our NICs or not.
+function check_ips() {
+    local flunk=${1:-0}
+    # only fetch IPs for our networks
+    for nic in $(ls /etc/sysconfig/network/ifcfg-bond*.*); do
+        ipv4_lease=$(wicked ifstatus --verbose ${nic#*-} | grep addr | grep ipv4)
+        if [[ "$ipv4_lease" =~ "[static]" ]]; then
+            :
+         else
+            error=1
+        fi
+    done
+    [ "$flunk" != 0 ] && [ "$error" != 0 ] &&  return 1
+    return 0
+}
+printf 'net-init: [ % -20s ]\n' 'testing: static IPs'
+check_ips
+if [ ${error:-0} != 0 ]; then
+    printf 'net-init: [ % -20s ]\n' 'quiesce: wickedd'
+    systemctl restart wickedd-nanny
+fi
+# Sleep for 2 seconds to let weickedd-nanny startup, and then restart the
+# child-process specific to NIC handlers so they force loading the new configs.
+sleep 2
+if check_ips 1 ; then
+    printf 'net-init: [ % -20s ]\n' 'testing: failed!'
+else
+    printf 'net-init: [ % -20s ]\n' 'testing: IPs exist'
+fi
 printf 'net-init: [ % -20s ]\n' 'completed'
