@@ -40,11 +40,9 @@ function get_ip_from_metadata() {
 
 function pre-configure-node() {
   echo "In pre-configure-node()"
-
-  cmngw=$(craysys metadata get --level node ipam | jq .cmn.gateway | tr -d '"')
-  if ! ip route replace default via ${cmngw} dev bond0.can0; then
-    echo "Replacing default route via '$cmngw' on device bond0.can0 failed"
-  fi
+  # placeholder; nothing todo right now, remove this note if/when code is
+  # added.
+  return 0
 }
 
 function configure-load-balancer-for-master() {
