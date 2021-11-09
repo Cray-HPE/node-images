@@ -282,7 +282,7 @@ function configure-external-etcd() {
 
 function reconfigure_coredns() {
 
-  echo "Applying resource limits to coredns pods"
+  echo "Applying resource limits and pod anti-affinity to coredns pods"
   while true; do
     output=$(kubectl get po -n kube-system | grep -q coredns.*Running)
     if [[ "$?" -eq 0 ]]; then
@@ -298,6 +298,7 @@ function reconfigure_coredns() {
   yq w -i $cfile 'spec.template.spec.containers.(name==coredns).resources.requests.cpu' '300m'
   yq w -i $cfile 'spec.template.spec.containers.(name==coredns).resources.requests.memory' '140Mi'
   yq w -i $cfile 'spec.template.spec.containers.(name==coredns).resources.limits.memory' '340Mi'
+  yq m -i $cfile /srv/cray/resources/common/coredns-affinity.yaml
   kubectl apply -f $cfile
 }
 
