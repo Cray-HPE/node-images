@@ -6,6 +6,11 @@ RETRY=0
 MAX_RETRIES=30
 RETRY_SECONDS=10
 
+if [ $(hostname) != "ncn-m001" ]; then
+  echo "$0 is designed to run on ncn-m001. If this is a different node then there is no reason for this to try to join storage nodes to spire. Exiting."
+  exit 1
+fi
+
 until kubectl exec -itn spire spire-server-0 --container spire-server -- ./bin/spire-server healthcheck | grep -q 'Server is healthy'; do
     if [[ "$RETRY" -lt "$MAX_RETRIES" ]]; then
         RETRY="$((RETRY + 1))"
