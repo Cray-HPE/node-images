@@ -443,5 +443,7 @@ function install_csm_rpms() {
         | jq -r  '.items[] | .assets[] | .downloadUrl' | grep goss-servers | sort -V | tail -1)
     csm_testing_url=$(paginate "https://packages.local/service/rest/v1/components?repository=csm-sle-15sp2" \
         | jq -r  '.items[] | .assets[] | .downloadUrl' | grep csm-testing | sort -V | tail -1)
-    zypper install -y $goss_servers_url $csm_testing_url && systemctl enable goss-servers && systemctl restart goss-servers
+    platform_utils_url=$(paginate "https://packages.local/service/rest/v1/components?repository=csm-sle-15sp2" \
+        | jq -r  '.items[] | .assets[] | .downloadUrl' | grep platform-utils | sort -V | tail -1)
+    zypper install -y $goss_servers_url $csm_testing_url $platform_utils_url && systemctl enable goss-servers && systemctl restart goss-servers
 }
