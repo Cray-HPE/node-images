@@ -5,13 +5,14 @@ set -euo pipefail
 RETRY=0
 MAX_RETRIES=30
 RETRY_SECONDS=10
+export KUBECONFIG="/etc/kubernetes/admin.conf"
 
 if [ $(hostname) != "ncn-m001" ]; then
   echo "$0 is designed to run on ncn-m001. If this is a different node then there is no reason for this to try to join storage nodes to spire. Exiting."
   exit 1
 fi
 
-until kubectl exec -itn spire spire-server-0 --container spire-server -- ./bin/spire-server healthcheck | grep -q 'Server is healthy'; do
+until kubectl exec -itn spire spire-server-0 --container spire-server -- ./bin/spire-server healthcheck | grep 'Server is healthy'; do
     if [[ "$RETRY" -lt "$MAX_RETRIES" ]]; then
         RETRY="$((RETRY + 1))"
         echo "spire-server is not ready. Will retry after $RETRY_SECONDS seconds. ($RETRY/$MAX_RETRIES)"
@@ -46,7 +47,7 @@ for node in $nodes; do
                 sshnh "$node" rm /root/spire/data/svid.key /root/spire/bundle.der /root/spire/agent_svid.der
         fi
         echo "$node is being joined to spire."
-        XNAME="$(ssh "$node" cat /proc/cmdline | sed 's/.*xname=\([A-Za-z0-9]*\).*/\1/')"
+        XNAME="$(sshnh "$node" cat /proc/cmdline | sed 's/.*xname=\([A-Za-z0-9]*\).*/\1/')"
         TOKEN="$(kubectl exec -n spire "$POD" --container spire-registration-server -- curl -k -X POST -d type=storage\&xname="$XNAME" "$URL" | tr ':' '=' | tr -d '"{}')"
         sshnh "$node" "echo $TOKEN > /root/spire/conf/join_token"
         kubectl get configmap -n spire spire-ncn-config -o jsonpath='{.data.spire-agent\.conf}' | sed "s/server_address.*/server_address = \"$LOADBALANCERIP\"/" | sshnh "$node" "cat > /root/spire/conf/spire-agent.conf"
