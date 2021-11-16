@@ -4,7 +4,7 @@
 # build and runtime scripts.
 #
 export KUBERNETES_PULL_PREVIOUS_VERSION="1.19.9"
-export KUBERNETES_PULL_VERSION="1.20.11"
+export KUBERNETES_PULL_VERSION="1.20.12"
 export KUBE_CONTROLLER_PREVIOUS_IMAGE="cray/kube-controller-manager:v${KUBERNETES_PULL_PREVIOUS_VERSION}"
 export KUBE_CONTROLLER_IMAGE="cray/kube-controller-manager:v${KUBERNETES_PULL_VERSION}"
 export WEAVE_VERSION="2.8.1"
