@@ -42,7 +42,7 @@ pipeline {
         booleanParam(name: 'buildAndPublish', defaultValue: buildAndPublish, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to actually rebuild and publish for a stable merge build job.')
         booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the base image; unchecked will pull latest STABLE base. (This overrides rebuildCommonImage; if this is true, rebuildCommonImage is bypassed.)')
         booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the common image; unchecked will pull latest STABLE ncn-common.')
-        string(name: 'csmRpmBranch', defaultValue: "main", description: 'The branch or ref to use when checking out csm-rpm repo for repo list and package lock versions.')
+        string(name: 'csmRpmBranch', defaultValue: "release/1.2", description: 'The branch or ref to use when checking out csm-rpm repo for repo list and package lock versions.')
         string(name: 'csmRpmRepo', defaultValue: "https://github.com/Cray-HPE/csm-rpms.git", description: 'The repo URL (HTTPS) to use for checking out csm-rpm.')
     }
 
