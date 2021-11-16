@@ -25,7 +25,7 @@ systemctl enable wickedd-dhcp6.service
 systemctl enable wickedd-nanny.service
 systemctl enable getty@tty1.service
 systemctl enable serial-getty@ttyS0.service
-systemctl enable lldpad.service
+systemctl enable --now lldpad.service
 systemctl disable postfix.service && systemctl stop postfix.service
 systemctl enable chronyd.service
 systemctl enable spire-agent.service
