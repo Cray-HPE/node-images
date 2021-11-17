@@ -14,7 +14,6 @@ systemctl enable issue-generator.service
 systemctl enable kdump-early.service
 systemctl enable kdump.service
 systemctl enable purge-kernels.service
-systemctl enable rasdaemon.service
 systemctl enable rc-local.service
 systemctl enable rollback.service
 systemctl enable sshd.service
@@ -28,7 +27,6 @@ systemctl enable serial-getty@ttyS0.service
 systemctl enable lldpad.service
 systemctl disable postfix.service && systemctl stop postfix.service
 systemctl enable chronyd.service
-systemctl enable spire-agent.service
 
 pip3 install --upgrade pip
 pip3 install requests
