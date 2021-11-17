@@ -291,6 +291,10 @@ function init() {
     ssh $host '/srv/cray/scripts/metal/generate_haproxy_cfg.sh > /etc/haproxy/haproxy.cfg; systemctl enable haproxy.service; systemctl restart haproxy.service'
   done
 
+  # Enable Ceph device monitoring
+  ceph device monitoring on
+  ceph config set global device_failure_prediction_mode local
+
 }
 
 function get_ceph_config() {
