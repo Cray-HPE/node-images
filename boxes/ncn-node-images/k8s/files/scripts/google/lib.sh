@@ -165,3 +165,7 @@ function expand-root-disk() {
   printf "Yes\n100%%\n" | parted ---pretend-input-tty /dev/sda resizepart 2
   resize2fs /dev/sda2
 }
+
+function configure-s3fs-directory() {
+  echo "In configure-s3fs-directory()"
+}

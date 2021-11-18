@@ -128,3 +128,46 @@ function get-etcd-cluster-state() {
 function expand-root-disk() {
   echo "In expand-root-disk() -- skipping since we're on metal"
 }
+
+function configure-s3fs-directory() {
+  echo "In configure-s3fs-directory()"
+
+  s3fs_cache_dir=/var/lib/s3fs_cache
+
+  if [ -d ${s3fs_cache_dir} ]; then
+    s3fs_opts="use_path_request_style,use_cache=${s3fs_cache_dir},check_cache_dir_exist=true"
+   else
+    s3fs_opts="use_path_request_style"
+  fi
+
+  if [[ "$(hostname)" =~ ^ncn-m ]]; then
+    s3_user=sds
+    s3_bucket=sds
+    s3fs_mount_dir=/var/lib/sdu
+  else
+    s3_user=ims
+    s3_bucket=boot-images
+    s3fs_mount_dir=/var/lib/cps-local
+  fi
+
+  echo "Configuring for ${s3_bucket} S3 bucket at ${s3fs_mount_dir} for ${s3_user} S3 user"
+
+  mkdir -p ${s3fs_mount_dir}
+  pwd_file=/root/.${s3_user}.s3fs
+  access_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.access_key' | base64 -d)
+  secret_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.secret_key' | base64 -d)
+  s3_endpoint=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.http_s3_endpoint' | base64 -d)
+
+  echo "${access_key}:${secret_key}" > ${pwd_file}
+  chmod 600 ${pwd_file}
+
+  if ! mount | grep -q ^s3fs.*${s3fs_mount_dir}; then
+    s3fs ${s3_bucket} ${s3fs_mount_dir} -o passwd_file=${pwd_file},url=${s3_endpoint},${s3fs_opts}
+  fi
+
+  if ! grep -q ^${s3_bucket} /etc/fstab; then
+    echo "Adding fstab entry for ${s3_bucket} S3 bucket at ${s3fs_mount_dir} for ${s3_user} S3 user"
+    echo "${s3_bucket} ${s3fs_mount_dir} fuse.s3fs _netdev,allow_other,passwd_file=${pwd_file},url=${s3_endpoint},${s3fs_opts} 0 0" >> /etc/fstab
+  fi
+
+}
