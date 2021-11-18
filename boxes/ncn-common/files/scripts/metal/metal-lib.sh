@@ -39,14 +39,14 @@ install_grub2() {
     local working_path=${1:-/metal/recovery}
     mount -v -L $fslabel $working_path 2>/dev/null || echo 'continuing ...'
     # Remove all existing ones; this script installs the only bootloader.
-    for entry in $(efibootmgr | awk -F '*' '/cray/ {print $1}'); do
+    for entry in $(efibootmgr | awk -F '*' '/CRAY/ {print $1}'); do
          efibootmgr -q -b ${entry:4:8} -B
     done
 
     # Install grub2.
     local name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
     local index=0
-    [ -z "$name" ] & name='CRAY Linux'
+    [ -z "$name" ] && name='CRAY Linux'
     for disk in $(mdadm --detail $(blkid -L $fslabel) | grep /dev/sd | awk '{print $NF}'); do
         # Add '--suse-enable-tpm' to grub2-install once we need TPM.
         grub2-install --no-rs-codes --suse-force-signed --root-directory $working_path --removable "$disk"
