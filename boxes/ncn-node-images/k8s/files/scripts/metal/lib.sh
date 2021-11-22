@@ -154,6 +154,13 @@ function configure-s3fs-directory() {
 
   mkdir -p ${s3fs_mount_dir}
   pwd_file=/root/.${s3_user}.s3fs
+
+  until kubectl get secret ${s3_user}-s3-credentials > /dev/null 2>&1
+  do
+    sleep 5
+    echo "Waiting for storage node to create ${s3_user}-s3-credentials secret..."
+  done
+
   access_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.access_key' | base64 -d)
   secret_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.secret_key' | base64 -d)
   s3_endpoint=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.http_s3_endpoint' | base64 -d)
