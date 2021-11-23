@@ -155,16 +155,10 @@ function configure-s3fs-directory() {
   mkdir -p ${s3fs_mount_dir}
   pwd_file=/root/.${s3_user}.s3fs
 
-  until kubectl get secret ${s3_user}-s3-credentials > /dev/null 2>&1
+  until kubectl get cm ceph-csi-config > /dev/null 2>&1
   do
+    echo "Waiting for storage node to complete rgw configuration (waiting for ceph-csi-config configmap)..."
     sleep 5
-    echo "Waiting for storage node to create ${s3_user}-s3-credentials secret..."
-  done
-
-  until /opt/cray/platform-utils/s3/list-objects.py --bucket-name ${s3_bucket} > /dev/null 2>&1
-  do
-    sleep 5
-    echo "Waiting for storage node to create ${s3_bucket} bucket..."
   done
 
   access_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.access_key' | base64 -d)
