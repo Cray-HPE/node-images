@@ -153,7 +153,7 @@ EOF
 function complete-initialization() {
   restart-daemons
   get-ceph-config $FIRST_STORAGE_HOSTNAME
-  configure-s3fs-directory
+  configure-s3fs
   mark-initialized
 }
 

@@ -14,9 +14,7 @@ cray_sts_rgw_user: "{{ sts_rgw_user |default('STS') }}"
 cray_ims_rgw_user: "{{ ims_rgw_user |default('IMS') }}"
 cray_prs_rgw_user: "{{ prs_rgw_user |default('PRS') }}"
 cray_wlm_rgw_user: "{{ wlm_rgw_user |default('WLM') }}"
-cray_alc_rgw_user: "{{ als_rgw_user |default('ALC') }}"
-cray_vbis_rgw_user: "{{ vbis_rgw_user |default('VBIS') }}"
-cray_ssi_rgw_user: "{{ ssi_rgw_user |default('SSI') }}"
+cray_admin_tools_rgw_user: "{{ admin_tools_rgw_user |default('ADMIN-TOOLS') }}"
 cray_nmd_rgw_user: "{{ nmd_rgw_user |default('NMD') }}"
 cray_badger_rgw_user: "{{ badger_rgw_user |default('Badger') }}"
 cray_ssm_smw_rgw_user: "{{ ssm_smw_rgw_user |default('SSM-SWM') }}"
@@ -25,7 +23,6 @@ cray_cps_rgw_user: "{{ cps_rgw_user |default('CPS') }}"
 cray_bos_rgw_user: "{{ bos_rgw_user |default('BOS') }}"
 cray_bss_rgw_user: "{{ bss_rgw_user |default('BSS') }}"
 cray_etcd_backup_rgw_user: "{{ etcd_backup_rgw_user |default('Etcd-Backup') }}"
-cray_benji_backup_rgw_user: "{{ benji_backup_rgw_user |default('Benji-Backup') }}"
 cray_sls_rgw_user: "{{ sls_rgw_user |default('SLS') }}"
 cray_velero_rgw_user: "{{ sls_rgw_user |default('VELERO') }}"
 cray_sma_rgw_user: "{{ sma_rgw_user |default('SMA') }}"
@@ -74,14 +71,6 @@ ceph_rgw_users:
     policy_name: "{{ cray_sma_rgw_user }}_Policy"
     policy_action: "\"s3:*\""
     policy_resource: "\"arn:aws:s3:::sma\",\"arn:aws:s3:::sma/*\""
-
-  - user_name: "{{ cray_alc_rgw_user }}"
-    user_display_name: "Audit Log Collector User"
-    role_name: "{{ cray_alc_rgw_user }}"
-    role_arn: "arn:aws:iam:::user/{{ cray_alc_rgw_user }}"
-    policy_name: "{{ cray_alc_rgw_user }}_Policy"
-    policy_action: "\"s3:*\""
-    policy_resource: "\"arn:aws:s3:::alc\",\"arn:aws:s3:::alc/*\""
 
   - user_name: "{{ cray_etcd_backup_rgw_user }}"
     user_display_name: "Etcd Backup User"
@@ -132,21 +121,13 @@ ceph_rgw_users:
     policy_action: "\"s3:*\""
     policy_resource: "\"arn:aws:s3:::prs\",\"arn:aws:s3:::prs/*\""
 
-  - user_name: "{{ cray_vbis_rgw_user }}"
-    user_display_name: "Virtual Bastion Inception Server User"
-    role_name: "{{ cray_vbis_rgw_user }}"
-    role_arn: "arn:aws:iam:::user/{{ cray_vbis_rgw_user }}"
-    policy_name: "{{ cray_vbis_rgw_user }}_Policy"
+  - user_name: "{{ cray_admin_tools_rgw_user }}"
+    user_display_name: "Administrative Tools"
+    role_name: "{{ cray_admin_tools_rgw_user }}"
+    role_arn: "arn:aws:iam:::user/{{ cray_admin_tools_rgw_user }}"
+    policy_name: "{{ cray_admin_tools_rgw_user }}_Policy"
     policy_action: "\"s3:*\""
-    policy_resource: "\"arn:aws:s3:::vbis\",\"arn:aws:s3:::vbis/*\""
-
-  - user_name: "{{ cray_ssi_rgw_user }}"
-    user_display_name: "Virtual Bastion Inception Server User"
-    role_name: "{{ cray_ssi_rgw_user }}"
-    role_arn: "arn:aws:iam:::user/{{ cray_ssi_rgw_user }}"
-    policy_name: "{{ cray_ssi_rgw_user }}_Policy"
-    policy_action: "\"s3:*\""
-    policy_resource: "\"arn:aws:s3:::ssi\",\"arn:aws:s3:::ssi/*\""
+    policy_resource: "\"arn:aws:s3:::admin-tools\",\"arn:aws:s3:::admin-tools/*\""
 
   - user_name: "{{ cray_wlm_rgw_user }}"
     user_display_name: "WorkLoad Manager Service User"
@@ -196,15 +177,6 @@ ceph_rgw_users:
     policy_action: "\"s3:*\""
     policy_resource: "\"arn:aws:s3:::fw-update\",\"arn:aws:s3:::fw-update/*\""
 
-  - user_name: "{{ cray_benji_backup_rgw_user }}"
-    user_display_name: "Benji Backup User"
-    role_name: "{{ cray_benji_backup_rgw_user }}"
-    role_arn: "arn:aws:iam:::user/{{ cray_benji_backup_rgw_user }}"
-    policy_name: "{{ cray_benji_backup_rgw_user }}_Policy"
-    policy_action: "\"s3:*\""
-    policy_resource: "\"arn:aws:s3:::benji-backups\",\"arn:aws:s3:::benji-backups/*\""
-    additional_namespace: backups
-
   - user_name: "{{ cray_sls_rgw_user }}"
     user_display_name: "System Layout Service User"
     role_name: "{{ cray_sls_rgw_user }}"
@@ -247,12 +219,10 @@ ceph_rgw_buckets:
 
   - bucket_name: sds
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_sds_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::sds\",\"arn:aws:s3:::sds/*\"]}]}"
+    bucket_quota: "500G"
 
   - bucket_name: sma
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_sma_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::sma\",\"arn:aws:s3:::sma/*\"]}]}"
-
-  - bucket_name: alc
-    bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_alc_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::alc\",\"arn:aws:s3:::alc/*\"]}]}"
 
   - bucket_name: etcd-backup
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_etcd_backup_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::etcd-backup\",\"arn:aws:s3:::etcd-backup/*\"]}]}"
@@ -266,11 +236,9 @@ ceph_rgw_buckets:
   - bucket_name: prs
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_prs_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::prs\",\"arn:aws:s3:::prs/*\"]}]}"
 
-  - bucket_name: vbis
-    bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_vbis_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::vbis\",\"arn:aws:s3:::vbis/*\"]}]}"
-
-  - bucket_name: ssi
-    bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_ssi_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::ssi\",\"arn:aws:s3:::ssi/*\"]}]}"
+  - bucket_name: admin-tools
+    bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_admin_tools_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::admin-tools\",\"arn:aws:s3:::admin-tools/*\"]}]}"
+    bucket_quota: "500G"
 
   - bucket_name: wlm
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_wlm_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::wlm\",\"arn:aws:s3:::wlm/*\"]}]}"
@@ -286,9 +254,6 @@ ceph_rgw_buckets:
 
   - bucket_name: fw-update
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_fw_update_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::fw-update\",\"arn:aws:s3:::fw-update/*\"]}]}"
-
-  - bucket_name: benji-backups
-    bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_benji_backup_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::benji-backups\",\"arn:aws:s3:::benji-backups/*\"]}]}"
 
   - bucket_name: sls
     bucket_policy: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\": [\"arn:aws:iam:::user/{{ cray_sls_rgw_user }}\"]},\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::sls\",\"arn:aws:s3:::sls/*\"]}]}"

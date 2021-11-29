@@ -166,6 +166,6 @@ function expand-root-disk() {
   resize2fs /dev/sda2
 }
 
-function configure-s3fs-directory() {
-  echo "In configure-s3fs-directory()"
+function configure-s3fs() {
+  echo "In configure-s3fs()"
 }
