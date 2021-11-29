@@ -130,40 +130,21 @@ function expand-root-disk() {
 }
 
 function configure-s3fs-directory() {
-  echo "In configure-s3fs-directory()"
 
-  s3fs_cache_dir=/var/lib/s3fs_cache
-
-  if [ -d ${s3fs_cache_dir} ]; then
-    s3fs_opts="use_path_request_style,use_cache=${s3fs_cache_dir},check_cache_dir_exist=true"
-   else
-    s3fs_opts="use_path_request_style"
-  fi
-
-  if [[ "$(hostname)" =~ ^ncn-m ]]; then
-    s3_user=sds
-    s3_bucket=sds
-    s3fs_mount_dir=/var/lib/sdu
-  else
-    s3_user=ims
-    s3_bucket=boot-images
-    s3fs_mount_dir=/var/lib/cps-local
-  fi
+  local s3_user=$1
+  local s3_bucket=$2
+  local s3fs_mount_dir=$3
+  local s3fs_cache_dir=$4
+  local s3fs_opts=$5
 
   echo "Configuring for ${s3_bucket} S3 bucket at ${s3fs_mount_dir} for ${s3_user} S3 user"
 
   mkdir -p ${s3fs_mount_dir}
-  pwd_file=/root/.${s3_user}.s3fs
+  local pwd_file=/root/.${s3_user}.s3fs
 
-  until kubectl get cm ceph-csi-config > /dev/null 2>&1
-  do
-    echo "Waiting for storage node to complete rgw configuration (waiting for ceph-csi-config configmap)..."
-    sleep 5
-  done
-
-  access_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.access_key' | base64 -d)
-  secret_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.secret_key' | base64 -d)
-  s3_endpoint=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.http_s3_endpoint' | base64 -d)
+  local access_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.access_key' | base64 -d)
+  local secret_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.secret_key' | base64 -d)
+  local s3_endpoint=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.http_s3_endpoint' | base64 -d)
 
   echo "${access_key}:${secret_key}" > ${pwd_file}
   chmod 600 ${pwd_file}
@@ -176,5 +157,29 @@ function configure-s3fs-directory() {
     echo "Adding fstab entry for ${s3_bucket} S3 bucket at ${s3fs_mount_dir} for ${s3_user} S3 user"
     echo "${s3_bucket} ${s3fs_mount_dir} fuse.s3fs _netdev,allow_other,passwd_file=${pwd_file},url=${s3_endpoint},${s3fs_opts} 0 0" >> /etc/fstab
   fi
+}
 
+function configure-s3fs() {
+  echo "In configure-s3fs()"
+
+  until kubectl get cm ceph-csi-config > /dev/null 2>&1
+  do
+    echo "Waiting for storage node to complete rgw configuration (waiting for ceph-csi-config configmap)..."
+    sleep 5
+  done
+
+  s3fs_cache_dir=/var/lib/s3fs_cache
+
+  if [ -d ${s3fs_cache_dir} ]; then
+    s3fs_opts="use_path_request_style,use_cache=${s3fs_cache_dir},check_cache_dir_exist=true"
+   else
+    s3fs_opts="use_path_request_style"
+  fi
+
+  if [[ "$(hostname)" =~ ^ncn-m ]]; then
+    configure-s3fs-directory sds sds /var/lib/sdu ${s3fs_cache_dir} ${s3fs_opts}
+    configure-s3fs-directory admin-tools admin-tools /var/lib/admin-tools ${s3fs_cache_dir} ${s3fs_opts}
+  else
+    configure-s3fs-directory ims boot-images /var/lib/cps-local ${s3fs_cache_dir} ${s3fs_opts}
+  fi
 }
