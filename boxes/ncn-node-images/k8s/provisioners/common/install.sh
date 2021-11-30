@@ -136,6 +136,10 @@ echo "Configuring rsyslog to suppress chatty messages"
 cp /srv/cray/resources/common/rsyslog/ignore-systemd-session-slice.conf /etc/rsyslog.d/ignore-systemd-session-slice.conf
 cp /srv/cray/resources/common/rsyslog/ignore-kubelet-noise.conf /etc/rsyslog.d/ignore-kubelet-noise.conf
 
+echo "Setting up script to prune s3fs cache directory"
+cp /srv/cray/resources/common/s3fs/prune-s3fs-cache.sh /usr/bin
+chmod 755 /usr/bin/prune-s3fs-cache.sh
+
 echo "Initially enabling services"
 systemctl daemon-reload
 systemctl enable kubelet containerd
