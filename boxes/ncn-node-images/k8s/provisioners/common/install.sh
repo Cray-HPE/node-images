@@ -162,6 +162,7 @@ echo "Pre-pulling other images"
 # docker.io rate limits us, let's pull weave from dtr...
 #
 pre-pull-internal-images weaveworks/weave-npc:${WEAVE_VERSION} weaveworks/weave-kube:${WEAVE_VERSION}
+pre-pull-internal-images weaveworks/weave-npc:${WEAVE_PREVIOUS_VERSION} weaveworks/weave-kube:${WEAVE_PREVIOUS_VERSION}
 crictl pull docker.io/nfvpe/multus:${MULTUS_VERSION}
 crictl pull k8s.gcr.io/sig-storage/csi-provisioner:v1.6.0
 crictl pull k8s.gcr.io/sig-storage/csi-attacher:v2.2.0
