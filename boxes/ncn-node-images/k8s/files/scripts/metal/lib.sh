@@ -140,8 +140,11 @@ function configure-s3fs-directory() {
   echo "Configuring for ${s3_bucket} S3 bucket at ${s3fs_mount_dir} for ${s3_user} S3 user"
 
   mkdir -p ${s3fs_mount_dir}
-  local pwd_file=/root/.${s3_user}.s3fs
+  if [ "${s3fs_mount_dir}" == "/var/lib/sdu" ]; then
+    chattr +i ${s3fs_mount_dir}
+  fi
 
+  local pwd_file=/root/.${s3_user}.s3fs
   local access_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.access_key' | base64 -d)
   local secret_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.secret_key' | base64 -d)
   local s3_endpoint=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.http_s3_endpoint' | base64 -d)
@@ -177,18 +180,21 @@ function configure-s3fs() {
   fi
 
   if [[ "$(hostname)" =~ ^ncn-m ]]; then
-    configure-s3fs-directory sds sds /var/lib/sdu ${s3fs_cache_dir} ${s3fs_opts}
+    sdu_opts="uid=2370,gid=2370,umask=0007,allow_other,nonempty"
+    configure-s3fs-directory sds sds /var/lib/sdu ${s3fs_cache_dir} "${s3fs_opts},${sdu_opts}"
+    #
+    # Set cache pruning for sdu to 100G (50%) of the 200G volume (five minutes after midnight)
+    #
+    echo "5 0 * * * root /usr/bin/prune-s3fs-cache.sh sds ${s3fs_cache_dir} 107374182400" > /etc/cron.d/prune-s3fs-sds-cache
+
     configure-s3fs-directory admin-tools admin-tools /var/lib/admin-tools ${s3fs_cache_dir} ${s3fs_opts}
     #
     # Set cache pruning for admin tools to 5G of the 200G volume (every 2nd hour)
     #
     echo "0 */2 * * * root /usr/bin/prune-s3fs-cache.sh admin-tools ${s3fs_cache_dir} 5368709120" > /etc/cron.d/prune-s3fs-admin-tools-cache
-    #
-    # Set cache pruning for sdu to 100G (50%) of the 200G volume (five minutes after midnight)
-    #
-    echo "5 0 * * * root /usr/bin/prune-s3fs-cache.sh sds ${s3fs_cache_dir} 107374182400" > /etc/cron.d/prune-s3fs-sds-cache
+
   else
-    configure-s3fs-directory ims boot-images /var/lib/cps-local ${s3fs_cache_dir} ${s3fs_opts}
+    configure-s3fs-directory ims boot-images /var/lib/cps-local/boot-images ${s3fs_cache_dir} ${s3fs_opts}
     #
     # Set cache pruning for boot-images to 150G (75%) of the 200G volume
     #
