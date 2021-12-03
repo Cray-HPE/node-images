@@ -140,9 +140,6 @@ function configure-s3fs-directory() {
   echo "Configuring for ${s3_bucket} S3 bucket at ${s3fs_mount_dir} for ${s3_user} S3 user"
 
   mkdir -p ${s3fs_mount_dir}
-  if [ "${s3fs_mount_dir}" == "/var/lib/sdu" ]; then
-    chattr +i ${s3fs_mount_dir}
-  fi
 
   local pwd_file=/root/.${s3_user}.s3fs
   local access_key=$(kubectl get secret ${s3_user}-s3-credentials -o json | jq -r '.data.access_key' | base64 -d)
