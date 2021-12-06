@@ -18,7 +18,7 @@
 
 - [ ] I have included documentation in my PR (or it is not required)
 - [ ] I tested this on metal (e.g. an internal system, with hardware) (x) (if yes, please include results or a description of the test)
-- [ ] I tested this on vshastat (if yes, please include results or a description of the test)
+- [ ] I tested this on vshasta (if yes, please include results or a description of the test)
  
 #### Idempotency
  
