@@ -131,12 +131,6 @@ build {
   }
 
   provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/sshot.packages'"]
-    valid_exit_codes = [0, 123]
-  }
-
-  provisioner "shell" {
     script = "${path.root}/provisioners/common/install.sh"
   }
 
@@ -170,10 +164,6 @@ build {
 
   provisioner "shell" {
     script = "${path.root}provisioners/common/cos/rsyslog.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/common/slingshot/install.sh"
   }
 
   provisioner "shell" {
