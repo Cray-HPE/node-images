@@ -281,7 +281,7 @@ function init() {
   ceph config generate-minimal-conf > /etc/ceph/ceph_conf_min
   cp /etc/ceph/ceph_conf_min /etc/ceph/ceph.conf
 
-  for host in $(ceph node ls| jq -r '.mon|keys[]'); do
+  for host in $(ceph node ls| jq -r '.osd|keys[]'); do
     scp /etc/ceph/* $host:/etc/ceph
   done
 
