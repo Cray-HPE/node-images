@@ -171,14 +171,14 @@ function configure-s3fs() {
   s3fs_cache_dir=/var/lib/s3fs_cache
 
   if [ -d ${s3fs_cache_dir} ]; then
-    s3fs_opts="use_path_request_style,use_cache=${s3fs_cache_dir},check_cache_dir_exist=true"
+    s3fs_opts="use_path_request_style,use_cache=${s3fs_cache_dir},check_cache_dir_exist"
    else
     s3fs_opts="use_path_request_style"
   fi
 
   if [[ "$(hostname)" =~ ^ncn-m ]]; then
-    sdu_opts="uid=2370,gid=2370,umask=0007,allow_other,nonempty"
-    configure-s3fs-directory sds sds /var/lib/sdu ${s3fs_cache_dir} "${s3fs_opts},${sdu_opts}"
+    sdu_opts="uid=2370,gid=2370,umask=0007,allow_other"
+    configure-s3fs-directory sds sds /var/opt/cray/sdu/collection-mount ${s3fs_cache_dir} "${s3fs_opts},${sdu_opts}"
     #
     # Set cache pruning for sdu to 100G (50%) of the 200G volume (five minutes after midnight)
     #
