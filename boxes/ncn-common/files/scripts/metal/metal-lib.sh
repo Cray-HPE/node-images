@@ -38,15 +38,17 @@ trim() {
 install_grub2() {
     local working_path=${1:-/metal/recovery}
     mount -v -L $fslabel $working_path 2>/dev/null || echo 'continuing ...'
-    # Remove all existing ones; this script installs the only bootloader.
-    for entry in $(efibootmgr | awk -F '*' '/CRAY/ {print $1}'); do
+
+    # Remove all existing entries; anything with CRAY (lower or uppercase). We
+    # only want our boot-loader.
+    for entry in $(efibootmgr | awk -F '*' 'toupper($0) ~ /CRAY/ {print $1}'); do
          efibootmgr -q -b ${entry:4:8} -B
     done
 
     # Install grub2.
     local name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
     local index=0
-    [ -z "$name" ] && name='CRAY Linux'
+    [ -z "$name" ] && name='CRAY Linux' # Note: if CRAY Linux is observed then the customer has installed a non-SLES distro.
     for disk in $(mdadm --detail $(blkid -L $fslabel) | grep /dev/sd | awk '{print $NF}'); do
         # Add '--suse-enable-tpm' to grub2-install once we need TPM.
         grub2-install --no-rs-codes --suse-force-signed --root-directory $working_path --removable "$disk"
