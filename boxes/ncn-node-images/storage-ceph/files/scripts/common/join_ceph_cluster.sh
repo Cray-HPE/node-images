@@ -142,6 +142,34 @@ fi
 echo “loop counter: $loop_counter”
 done
 
+if [ ! -f "/etc/ceph/ceph.client.ro.keyring" ]
+then
+  truncate --size=0 ~/.ssh/known_hosts  2>&1
+  for node in $(seq 1 $num_storage_nodes); do
+   nodename=$(printf "ncn-s%03d.nmn" $node)
+   ssh-keyscan -t rsa -H $nodename >> ~/.ssh/known_hosts
+  done
+
+  for node in $(seq 1 $num_storage_nodes); do
+   nodename=$(printf "ncn-s%03d.nmn" $node)
+    if [[ $(scp $nodename:/etc/ceph/ceph.client.ro.keyring /etc/ceph/ceph.client.ro.keyring) ]]
+    then
+      break
+    fi
+  done
+fi
+
+if  [ ! -f "/etc/ceph/ceph.conf" ]
+then
+  for node in $(seq 1 $num_storage_nodes); do
+    nodename=$(printf "ncn-s%03d.nmn" $node)
+    if [[ $(scp $nodename:/etc/ceph/ceph.conf /etc/ceph/ceph.conf) ]]
+    then
+      break
+    fi
+  done
+fi
+
 for service in $(cephadm ls | jq -r '.[].systemd_unit'|grep -v cephadm)
 do
   systemctl enable $service
