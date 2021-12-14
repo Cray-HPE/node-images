@@ -23,20 +23,3 @@ function pre-pull-internal-images() {
     fi
   done
 }
-
-function setup-dns() {
-  if [ -f /usr/bin/google_network_daemon ]; then
-    # TODO: the need for this may or may not go away depending where we land on DNS in GCP for the sake of the interconnect
-    echo "Modifying DNS to use Cray DNS servers..."
-    cp /etc/sysconfig/network/config /etc/sysconfig/network/config.backup
-    sed -i 's|^NETCONFIG_DNS_STATIC_SERVERS=.*$|NETCONFIG_DNS_STATIC_SERVERS="172.31.84.40 172.30.84.40"|g' /etc/sysconfig/network/config
-    systemctl restart network google-network-daemon
-  fi
-}
-
-function cleanup-dns() {
-  if [ -f /usr/bin/google_network_daemon ]; then
-    # TODO: the need for this may or may not go away depending where we land on DNS in GCP for the sake of the interconnect
-    mv /etc/sysconfig/network/config.backup /etc/sysconfig/network/config
-  fi
-}

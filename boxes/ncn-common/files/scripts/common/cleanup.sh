@@ -2,17 +2,6 @@
 
 set -ex
 
-echo "purging buildonly repos"
-for repo in $(zypper repos | awk '{print $3}' | grep -E '^buildonly'); do
-    zypper -n rr $repo
-done
-
-SLES_VERSION=$(grep -i VERSION= /etc/os-release | tr -d '"' | cut -d '-' -f2)
-echo "purging $SLES_VERSION services repos"
-for repo in $(zypper ls | awk '{print $3}' | grep -E $SLES_VERSION); do
-    zypper rs $repo
-done
-
 echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
 rm -rf /var/adm/autoinstall/cache
 
@@ -35,11 +24,6 @@ truncate -s 0 /etc/machine-id
 
 echo "force a new random seed to be generated"
 rm -f /var/lib/systemd/random-seed
-
-echo "remove credential files"
-rm -f /root/.zypp/credentials.cat
-rm -f /etc/zypp/credentials.cat
-rm -f /etc/zypp/credentials.d/*
 
 echo "clear the history so our install isn't there"
 rm -f /root/.wget-hsts

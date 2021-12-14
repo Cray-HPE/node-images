@@ -2,6 +2,9 @@
 
 set -e
 
+echo "Fixing Artifactory DNS"
+echo "34.120.105.219 artifactory.algol60.net" >> /etc/hosts
+
 echo "Initializing log location(s)"
 mkdir -p /var/log/cray
 cat << 'EOF' > /etc/logrotate.d/cray
