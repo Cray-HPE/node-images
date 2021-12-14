@@ -17,7 +17,7 @@ source "virtualbox-iso" "sles15-base" {
   headless = "${var.headless}"
   http_directory = "${path.root}http"
   iso_checksum = "${var.source_iso_checksum}"
-  iso_url = "${var.source_image_uri}"
+  iso_url = "${var.source_iso_uri}"
   sata_port_count = 8
   shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
@@ -25,7 +25,7 @@ source "virtualbox-iso" "sles15-base" {
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}"
-  output_filename = "${var.image_name}"
+  output_filename = "${var.image_name}-${var.artifact_version}"
   vboxmanage = [
     [
       "modifyvm",
@@ -63,9 +63,9 @@ source "qemu" "sles15-base" {
   disk_compression = true
   skip_compaction = false
   headless = "${var.headless}"
-  http_directory = "${path.root}http"
+  http_directory = "${path.root}/http"
   iso_checksum = "${var.source_iso_checksum}"
-  iso_url = "${var.source_image_uri}"
+  iso_url = "${var.source_iso_uri}"
   shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_port = 22
@@ -82,26 +82,47 @@ build {
     "source.qemu.sles15-base"]
 
   provisioner "shell" {
-    script = "${path.root}scripts/wait-for-autoyast-completion.sh"
+    script = "${path.root}/scripts/wait-for-autoyast-completion.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}scripts/kernel.sh"
+    script = "${path.root}/scripts/kernel.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}scripts/virtualbox.sh"
+    script = "${path.root}/scripts/virtualbox.sh"
     only = [
       "virtualbox-iso.sles15-base"]
   }
 
   provisioner "shell" {
-    script = "${path.root}scripts/qemu.sh"
+    script = "${path.root}/scripts/qemu.sh"
     only = [
       "qemu.sles15-base"]
   }
 
   provisioner "shell" {
-    script = "${path.root}scripts/cleanup.sh"
+    script = "${path.root}/scripts/cleanup.sh"
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/scripts/google-grub.sh"
+  }
+
+  post-processors {
+    post-processor "shell-local" {
+      inline = [
+          "echo 'Saving variable file for use in google import'",
+          "echo google_destination_project_id=\"${var.google_destination_project_id}\" > ./scripts/google/.variables",
+          "echo output_directory=\"${var.output_directory}\" >> ./scripts/google/.variables",
+          "echo image_name=\"${var.image_name}\" >> ./scripts/google/.variables",
+          "echo version=\"${var.artifact_version}\" >> ./scripts/google/.variables",
+          "echo qemu_format=\"${var.qemu_format}\" >> ./scripts/google/.variables",
+          "echo google_destination_image_family=\"${var.google_destination_image_family}\" >> ./scripts/google/.variables",
+          "echo google_network=\"${var.google_destination_project_network}\" >> ./scripts/google/.variables",
+          "echo google_subnetwork=\"${var.google_subnetwork}\" >> ./scripts/google/.variables",
+          "echo google_zone=\"${var.google_zone}\" >> ./scripts/google/.variables"
+      ]
+    }
   }
 }

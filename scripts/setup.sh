@@ -30,12 +30,3 @@ envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/bo
 
 export SLES15_SP_VERSION="15.2"
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst-google.xml
-
-if [ -n "$CSM_RPMS_SHA" ]; then
-  if [ -d "csm-rpms" ]; then
-    echo "Setting csm-rpms to expected hash: $CSM_RPMS_SHA"
-    cd csm-rpms
-    git checkout "$CSM_RPMS_SHA" --quiet
-  fi
-fi
-

@@ -38,7 +38,7 @@ variable "source_iso_checksum" {
   default = "none"
 }
 
-variable "source_image_uri" {
+variable "source_iso_uri" {
   type = string
   default = "iso/SLE-15-SP3-Full-x86_64-GM-Media1.iso"
 }
@@ -112,4 +112,25 @@ variable "qemu_skip_compaction" {
 variable "vnc_bind_address" {
   type = string
   default = "0.0.0.0"
+}
+
+variable "google_destination_image_family" {
+  type = string
+  default = "vshasta-sles15-base-rc"
+}
+variable "google_destination_project_network" {
+  type = string
+  default = "projects/shared-vpc-interconnect-202004/global/networks/default-network"
+}
+variable "google_subnetwork" {
+  type = string
+  default = "projects/shared-vpc-interconnect-202004/regions/us-central1/subnetworks/artifactory-subnet"
+}
+variable "google_zone" {
+  type = string
+  default = "us-central1-a"
+}
+variable "google_destination_project_id" {
+  type = string
+  default = "artifactory-202004"
 }

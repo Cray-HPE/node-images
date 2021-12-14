@@ -59,7 +59,4 @@ build {
 
   post-processor "vagrant" {}
 
-  post-processor "manifest" {
-    output = "vagrant-manifest.json"
-  }
 }
