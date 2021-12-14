@@ -144,17 +144,19 @@ function get_boot_artifacts {
 
 function configure_lldp() {
     local interfaces
-    interfaces=`ls /sys/class/net/ | grep mgmt`
+    # Grab all bond interfaces and their members; mgmt and sun NICs. Remove duplicates from partial matches.
+    interfaces=`ls /sys/class/net/ | grep -oP '(mgmt|bond|sun)\d+' | sort -u`
+    systemctl is-active lldpad >/dev/null || systemctl start lldpad
     for i in $interfaces; do
-      echo "enabling and configuring LLDP for interface: $i"
+      echo "Configuring LLDP [$i] ..."
       lldptool set-lldp -i $i adminStatus=rxtx
-      lldptool -T -i $i -V  sysName enableTx=yes
-      lldptool -T -i $i -V  portDesc enableTx=yes
-      lldptool -T -i $i -V  sysDesc enableTx=yes
-      lldptool -T -i $i -V sysCap enableTx=yes
-      lldptool -T -i $i -V mngAddr enableTx=yes
+      printf '[%s] sysName ' $i && lldptool -T -i $i -V  sysName enableTx=yes
+      printf '[%s] portDesc ' $i && lldptool -T -i $i -V  portDesc enableTx=yes
+      printf '[%s] sysDesc ' $i && lldptool -T -i $i -V  sysDesc enableTx=yes
+      printf '[%s] sysCap ' $i && lldptool -T -i $i -V sysCap enableTx=yes
+      printf '[%s] mngAddr ' $i && lldptool -T -i $i -V mngAddr enableTx=yes
     done
-    echo 'enabling and configuring of LLDP is complete'
+    echo 'LLDP is configured for all bond interfaces and their members (mgmt and sun)'
 }
 
 function set_static_fallback() {
