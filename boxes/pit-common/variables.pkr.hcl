@@ -10,7 +10,7 @@ variable "disk_cache" {
 
 variable "disk_size" {
   type = string
-  default = "42000"
+  default = "8000"
 }
 
 variable "headless" {
@@ -124,6 +124,11 @@ variable "artifactory_token" {
   default = ""
 }
 
+variable "custom_repos_file" {
+  type = string
+  default = ""
+}
+
 variable "google_destination_image_family" {
   type = string
   default = "vshasta-pit-common-rc"
@@ -190,4 +195,9 @@ variable "google_source_image_url" {
 variable "build_url" {
   type = string
   default = ""
+}
+
+variable "image_guest_os_features" {
+  type = list(string)
+  default = ["MULTI_IP_SUBNET"]
 }
