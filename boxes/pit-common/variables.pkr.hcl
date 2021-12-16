@@ -10,7 +10,7 @@ variable "disk_cache" {
 
 variable "disk_size" {
   type = string
-  default = "42000"
+  default = "8000"
 }
 
 variable "headless" {
@@ -120,6 +120,11 @@ variable "artifactory_user" {
 }
 
 variable "artifactory_token" {
+  type = string
+  default = ""
+}
+
+variable "custom_repos_file" {
   type = string
   default = ""
 }

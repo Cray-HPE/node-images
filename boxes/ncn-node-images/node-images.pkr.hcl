@@ -209,6 +209,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "${path.root}/provisioners/common/disk_resize.sh"
+  }
+
+  provisioner "shell" {
     inline = [
       "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
       "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"

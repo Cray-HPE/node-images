@@ -2,6 +2,8 @@
 
 set -e
 
+GOSS_BASE=/opt/cray/tests/install/livecd
+
 echo "Initializing log location(s)"
 mkdir -p /var/log/cray
 cat << 'EOF' > /etc/logrotate.d/cray
@@ -11,6 +13,11 @@ cat << 'EOF' > /etc/logrotate.d/cray
   rotate 4
 }
 EOF
+
+echo "Modifying DNS to use Cray DNS servers..."
+cp /etc/sysconfig/network/config /etc/sysconfig/network/config.backup
+sed -i 's|^NETCONFIG_DNS_STATIC_SERVERS=.*$|NETCONFIG_DNS_STATIC_SERVERS="172.31.84.40 172.30.84.40"|g' /etc/sysconfig/network/config
+systemctl restart network
 
 echo "Initializing directories and resources"
 mkdir -p /srv/cray
@@ -69,7 +76,7 @@ chmod 700 /root/.ssh
 chown -R root:root /root
 
 # Change hostname from lower layer to ncn.
-echo 'ncn' > /etc/hostname
+echo 'pit' > /etc/hostname
 
 # Lock the kernel before we move onto installing anything []for NCNs
 uname -r

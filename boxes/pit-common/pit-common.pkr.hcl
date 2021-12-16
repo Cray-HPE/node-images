@@ -1,4 +1,3 @@
-// .box
 source "virtualbox-ovf" "pit-common" {
   source_path = "${var.vbox_source_path}"
   format = "${var.vbox_format}"
@@ -26,7 +25,6 @@ source "virtualbox-ovf" "pit-common" {
   guest_additions_mode = "disable"
 }
 
-// .qcow2
 source "qemu" "pit-common" {
   accelerator = "${var.qemu_accelerator}"
   cpus = "${var.cpus}"
@@ -66,30 +64,40 @@ source "googlecompute" "pit-common" {
   image_family = "${var.google_destination_image_family}"
   image_name = "vshasta-${var.image_name}-${var.artifact_version}"
   image_description = "build.source-artifact = ${var.google_source_image_url}, build.url = ${var.build_url}"
-  machine_type = "n2-standard-8"
+  machine_type = "n2-standard-32"
   subnetwork = "${var.google_subnetwork}"
   disk_size = "${var.google_disk_size_gb}"
   use_internal_ip = "${var.google_use_internal_ip}"
   omit_external_ip = "${var.google_use_internal_ip}"
 }
 
-// TODO .iso
-// source "iso" "pit-iso" {
-// }
 build {
   sources = [
     "source.virtualbox-ovf.pit-common",
     "source.qemu.pit-common",
     "source.googlecompute.pit-common"]
 
+  # Maybe
   provisioner "file" {
     source = "${path.root}/files"
     destination = "/tmp/"
   }
 
+  # We need csm-rpms for functions
   provisioner "file" {
     source = "csm-rpms"
     destination = "/tmp/files/"
+  }
+
+  # Probably want to keep this
+  provisioner "file" {
+    source = "custom"
+    destination = "/tmp/files/"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
   }
 
   provisioner "shell" {
@@ -101,29 +109,21 @@ build {
     only = ["googlecompute.pit-common"]
   }
 
-   # TODO: Is this needed for vbox?
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/setup.sh"
-    only = ["qemu.pit-common"]
-  }
-
-   provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
-  }
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/metal/setup.sh"
+#    only = [
+#      "qemu.pit-common",
+#      "virtualbox-ovf.pit-common"
+#    ]
+#  }
 
   provisioner "shell" {
     environment_vars = [
+      "CUSTOM_REPOS_FILE=${var.custom_repos_file}",
       "ARTIFACTORY_USER=${var.artifactory_user}",
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; set -e; setup-package-repos'"]
+    inline = ["bash -c /srv/cray/custom/repos.sh"]
   }
 
   provisioner "shell" {
@@ -131,14 +131,11 @@ build {
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
     ]
-    except = ["googlecompute.pit-common"]
+    only = [
+      "qemu.pit-common",
+      "virtualbox-ovf.pit-common"
+    ]
   }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/hpc.sh"
-    except = ["googlecompute.pit-common"]
-  }
-
 
   provisioner "shell" {
     inline = [
@@ -148,27 +145,58 @@ build {
 
   provisioner "shell" {
     inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/cray-pre-install-toolkit/firmware.packages'"]
+    valid_exit_codes = [0, 123]
+    only = [
+      "qemu.pit-common",
+      "virtualbox-ovf.pit-common"
+    ]
+  }
+
+  provisioner "shell" {
+    inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/cray-pre-install-toolkit/metal.packages'"]
     valid_exit_codes = [0, 123]
-    except = ["googlecompute.pit-common"]
+    only = [
+      "qemu.pit-common",
+      "virtualbox-ovf.pit-common"
+    ]
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/install.sh"
+    script = "${path.root}/provisioners/pit/k8s.sh"
   }
 
-  // provisioner "shell" {
-  //   script = "${path.root}/provisioners/common/csm/cloud-init.sh"
-  // }
+  provisioner "shell" {
+    script = "${path.root}/provisioners/pit/firmware.sh"
+  }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/fstab.sh"
-    except = ["googlecompute.pit-common"]
+    script = "${path.root}/provisioners/pit/aliases.sh"
   }
+
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
-    except = ["googlecompute.pit-common"]
+    script = "${path.root}/provisioners/pit/services.sh"
   }
+
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/common/install.sh"
+#  }
+#
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/metal/fstab.sh"
+#    only = [
+#      "qemu.pit-common",
+#      "virtualbox-ovf.pit-common"
+#    ]
+#  }
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/metal/install.sh"
+#    only = [
+#      "qemu.pit-common",
+#      "virtualbox-ovf.pit-common"
+#    ]
+#  }
 
   provisioner "shell" {
     inline = [
@@ -176,7 +204,20 @@ build {
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.deps.packages deps'",
       "bash -c 'zypper lr -e /tmp/installed.repos'"
     ]
-    except = ["googlecompute.pit-common"]
+    only = [
+      "qemu.pit-common",
+      "virtualbox-ovf.pit-common"
+    ]
+  }
+
+  provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-package-repos'"]
+  }
+
+  provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-all-repos'"]
   }
 
   provisioner "file" {
@@ -188,53 +229,30 @@ build {
       "/tmp/installed.packages"
     ]
     destination = "${var.output_directory}/"
-    except = ["googlecompute.pit-common"]
+    only = [
+      "qemu.pit-common",
+      "virtualbox-ovf.pit-common"
+    ]
   }
 
   provisioner "file" {
     direction = "download"
     source = "/tmp/installed.repos"
     destination = "${var.output_directory}/installed.repos"
-    except = ["googlecompute.pit-common"]
+    only = [
+      "qemu.pit-common",
+      "virtualbox-ovf.pit-common"
+    ]
   }
 
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-package-repos'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/scripts/common/build-functions.sh; cleanup-dns'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; cleanup-all-repos'"]
-  }
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/pit/pit-grub.sh"
+#  }
 
   provisioner "shell" {
     script = "${path.root}/files/scripts/common/cleanup.sh"
   }
 
-  provisioner "shell" {
-    inline = [
-      "bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh ${var.create_kis_artifacts_arguments}'"]
-    only = ["qemu.pit-common"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    source = "/tmp/kis.tar.gz"
-    destination = "${var.output_directory}/"
-    only = ["qemu.pit-common"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c '/srv/cray/scripts/common/cleanup-kis-artifacts.sh'"]
-    only = ["qemu.pit-common"]
-  }
 
   provisioner "shell" {
     inline = [
@@ -260,19 +278,10 @@ build {
   }
 
 post-processors {
-    post-processor "shell-local" {
-      inline = [
-        "echo 'Extracting KIS artifacts package'",
-        "echo 'Putting image name into the squashFS filename.'",
-        "ls -lR ./${var.output_directory}",
-        "tar -xzvf ${var.output_directory}/kis.tar.gz -C ${var.output_directory}",
-        "rm ${var.output_directory}/kis.tar.gz"
-      ]
-      only   = ["qemu.pit-common"]
-    }
-    // post-processor "shell-local" {
-    //   inline = [
-    //     "if cat ${var.output_directory}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
-    // }
+     post-processor "shell-local" {
+       inline = [
+         "if cat ${var.output_directory}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
+       only   = ["qemu.pit-common"]
+     }
   }
 }

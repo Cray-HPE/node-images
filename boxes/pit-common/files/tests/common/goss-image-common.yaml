@@ -1,90 +1,22 @@
 file:
   /var/adm/autoinstall/cache:
     exists: false
-  /etc/zypp/services.d/Basesystem_Module_15_SP3_x86_64.service:
-    exists: false
-  /etc/zypp/services.d/Server_Applications_Module_15_SP3_x86_64.service:
-    exists: false
-  /etc/zypp/services.d/Public_Cloud_Module_15_SP3_x86_64.service:
-    exists: false
-  /etc/zypp/services.d/SUSE_Linux_Enterprise_Server_15_SP3_x86_64.service:
-    exists: false
 service:
-  cloud-config:
+  apache2:
     enabled: true
     running: false
-  cloud-init:
+  basecamp:
     enabled: true
     running: false
-  cloud-final:
+  chronyd:
     enabled: true
     running: false
-  cloud-init-local:
+  dnsmasq:
     enabled: true
     running: false
-  ca-certificates:
-    enabled: true
-    running: false
-  issue-generator:
-    enabled: true
-    running: false
-  ca-certificates:
-    enabled: true
-    running: false
-  cloud-config:
-    enabled: true
-    running: false
-  cloud-init:
-    enabled: true
-    running: false
-  cloud-init-local:
-    enabled: true
-    running: false
-  cloud-final:
-    enabled: true
-    running: false
-  issue-generator:
-    enabled: true
-    running: false
-  purge-kernels:
-    enabled: true
-    running: false
-  rc-local:
-    enabled: true
-    running: false
-  rollback:
+  nexus:
     enabled: true
     running: false
   sshd:
     enabled: true
     running: true
-  wicked:
-    enabled: true
-    running: true
-  wickedd-auto4:
-    enabled: true
-    running: true
-  wickedd-dhcp4:
-    enabled: true
-    running: true
-  wickedd-dhcp6:
-    enabled: true
-    running: true
-  wickedd-nanny:
-    enabled: true
-    running: true
-  getty@tty1:
-    enabled: true
-    running: true
-  lldpad:
-    enabled: true
-    running: true
-  postfix:
-    enabled: false
-    running: false
-  chronyd:
-    enabled: true
-    running: false
-  spire-agent:
-    enabled: true
-    running: false

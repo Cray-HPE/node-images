@@ -31,13 +31,13 @@ source "qemu" "ncn-common" {
   disk_cache = "${var.disk_cache}"
   disk_discard = "unmap"
   disk_detect_zeroes = "unmap"
-  disk_compression = true
+  disk_compression = "${var.qemu_disk_compression}"
+  skip_compaction = "${var.qemu_skip_compaction}"
   disk_image = true
   disk_size = "${var.disk_size}"
   display = "${var.qemu_display}"
   use_default_display = "${var.qemu_default_display}"
   memory = "${var.memory}"
-  skip_compaction = false
   headless = "${var.headless}"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
@@ -48,6 +48,7 @@ source "qemu" "ncn-common" {
   output_directory = "${var.output_directory}"
   vnc_bind_address = "${var.vnc_bind_address}"
   vm_name = "${var.image_name}.${var.qemu_format}"
+  format = "${var.qemu_format}"
 }
 
 source "googlecompute" "ncn-common" {
@@ -110,15 +111,6 @@ build {
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/scripts/common/build-functions.sh; setup-dns'"]
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
-  }
-
-  provisioner "shell" {
-    inline = [
       "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
   }
 
@@ -129,6 +121,10 @@ build {
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
     inline = ["bash -c /srv/cray/custom/repos.sh"]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/common/disk_resize.sh"
   }
 
   provisioner "shell" {
@@ -349,6 +345,7 @@ build {
     post-processor "shell-local" {
       inline = [
         "if cat ${var.output_directory}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
+      only   = ["qemu.ncn-common"]
     }
   }
 }
