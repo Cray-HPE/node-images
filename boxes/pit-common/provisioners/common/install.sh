@@ -2,6 +2,9 @@
 
 set -e
 
+# Put PIT files in place
+rsync -av --remove-source-files /tmp/root/ /
+
 echo "Ensuring /srv/cray/utilities locations are available for use system-wide"
 ln -s /srv/cray/utilities/common/craysys/craysys /bin/craysys
 echo "export PYTHONPATH=\"/srv/cray/utilities/common\"" >> /etc/profile.d/cray.sh

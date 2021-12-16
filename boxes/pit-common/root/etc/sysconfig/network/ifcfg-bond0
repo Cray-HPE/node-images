@@ -1,0 +1,18 @@
+NAME='Internal Interface'
+
+# Select the NIC(s) for access to the CRAY.
+BONDING_SLAVE0=''
+BONDING_SLAVE1=''
+
+# Set static IP (becomes "preferred" if dhcp is enabled)
+BOOTPROTO='static'
+IPADDR=''    # i.e. '192.168.64.1/20'
+PREFIXLEN='' # i.e. '20'
+
+# CHANGE AT OWN RISK:
+BONDING_MODULE_OPTS='mode=802.3ad miimon=100 lacp_rate=fast xmit_hash_policy=layer2+3'
+
+# DO NOT CHANGE THESE:
+ONBOOT='yes'
+STARTMODE='manual'
+BONDING_MASTER='yes'

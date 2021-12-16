@@ -1,0 +1,4 @@
+# Fill this in with your external route.
+# Leave the last two "columns" of the file as "-", the interface name and netmask are deduced by NM.
+# Format:
+# default <ip of defgw> - -

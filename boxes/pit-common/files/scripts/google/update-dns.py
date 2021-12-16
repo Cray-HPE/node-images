@@ -45,5 +45,5 @@ with open('/etc/sysconfig/network/config', 'r+') as net_config:
 
 if net_config_checksum != updated_net_config_checksum:
   print('Restarting network to pick up changes to net config...', end='', flush=True)
-  os.system('systemctl restart network google-network-daemon')
+  os.system('systemctl restart network')
   print('done')

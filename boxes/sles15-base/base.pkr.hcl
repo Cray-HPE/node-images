@@ -15,7 +15,7 @@ source "virtualbox-iso" "sles15-base" {
   guest_os_type = "OpenSUSE_64"
   hard_drive_interface = "sata"
   headless = "${var.headless}"
-  http_directory = "${path.root}http"
+  http_directory = "${path.root}/http"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
   sata_port_count = 8
