@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# HPC metal clusters reflect their nature through the SLES HPC Releae RPM.
+# HPC metal clusters reflect their nature through the SLES HPC Release RPM.
 # The conflicting RPM needs to be removed
 # Forcing the the HPC rpm because removing sles-release auto removes dependencies
 # even with -U when installing with inventory file
-set -e
+set -ex
 
 echo "Etching release file"
 HPC_VERSION=$(cat /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages | grep "SLE_HPC-release")

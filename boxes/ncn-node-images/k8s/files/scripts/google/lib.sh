@@ -9,7 +9,7 @@ export KUBELET_CLOUD_CONFIG_PATH="/etc/cray/kubernetes/cloud-config"
 export K8S_NODE_IP=$(hostname -I | awk '{print $1}')
 echo "Setting K8S_NODE_IP to ${K8S_NODE_IP} for KUBELET_EXTRA_ARGS and kubeadm config"
 export KUBELET_EXTRA_ARGS="--node-ip ${K8S_NODE_IP} --cloud-provider=gce --cloud-config=${KUBELET_CLOUD_CONFIG_PATH}"
-export NETWORK_DAEMONS="network google-network-daemon"
+export NETWORK_DAEMONS="network"
 export CONTROLLER_MANAGER_EXTRA_ARGS="{'cloud-provider': 'gce', 'cloud-config': '/etc/cray/kubernetes/cloud-config', 'configure-cloud-routes': 'false', 'flex-volume-plugin-dir': '/etc/cray/kubernetes/flexvolume'}"
 export FIRST_MASTER_HOSTNAME=ncn-m001
 export FIRST_STORAGE_HOSTNAME=ncn-s001
