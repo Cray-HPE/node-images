@@ -26,9 +26,10 @@ For any ISO, copy it into the `iso` directory.
 
 ==== SuSE Linux Enterprise
 
-The file name is either:
+Files that have been tested and verified to work:
  - `SLE-15-SP2-Full-x86_64-GM-Media1.iso`
  - `SLE-15-SP3-Full-x86_64-GM-Media1.iso`
+ - `SLE-15-SP3-Online-x86_64-GM-Media1.iso`
 
 === Repositories
 
@@ -50,17 +51,23 @@ Furthermore, there may be additional repos used that are defined in `csm-rpms` w
 
 === Build Steps
 
+* There are two Providers that can be built; VirtualBox and QEMU
+* VirtualBox is best for local development.
+* QEMU is best for pipeline and portability on linux machines.
+* Both outputs are capable of creating the kernel, initrd, and squashfs required to boot nodes.
+
+==== Setup
+
 * Install packer from a reputable endpoint, like *https://www.packer.io/downloads.html[this one]*.
 
 If you are building QEMU images in MacOS, you will need to adjust specific QEMU options:
 
 * MacOS requires HVF for acceleration
 * MacOS uses Cocoa for output
-* Run `packer build -only=qemu.sles15-base -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/`
+* `-var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf'`
 
-==== Base Box
 
-===== Prerequisites
+==== Prerequisites
 
 * Setup environment variables by copying `scripts/environment.template` to `scripts/environment` and modifying the values for your environment.
 * Ensure that `SLE-15-SP3-Full-x86_64-GM-Media1.iso` is in the `iso/` folder
@@ -70,7 +77,7 @@ If you are building QEMU images in MacOS, you will need to adjust specific QEMU 
 * Render the autoinst template
 
 
-===== Quick Start
+==== Quick Start
 
 ```bash
 git clone <csm-rpms-repo>
@@ -85,63 +92,65 @@ wget https://<somepath>/SLE-15-SP3-Full-x86_64-GM-Media1.iso -O iso/SLE-15-SP3-F
 ./scripts/setup.sh
 ```
 
-===== Build
+==== Base Layer
 
-==== Base Images
+The base layer will install SLES 15 and prepare the image for the installation of Kubernetes and Ceph.
 
-The base box will install SLES 15 SP3 and prepare the image for the installation of Kubernetes and Ceph.
+Execute the following commands from the top level of the project
 
-===== Prerequisites
+To build with QEMU, run the following command.
 
-N/A
+* Run `packer build -only=qemu.sles15-base -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-base/`
 
-===== Build
+To build with VirtualBox, run the following command.
 
-The `packer build` command will create both VirtualBox and QEMU versions of the base image.
-Execute the following command from the top level of the project to build both.
-
-* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-base/`
-
-To only build VirtualBox, run the following command.
-
-* Run `packer build -only=virtualbox-iso.sles15-base -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-base/`
-
-To only build QEMU, run the following command.
-
-* Run `packer build -only=qemu.sles15-base -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-base/`
+* Run `packer build -only=virtualbox-iso.sles15-base -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/sles15-base/`
 
 If you want to view the output of the build, disable `headless` mode:
 
-* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' boxes/sles15-base/`
+* Run `packer build -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' boxes/sles15-base/`
 
 Once the images are built, the output will be placed in the `output-sles15-base` directory in the root of the project.
 
-==== Node Images
+==== Common Layer
 
-In the previous step a VirtualBox image, Qemu image, or both were created in `output-sles15-base`.
-The ncn-node-images stage builds on top of that to create functional images for Kubernetes and Ceph.
+The common layer starts from the output of the base layer. As such the base layer must be created before building common.
 
-===== Prerequisites
+To build with QEMU, run the following command.
 
-N/A
+* Run `packer build -only=qemu.ncn-common -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-common/`
 
-===== Build
+To build with VirtualBox, run the following command.
 
-Execute the following command from the top level of the project
+* Run `packer build -only=virtualbox-ovf.ncn-common -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-common/`
 
-* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-node-images/`
+Once the image is built, the output will be placed in the `output-ncn-common` directory in the root of the project.
 
-To only build VirtualBox, run the following command.
+==== Pit Common Layer
 
-* Run `packer build -only=virtualbox-ovf.* -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-node-images/`
+The pit common layer starts from the output of the base layer. As such the base layer must be created before building pit common.
 
-To only build QEMU, run the following command.
+To build with QEMU, run the following command.
 
-* Run `packer build -only=qemu.* -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-node-images/`
+* Run `packer build -only=qemu.pit-common -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/pit-common/`
 
-If you want to view the output of the build, disable `headless` mode:
+To build with VirtualBox, run the following command.
 
-* Run `packer build -force -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' boxes/ncn-node-images/`
+* Run `packer build -only=virtualbox-ovf.pit-common -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/pit-common/`
+
+Once the image is built, the output will be placed in the `output-pit-common` directory in the root of the project.
+
+==== Non-Compute Node Image Layer
+
+The ncn-node-images stage builds on top of the common layer to create functional images for Kubernetes and Ceph.
+
+To build with QEMU, run the following command.
+
+* Run `packer build -only=qemu.* -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-node-images/`
+
+To build with VirtualBox, run the following command.
+
+* Run `packer build -only=virtualbox-ovf.* -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' boxes/ncn-node-images/`
 
 Once the images are built, the output will be placed in the `output-sles15-images` directory in the root of the project.
 
@@ -164,42 +173,21 @@ If you want to view the output of the build, disable `headless` mode:
 
 `# vagrant box add --force --name sles15sp3 ./sles15-base-virtualbox.box`
 
-== Pipeline & Build Workflow
+=== Artifacts
 
-=== Build Output
+Each layer creates a certain set of artifacts that can be used in different ways.
 
-* There are two Providers that can be built; VirtualBox and QEMU
-* VirtualBox is best for local development and carries the ability to create a Vagrant box.
-* QEMU is best for pipeline and portability on linux machines.
-* Both outputs are capable of creating the kernel, initrd, and squashfs required to boot nodes.
+* Each layer creates a VM disk image that can be directly booted and/or used to create the next layer's image.
+* Each layer after `sles15-base` creates a list of packages and repos.
+* `ncn-common` creates kernel and initrd artifacts.
+* `ncn-node-images` creates kernel, initrd, and squashfs artifacts.
 
 === Versioning
 
-* The version of the build is passed with the `packer build` command as a var:
+* The version of the build is passed with the `packer build` command as the `artifact_version` var:
 
-[source,bash]
-----
-packer build -only=qemu.* -force -var "artifact_version=`git rev-parse --short HEAD`" -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' -var 'qemu_display=cocoa' -var 'qemu_accelerator=hvf' boxes/sles15-base/
-----
+```bash
+packer build -only=qemu.sles15-base -var "artifact_version=`git rev-parse --short HEAD`" -var 'ssh_password=$SLES15_INITIAL_ROOT_PASSWORD' -var 'headless=false' boxes/sles15-base/
+````
 
 * If no version is passed to the builder then the version `none` is used when generating the archive.
-
-=== Base OS Layer
-
-* `boxes/sles15-base`
-* The base OS is essentially unchanging unless something fundamental needs to be changed, such as partitions,
- filesystems, boot loaders, core users, kernels, qemu/vbox drivers, etc.
-* The base OS should be built once and everything else should be built on top of it.
-* Base OS install requires the full media offline version of SLES 15 SP3
-
-=== Non-Compute Node Common Layer
-
-* `boxes/ncn-common`
-* There are some common aspects to building the OS, but the ramp up and ramp downtime of this layer probably doesn't
- warrant keeping it separate.
-* The common layer starts from the output of the base layer.
-
-=== Application Layers
-
-* `boxes/ncn-node-images`
-* The node image layers of `storage-ceph` and `kubernetes` are built here.

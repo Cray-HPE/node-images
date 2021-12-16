@@ -10,7 +10,7 @@ variable "cpus" {
 
 variable "disk_size" {
   type = string
-  default = "42000"
+  default = "8000"
 }
 
 variable "disk_cache" {
