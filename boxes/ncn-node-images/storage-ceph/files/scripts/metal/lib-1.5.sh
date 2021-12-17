@@ -264,7 +264,7 @@ function init() {
    echo "Setting cephfs allow_standby_replay true"
    ceph fs set cephfs allow_standby_replay true
 
-   ceph orch apply rgw site1 zone1 --placement="3 $(ceph node ls osd|jq -r '.|keys|join(" ")')" --port=8080
+   ceph orch apply rgw site1 zone1 --placement="${num_storage_nodes} $(ceph node ls osd|jq -r '.|keys|join(" ")')" --port=8080
 
    echo "Sleeping for 30 seconds to let rgw get going before checking health"
    sleep 30
