@@ -50,6 +50,16 @@ DHCPREQUESTs despite changing their IP source to STATIC.
 
 CONSOLES will cease working while the BMC is reset (8-20seconds).
 EOM
+    local vendor
+    vendor=$(ipmitool fru | grep -i 'board mfg' | tail -n 1 | cut -d ':' -f2 | tr -d ' ')
+    case $vendor in:
+        *Marvell*|HP|HPE)
+            BMC_RESET='warm'
+            ;;
+        *)
+            echo >&2 'Failed to resolve vendor; defaulting to COLD reset'
+            ;;
+    esac
     (
         set -x
         # One could `export BMC_RESET='warm'` to change the behavior here.
