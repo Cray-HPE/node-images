@@ -16,7 +16,8 @@ network:
       parameters:
         mode: 802.3ad
         mii-monitor-interval: 100
-        lacp-rate: fast
+        lacp-rate: slow
+        ad-select: bandwidth
         transmit-hash-policy: layer2+3
   vlans:
   {% for name, network in ds.meta_data.ipam.items() if network.vlanid != 0 %}
