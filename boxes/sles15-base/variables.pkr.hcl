@@ -40,7 +40,7 @@ variable "source_iso_checksum" {
 
 variable "source_iso_uri" {
   type = string
-  default = "iso/SLE-15-SP3-Full-x86_64-GM-Media1.iso"
+  default = "iso/SLE-15-SP3-Online-x86_64-GM-Media1.iso"
 }
 
 variable "ssh_password" {
@@ -67,6 +67,11 @@ variable "output_directory" {
 variable "artifact_version" {
   type = string
   default = "none"
+}
+
+variable "kernel_version" {
+  type    = string
+  default = "5.3.18-59.19.1"
 }
 
 variable "create_kis_artifacts_arguments" {
