@@ -33,7 +33,7 @@ pipeline {
         ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common"
         ARTIFACTS_DIRECTORY_CEPH = "output-ncn-node-images/storage-ceph"
         ARTIFACTS_DIRECTORY_K8S = "output-ncn-node-images/kubernetes"
-        ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/SLE-15-SP3-Full-x86_64-GM-Media1.iso"
+        ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/SLE-15-SP3-Online-x86_64-GM-Media1.iso"
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
         NRAM = '4096'
@@ -103,7 +103,6 @@ pipeline {
 					script {
 						def arguments = "-only=qemu.sles15-base -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
 						publishCsmImages.build(arguments, 'boxes/sles15-base/')
-						publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_BASE, VERSION)
 					}
 				}
 			}

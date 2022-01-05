@@ -73,7 +73,7 @@ source "qemu" "sles15-base" {
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
   output_directory = "${var.output_directory}"
   vnc_bind_address = "${var.vnc_bind_address}"
-  vm_name = "${var.image_name}.${var.qemu_format}"
+  vm_name = "${var.image_name}-${var.artifact_version}.${var.qemu_format}"
 }
 
 build {
@@ -86,6 +86,9 @@ build {
   }
 
   provisioner "shell" {
+    environment_vars = [
+      "SLES15_KERNEL_VERSION=${var.kernel_version}"
+    ]
     script = "${path.root}/scripts/kernel.sh"
   }
 
