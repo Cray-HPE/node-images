@@ -37,12 +37,12 @@ trim() {
 
 remove_fs_overwrite() {
     echo 'note: re-running cloud-init will not wipe any LVMs in /dev/md/AUX; to purge these on a re-run, source the metal-lib and invoke enable_fs_overwrite'
-    find /etc/cloud -name *metalfs.cfg -exec sed -i 's/overwrite: true/overwrite: false/g' {} \; 
+    find /etc/cloud -name *metalfs.cfg -exec sed -i 's/overwrite:.*/overwrite: false/g' {} \;
 }
 
 enable_fs_overwrite() {
     echo >2 'warning: re-running cloud-init will now wipe all LVMs in /dev/md/AUX!'
-    find /etc/cloud -name *metalfs.cfg -exec sed -i 's/overwrite: true/overwrite: false/g' {} \; 
+    find /etc/cloud -name *metalfs.cfg -exec sed -i 's/overwrite:.*/overwrite: true/g' {} \;
 }
 
 install_grub2() {
