@@ -2,7 +2,7 @@
 
 set -e
 
-kubernetes_version="1.18.6-0"
+kubernetes_version="1.20.13-0"
 ceph_version='15.2.12.83+g528da226523-3.25.1'
 ansible_version='2.9.21'
 mkdir -p /etc/kubernetes
