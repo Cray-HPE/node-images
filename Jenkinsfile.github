@@ -217,7 +217,22 @@ pipeline {
                                 def arguments = "-only=qemu.kubernetes -var 'source_iso_uri='${source} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
                                 publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
                                 publishCsmImages.prepareArtifacts("${ARTIFACTS_DIRECTORY_K8S}", env.VERSION)
-                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                // List versions of k8s image components as artifact props - use it for csm manifest validation
+                                def kubernetesVersions = readJSON(text: sh(returnStdout: true, script: '''
+                                    source ${WORKSPACE}/boxes/ncn-node-images/k8s/files/resources/common/vars.sh >&2
+                                    echo $(cat <<-EOF
+                                        {
+                                            "KUBERNETES_VERSION": "v${KUBERNETES_PULL_VERSION}",
+                                            "WEAVE_VERSION": "${WEAVE_VERSION}",
+                                            "MULTUS_VERSION": "${MULTUS_VERSION}",
+                                            "VELERO_VERSION": "${VELERO_VERSION}",
+                                            "ETCD_VERSION": "${ETCD_VERSION}",
+                                            "COREDNS_VERSION": "${COREDNS_VERSION}"
+                                        }
+                                    EOF
+                                    )
+                                '''.stripIndent())).collect{k, v -> "csm.versions.${k}=${v}"}.join(";")
+                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source};${kubernetesVersions}"
                                 publishCsmImages(pattern: ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
                             }
                         }
