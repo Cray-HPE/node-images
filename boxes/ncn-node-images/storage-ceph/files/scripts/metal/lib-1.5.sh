@@ -271,6 +271,10 @@ function init() {
    wait_for_health_ok
 
   fi
+
+  ceph-authtool -C /etc/ceph/ceph.client.ro.keyring -n client.ro --cap mon 'allow r' --cap mds 'allow r' --cap osd 'allow r' --cap mgr 'allow r' --gen-key
+  ceph auth import -i /etc/ceph/ceph.client.ro.keyring
+
   . /etc/ansible/boto3_ansible/bin/activate
   . /srv/cray/scripts/common/fix_ansible_inv.sh
   fix_inventory
