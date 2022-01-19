@@ -73,8 +73,13 @@ fi
 enable_ceph_prometheus
 
 # Make ceph read-only client for monitoring
-ceph-authtool -C /etc/ceph/ceph.client.ro.keyring -n client.ro --cap mon 'allow r' --cap mds 'allow r' --cap osd 'allow r' --cap mgr 'allow r' --gen-key
-ceph auth import -i /etc/ceph/ceph.client.ro.keyring
+
+if ! ceph auth get client.ro > /dev/null 2>&1
+then
+  ceph-authtool -C /etc/ceph/ceph.client.ro.keyring -n client.ro --cap mon 'allow r' --cap mds 'allow r' --cap osd 'allow r' --cap mgr 'allow r' --gen-key
+  ceph auth import -i /etc/ceph/ceph.client.ro.keyring
+fi
+
 echo "Distributing the client.ro keyring"
 for node in $(ceph orch host ls --format=json|jq -r '.[].hostname'); do scp /etc/ceph/ceph.client.ro.keyring $node:/etc/ceph/ceph.client.ro.keyring; done
 
