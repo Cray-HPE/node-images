@@ -44,22 +44,10 @@ pipeline {
         booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the base image; unchecked will pull latest STABLE base. (This overrides rebuildCommonImage; if this is true, rebuildCommonImage is bypassed.)')
         booleanParam(name: 'buildGoogle', defaultValue: buildGoogle, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build Google images for vshasta.)')
         booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the common image; unchecked will pull latest STABLE ncn-common.')
-        string(name: 'csmRpmBranch', defaultValue: "release/1.2", description: 'The branch or ref to use when checking out csm-rpm repo for repo list and package lock versions.')
-        string(name: 'csmRpmRepo', defaultValue: "https://github.com/Cray-HPE/csm-rpms.git", description: 'The repo URL (HTTPS) to use for checking out csm-rpm.')
         string(name: 'sourceProjectId', defaultValue: "artifactory-202004", description: 'The source Project ID for pulling Google images.')
     }
 
     stages {
-        stage('Checkout csm-rpms') {
-            when {
-                expression { env.TAG_NAME == null && (!(env.BRANCH_NAME ==~ promotionToken) || (env.BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-            }
-            steps {
-                dir('csm-rpms') {
-                    git credentialsId: 'jenkins-algol60-cray-hpe-github-integration', url: "${params.csmRpmRepo}", branch: "${params.csmRpmBranch}"
-                }
-            }
-        }
 
         stage('Fetch SLES ISO') {
             when {
@@ -117,7 +105,7 @@ pipeline {
                     }
                     steps {
                         script {
-                            def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${ISO_URL}"
+                            def props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${ISO_URL}"
                             publishCsmImages(pattern: ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: env.VERSION, props: props)
                         }
                     }
@@ -159,7 +147,7 @@ pipeline {
                                 def arguments = "-only=qemu.ncn-common -var 'source_iso_uri='${source} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
                                 publishCsmImages.build(arguments, 'boxes/ncn-common/')
                                 publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_COMMON, VERSION)
-                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                def props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
                                 publishCsmImages(pattern: ARTIFACTS_DIRECTORY_COMMON, imageName: 'ncn-common', version: env.VERSION, props: props)
                             }
                         }
@@ -232,7 +220,7 @@ pipeline {
                                     EOF
                                     )
                                 '''.stripIndent())).collect{k, v -> "csm.versions.${k}=${v}"}.join(";")
-                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source};${kubernetesVersions}"
+                                def props = "build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source};${kubernetesVersions}"
                                 publishCsmImages(pattern: ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
                             }
                         }
@@ -285,7 +273,7 @@ pipeline {
                                 sh "ls -lhR ${ARTIFACTS_DIRECTORY_CEPH}"
                                 publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_CEPH, VERSION)
                                 sh "ls -lhR ${ARTIFACTS_DIRECTORY_CEPH}"
-                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                def props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
                                 publishCsmImages(pattern: ARTIFACTS_DIRECTORY_CEPH, imageName: 'storage-ceph', version: VERSION, props: props)
                             }
                         }

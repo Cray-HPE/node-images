@@ -15,8 +15,9 @@ The listed software below will equip a local machine or buildserver to build for
 * packer
 * qemu
 * envsubst
-* (optional) virtualbox
-* (optional) vagrant
+* git-vendor (for csm-rpms)
+* virtualbox (optional)
+* vagrant (optional)
 
 === Media
 
@@ -48,6 +49,15 @@ And example entry for a custom repo:
 
 Furthermore, there may be additional repos used that are defined in `csm-rpms` which is checked out in the Quick Start section. You may be required to replace some or all of these files in `csm-rpms/repos/*.repos` to work with your environment.
 
+==== Working with CSM-RPMS
+
+ If you need to adjust the version of `csm-rpms` in your repo, or make changes to the `csm-rpms` code base, you will
+ need to install git-vendor, which uses git submodules for managing dependencies.
+
+ * `git vendor list` will show you the managed repos
+ * `git vendor update csm-rpms release/1.2` will checkout the `release/1.2` branch of `csm-rpms`
+ * All code for `csm-rpms` is stored in the `vendor` directory
+
 === Build Steps
 
 * Install packer from a reputable endpoint, like *https://www.packer.io/downloads.html[this one]*.
@@ -64,7 +74,6 @@ If you are building QEMU images in MacOS, you will need to adjust specific QEMU 
 
 * Setup environment variables by copying `scripts/environment.template` to `scripts/environment` and modifying the values for your environment.
 * Ensure that `SLE-15-SP3-Full-x86_64-GM-Media1.iso` is in the `iso/` folder
-* Check out `csm-rpms` repository and create a symlink to it in the root directory of the project.
 * Execute `source scripts/environment`
 * Execute `./scripts/setup.sh`
 * Render the autoinst template
@@ -73,10 +82,8 @@ If you are building QEMU images in MacOS, you will need to adjust specific QEMU 
 ===== Quick Start
 
 ```bash
-git clone <csm-rpms-repo>
 git clone https://github.com/Cray-HPE/node-image-build.git
 cd node-image-build
-ln -s ../csm-rpms/ csm-rpms
 cp scripts/environment.template scripts/environment
 vim scripts/environment
 source scripts/environment
