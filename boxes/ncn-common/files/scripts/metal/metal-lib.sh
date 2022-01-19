@@ -447,8 +447,12 @@ function paginate() {
 function install_csm_rpms() {
 
     # Verify nexus is available.  It's expected to *not* be available during initial install of the NCNs.
-    if ! curl -sSf https://packages.local/service/rest/v1/components?repository=csm-sle-15sp3 >& /dev/null; then
-        echo "unable to contact nexus, bailing"
+    if ! curl -sSf https://packages.local/service/rest/v1/components?repository=csm-sle-15sp2 >& /dev/null; then
+        echo "***"
+        echo "WARNING: Unable to contact Nexus. This is expected if Nexus is unhealthy or not deployed"
+        echo "         (e.g. during initial NCN deployment). One or more of the following RPMs may not be"
+        echo "         up to date and/or not installed: goss-servers, csm-testing, platform-utils"
+        echo "***"
         return 0
     fi
 
