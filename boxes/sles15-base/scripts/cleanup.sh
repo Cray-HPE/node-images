@@ -10,7 +10,6 @@ done
 echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
 rm -rf /var/adm/autoinstall/cache
 
-
 zypper clean --all
 
 echo "clean up network interface persistence"
@@ -21,8 +20,8 @@ echo "truncate any logs that have built up during the install"
 find /var/log/ -type f -name "*.log.*" -exec rm -rf {} \;
 find /var/log -type f -exec truncate --size=0 {} \;
 
-echo "remove the contents of /tmp and /var/tmp"
-rm -rf /tmp/* /var/tmp/*
+echo "remove the contents of /tmp"
+rm -rf /tmp/*
 
 echo "blank netplan machine-id (DUID) so machines get unique ID generated on boot"
 truncate -s 0 /etc/machine-id

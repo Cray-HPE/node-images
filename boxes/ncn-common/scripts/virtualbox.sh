@@ -18,5 +18,5 @@ cd /tmp
 mount -o loop /root/VBoxGuestAdditions_$VBOX_VERSION.iso /mnt || echo "unable to mount virtual box guest additions iso"
 sh /mnt/VBoxLinuxAdditions.run install --force || echo "unable to install driver"
 umount /mnt || echo "unable to umount iso"
-rm -rf /root/VBoxGuestAdditions_*.iso || echo "unable to rm iso"
+rm -rf /root/VBoxGuestAdditions*.iso || echo "unable to rm iso"
 echo "guest additions installed"

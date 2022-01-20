@@ -110,6 +110,7 @@
       <product>SLE_HPC</product>
     </products>
     <packages config:type='list'>
+      <package>jq</package>
       <package>kernel-default-debuginfo</package>
       <package>squashfs</package>
       <package>sudo</package>

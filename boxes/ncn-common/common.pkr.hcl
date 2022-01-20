@@ -137,6 +137,19 @@ build {
     environment_vars = [
       "SLES15_KERNEL_VERSION=${var.kernel_version}"
     ]
+    script = "${path.root}/scripts/kernel.sh"
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/scripts/virtualbox.sh"
+    only = [
+      "virtualbox-ovf.ncn-common"]
+  }
+
+  provisioner "shell" {
+    environment_vars = [
+      "SLES15_KERNEL_VERSION=${var.kernel_version}"
+    ]
     script = "${path.root}/scripts/kernel-debug.sh"
     only = [
       "qemu.ncn-common",

@@ -86,25 +86,6 @@ build {
   }
 
   provisioner "shell" {
-    environment_vars = [
-      "SLES15_KERNEL_VERSION=${var.kernel_version}"
-    ]
-    script = "${path.root}/scripts/kernel.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/scripts/virtualbox.sh"
-    only = [
-      "virtualbox-iso.sles15-base"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/scripts/qemu.sh"
-    only = [
-      "qemu.sles15-base"]
-  }
-
-  provisioner "shell" {
     script = "${path.root}/scripts/cleanup.sh"
   }
 
