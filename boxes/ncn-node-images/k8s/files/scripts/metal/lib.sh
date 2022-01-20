@@ -190,7 +190,7 @@ function configure-s3fs() {
     #
     echo "0 */2 * * * root /usr/bin/prune-s3fs-cache.sh admin-tools ${s3fs_cache_dir} 5368709120" > /etc/cron.d/prune-s3fs-admin-tools-cache
 
-    configure-s3fs-directory config-data config-data /var/lib/admin-tools ${s3fs_opts}
+    configure-s3fs-directory config-data config-data /var/opt/cray/config-data ${s3fs_opts}
     #
     # Caching and cache pruning not needed for config-data folder
     #
