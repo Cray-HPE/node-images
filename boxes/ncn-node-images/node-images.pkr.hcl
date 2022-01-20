@@ -385,20 +385,29 @@ build {
   provisioner "shell" {
     inline = [
       "bash -c 'goss -g /srv/cray/tests/metal/goss-image-common.yaml validate -f junit | tee /tmp/goss_metal_out.xml'"]
-    except = ["googlecompute.ncn-common"]
+    except = [
+      "googlecompute.kubernetes",
+      "googlecompute.storage-ceph"
+    ]
   }
 
   provisioner "shell" {
     inline = [
       "bash -c 'goss -g /srv/cray/tests/google/goss-image-common.yaml validate -f junit | tee /tmp/goss_google_out.xml'"]
-    only = ["googlecompute.ncn-common"]
+    only = [
+      "googlecompute.kubernetes",
+      "googlecompute.storage-ceph"
+    ]
   }
 
   provisioner "file" {
     direction = "download"
     source = "/tmp/goss_out.xml"
     destination = "${var.output_directory}/${source.name}/test-results.xml"
-    except = ["googlecompute.ncn-common"]
+    except = [
+      "googlecompute.kubernetes",
+      "googlecompute.storage-ceph"
+    ]
   }
 
   provisioner "file" {
@@ -446,7 +455,12 @@ build {
     }
     post-processor "shell-local" {
       inline = [
-        "if cat ${var.output_directory}/${source.name}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
+        "if cat ${var.output_directory}/${source.name}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"
+      ]
+      only   = [
+        "qemu.kubernetes",
+        "qemu.storage-ceph"
+      ]
     }
   }
 }
