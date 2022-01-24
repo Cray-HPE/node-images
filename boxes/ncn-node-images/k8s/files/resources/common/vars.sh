@@ -5,15 +5,15 @@
 #
 export KUBERNETES_PULL_PREVIOUS_VERSION="1.19.9"
 export KUBERNETES_PULL_VERSION="1.20.13"
-export KUBE_CONTROLLER_PREVIOUS_IMAGE="cray/kube-controller-manager:v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-export KUBE_CONTROLLER_IMAGE="cray/kube-controller-manager:v${KUBERNETES_PULL_VERSION}"
 export WEAVE_VERSION="2.8.1"
 export WEAVE_PREVIOUS_VERSION="2.8.0"
 export MULTUS_VERSION="v3.7"
+export MULTUS_PREVIOUS_VERSION="v3.1"
 export CONTAINERD_VERSION="1.5.7"
 export HELM_V3_VERSION="3.2.4"
 export VELERO_VERSION="v1.5.2"
 export ETCD_VERSION="v3.5.0"
+export PAUSE_VERSION="3.2"
 #
 # https://github.com/coredns/deployment/blob/master/kubernetes/CoreDNS-k8s_version.md
 #

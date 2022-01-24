@@ -4,9 +4,6 @@ set -e
 
 . /srv/cray/resources/common/vars.sh
 kubernetes_version="${KUBERNETES_PULL_VERSION}-0"
-kubernetes_pull_version="v${KUBERNETES_PULL_VERSION}"
-
-. /srv/cray/scripts/common/build-functions.sh
 
 echo "export KUBECONFIG=\"/etc/kubernetes/admin.conf\"" >> /etc/profile.d/cray.sh
 mkdir -p /etc/kubernetes
@@ -147,36 +144,68 @@ systemctl start containerd
 
 . /srv/cray/resources/common/vars.sh
 
-echo "Pre-pulling previous version containerd images, will continue to retry if it fails..."
-while ! kubeadm config images pull --kubernetes-version "v${KUBERNETES_PULL_PREVIOUS_VERSION}"; do
-  sleep 5
-done
-
-echo "Pre-pulling containerd images, will continue to retry if it fails..."
-while ! kubeadm config images pull --kubernetes-version "v${KUBERNETES_PULL_VERSION}"; do
-  sleep 5
-done
-
-echo "Pre-pulling other images"
-#
-# docker.io rate limits us, let's pull weave from dtr...
-#
-pre-pull-internal-images weaveworks/weave-npc:${WEAVE_VERSION} weaveworks/weave-kube:${WEAVE_VERSION}
-pre-pull-internal-images weaveworks/weave-npc:${WEAVE_PREVIOUS_VERSION} weaveworks/weave-kube:${WEAVE_PREVIOUS_VERSION}
-crictl pull docker.io/nfvpe/multus:${MULTUS_VERSION}
+echo "Pre-pulling images for previous version ceph provisioners (to support hybrid mode in upgrade)"
+crictl pull k8s.gcr.io/sig-storage/csi-node-driver-registrar:v1.3.0
 crictl pull k8s.gcr.io/sig-storage/csi-provisioner:v1.6.0
-crictl pull k8s.gcr.io/sig-storage/csi-attacher:v2.2.0
 crictl pull k8s.gcr.io/sig-storage/csi-resizer:v0.5.0
 crictl pull k8s.gcr.io/sig-storage/csi-snapshotter:v2.1.0
-crictl pull k8s.gcr.io/sig-storage/csi-node-driver-registrar:v1.3.0
-crictl pull k8s.gcr.io/sig-storage/csi-provisioner:v2.0.4
-crictl pull k8s.gcr.io/sig-storage/csi-attacher:v3.0.2
-crictl pull k8s.gcr.io/sig-storage/csi-resizer:v1.0.1
-crictl pull k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.2
-crictl pull k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.0.1
-crictl pull k8s.gcr.io/coredns:${COREDNS_PREVIOUS_VERSION}
-crictl pull k8s.gcr.io/coredns:${COREDNS_VERSION}
 crictl pull quay.io/cephcsi/cephcsi:v3.1.1
+crictl pull quay.io/k8scsi/csi-attacher:v2.1.1
+crictl pull quay.io/k8scsi/csi-node-driver-registrar:v1.3.0
+crictl pull quay.io/k8scsi/csi-provisioner:v1.6.0
+crictl pull quay.io/k8scsi/csi-resizer:v0.5.0
+crictl pull quay.io/k8scsi/csi-snapshotter:v2.1.0
+crictl pull quay.io/k8scsi/csi-snapshotter:v2.1.1
+
+echo "Pre-pulling images for current version ceph provisioners"
+crictl pull ${K8S_IMAGE_REGISTRY}/sig-storage/csi-provisioner:v3.1.0
+crictl pull ${K8S_IMAGE_REGISTRY}/sig-storage/csi-attacher:v3.4.0
+crictl pull ${K8S_IMAGE_REGISTRY}/sig-storage/csi-snapshotter:v4.2.0
+crictl pull ${K8S_IMAGE_REGISTRY}/sig-storage/csi-node-driver-registrar:v2.4.0
+crictl pull ${K8S_IMAGE_REGISTRY}/sig-storage/csi-resizer:v1.3.0
+crictl pull ${QUAY_IMAGE_REGISTRY}/cephcsi/cephcsi:v3.5.1
+
+echo "Pre-pulling images for previous version of K8S (to support hybrid mode in upgrade)"
+#
+# Pull these in 1.3 when previous versions are in artifactory
+# and match the previous version's manifests (and remove the ones
+# that pull from upstream)
+#
+# crictl pull ${K8S_IMAGE_REGISTRY}/coredns:${COREDNS_PREVIOUS_VERSION}
+# crictl pull ${K8S_IMAGE_REGISTRY}/kube-apiserver:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+# crictl pull ${K8S_IMAGE_REGISTRY}/kube-controller-manager:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+# crictl pull ${K8S_IMAGE_REGISTRY}/kube-scheduler:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+# crictl pull ${K8S_IMAGE_REGISTRY}/kube-proxy:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+# crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-npc:${WEAVE_PREVIOUS_VERSION}
+# crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-kube:${WEAVE_PREVIOUS_VERSION}
+# crictl pull ${DOCKER_IMAGE_REGISTRY}/nfvpe/multus:${MULTUS_PREVIOUS_VERSION}
+#
+crictl pull k8s.gcr.io/coredns:${COREDNS_PREVIOUS_VERSION}
+crictl pull k8s.gcr.io/kube-apiserver:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+crictl pull k8s.gcr.io/kube-controller-manager:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+crictl pull k8s.gcr.io/kube-scheduler:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+crictl pull k8s.gcr.io/kube-proxy:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+crictl pull k8s.gcr.io/pause:"${PAUSE_VERSION}"
+crictl pull docker.io/weaveworks/weave-npc:${WEAVE_PREVIOUS_VERSION}
+crictl pull docker.io/weaveworks/weave-kube:${WEAVE_PREVIOUS_VERSION}
+crictl pull docker.io/nfvpe/multus:${MULTUS_PREVIOUS_VERSION}
+
+echo "Pre-pulling images for current version of K8S from artifactory"
+crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-kube:${WEAVE_VERSION}
+crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-npc:${WEAVE_VERSION}
+crictl pull ${DOCKER_IMAGE_REGISTRY}/nfvpe/multus:${MULTUS_VERSION}
+crictl pull ${K8S_IMAGE_REGISTRY}/coredns:${COREDNS_VERSION}
+crictl pull ${K8S_IMAGE_REGISTRY}/kube-apiserver:"v${KUBERNETES_PULL_VERSION}"
+crictl pull ${K8S_IMAGE_REGISTRY}/kube-controller-manager:"v${KUBERNETES_PULL_VERSION}"
+crictl pull ${K8S_IMAGE_REGISTRY}/kube-scheduler:"v${KUBERNETES_PULL_VERSION}"
+crictl pull ${K8S_IMAGE_REGISTRY}/kube-proxy:"v${KUBERNETES_PULL_VERSION}"
+crictl pull ${K8S_IMAGE_REGISTRY}/pause:"${PAUSE_VERSION}"
 
 echo "Displaying list of pre-cached images"
+
 crictl images
+
+echo "Writing docker registry sources to disk for use during cloud-init"
+echo "export K8S_IMAGE_REGISTRY=${K8S_IMAGE_REGISTRY}" >> /srv/cray/resources/common/vars.sh
+echo "export DOCKER_IMAGE_REGISTRY=${DOCKER_IMAGE_REGISTRY}" >> /srv/cray/resources/common/vars.sh
+echo "export QUAY_IMAGE_REGISTRY=${QUAY_IMAGE_REGISTRY}" >> /srv/cray/resources/common/vars.sh
