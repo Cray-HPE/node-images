@@ -13,6 +13,21 @@ variable "disk_size" {
   default = "42000"
 }
 
+variable "docker_image_registry" {
+  type = string
+  default = "artifactory.algol60.net/csm-docker/stable/docker.io"
+}
+
+variable "k8s_image_registry" {
+  type = string
+  default = "artifactory.algol60.net/csm-docker/stable/k8s.gcr.io"
+}
+
+variable "quay_image_registry" {
+  type = string
+  default = "artifactory.algol60.net/csm-docker/stable/quay.io"
+}
+
 variable "headless" {
   type = bool
   default = true
