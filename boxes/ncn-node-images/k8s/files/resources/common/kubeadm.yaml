@@ -14,7 +14,7 @@ clusterName: kubernetes
 controlPlaneEndpoint: "${CONTROL_PLANE_ENDPOINT}"
 dns:
   type: CoreDNS
-imageRepository: k8s.gcr.io
+imageRepository: "${K8S_IMAGE_REGISTRY}"
 networking:
   dnsDomain: cluster.local
   podSubnet: "${PODS_CIDR}"

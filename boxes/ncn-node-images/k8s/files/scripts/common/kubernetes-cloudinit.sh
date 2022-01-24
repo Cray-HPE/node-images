@@ -76,7 +76,7 @@ function join() {
     echo "$(cat ${join_script_local}) --apiserver-advertise-address=${K8S_NODE_IP}" > ${join_script_local}
   fi
 
-  chmod +x $join_script_local
+  chmod 0700 $join_script_local
   echo "Attempting to join node to the Kubernetes cluster (will continue to retry if it fails)"
   echo "$(cat $join_script_local)..."
   while ! $join_script_local; do
@@ -117,6 +117,8 @@ fi
 kubeadm token create --print-join-command > /etc/cray/kubernetes/join-command 2>/dev/null
 echo "$(cat /etc/cray/kubernetes/join-command) --control-plane --certificate-key $(cat /etc/cray/kubernetes/certificate-key)" \
   > /etc/cray/kubernetes/join-command-control-plane
+chmod 0700 /etc/cray/kubernetes/join-command
+chmod 0700 /etc/cray/kubernetes/join-command-control-plane
 
 EOF
     chmod +x /srv/cray/scripts/kubernetes/token-certs-refresh.sh
