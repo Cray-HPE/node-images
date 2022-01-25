@@ -171,9 +171,9 @@ function configure-s3fs() {
   s3fs_cache_dir=/var/lib/s3fs_cache
 
   if [ -d ${s3fs_cache_dir} ]; then
-    s3fs_opts="use_path_request_style,use_cache=${s3fs_cache_dir},check_cache_dir_exist"
+    s3fs_opts="use_path_request_style,use_cache=${s3fs_cache_dir},check_cache_dir_exist,use_xattr"
    else
-    s3fs_opts="use_path_request_style"
+    s3fs_opts="use_path_request_style,use_xattr"
   fi
 
   if [[ "$(hostname)" =~ ^ncn-m ]]; then
