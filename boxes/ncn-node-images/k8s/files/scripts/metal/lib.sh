@@ -131,11 +131,18 @@ function expand-root-disk() {
 
 function configure-s3fs-directory() {
 
+  local s3_configure_arg_count=$#
   local s3_user=$1
   local s3_bucket=$2
   local s3fs_mount_dir=$3
-  local s3fs_cache_dir=$4
-  local s3fs_opts=$5
+  if [[ $s3_configure_arg_count -eq 5 ]]; then
+    #s3fs_cache_dir and s3fs_opts were passed as args
+    local s3fs_cache_dir=$4
+    local s3fs_opts=$5
+  elif [[ $s3_configure_arg_count -eq 4 ]]; then
+    #s3fs_cache_dir was not passed, meaning no cache desired  
+    local s3fs_opts=$4
+  fi
 
   echo "Configuring for ${s3_bucket} S3 bucket at ${s3fs_mount_dir} for ${s3_user} S3 user"
 
@@ -189,6 +196,10 @@ function configure-s3fs() {
     # Set cache pruning for admin tools to 5G of the 200G volume (every 2nd hour)
     #
     echo "0 */2 * * * root /usr/bin/prune-s3fs-cache.sh admin-tools ${s3fs_cache_dir} 5368709120" > /etc/cron.d/prune-s3fs-admin-tools-cache
+
+    configure-s3fs-directory config-data config-data /var/opt/cray/config-data ${s3fs_opts}
+    #
+    # No cache pruning required for config-data folder as we are not caching this folder
 
   else
     configure-s3fs-directory ims boot-images /var/lib/cps-local/boot-images ${s3fs_cache_dir} ${s3fs_opts}
