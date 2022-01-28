@@ -25,7 +25,12 @@ export num_storage_nodes=$(craysys metadata get num-storage-nodes)
 echo "number of storage nodes: $num_storage_nodes"
 
 for node in $(seq 1 $num_storage_nodes); do
-  nodename=$(printf "ncn-s%03d.nmn" $node)
+  if [[ "$CRAYSYS_TYPE == "metal" ]]
+  then
+    nodename=$(printf "ncn-s%03d.nmn" $node)
+  else
+    nodename=$(printf "ncn-s%03d" $node)
+  fi
   echo "Checking for node $nodename status"
   until nc -z -w 10 $nodename 22; do
     echo "Waiting for $nodename to be online, sleeping 60 seconds between polls"
@@ -34,12 +39,22 @@ for node in $(seq 1 $num_storage_nodes); do
 done
 
 for node in $(seq 1 $num_storage_nodes); do
- nodename=$(printf "ncn-s%03d.nmn" $node)
+  if [[ "$CRAYSYS_TYPE == "metal" ]]
+  then
+    nodename=$(printf "ncn-s%03d.nmn" $node)
+  else
+    nodename=$(printf "ncn-s%03d" $node)
+  fi
  ssh-keyscan -t rsa -H $nodename >> ~/.ssh/known_hosts
 done
 
 for node in $(seq 1 $num_storage_nodes); do
-  nodename=$(printf "ncn-s%03d.nmn" $node)
+  if [[ "$CRAYSYS_TYPE == "metal" ]]
+  then
+    nodename=$(printf "ncn-s%03d.nmn" $node)
+  else
+    nodename=$(printf "ncn-s%03d" $node)
+  fi
   ssh "$nodename" /srv/cray/scripts/common/pre-load-images.sh
 done
 
@@ -117,5 +132,16 @@ else
   echo "creating sma storage class pre-reqs"
   create_sma_ceph_secrets
   create_sma_storage_class
+
+  echo "creating duplicate resources for transition into dedicated namespaces"
+  create_ceph_rbd_1.2_csi_configmap
+  create_ceph_cephfs_1.2_csi_configmap
+  create_k8s_1.2_ceph_secrets
+  create_sma_1.2_ceph_secrets
+  create_cephfs_1.2_ceph_secrets
+  create_k8s_1.2_storage_class
+  create_sma_1.2_storage_class
+  create_cephfs_1.2_storage_class
+
   mark_initialized $csi_initialized_file
 fi
