@@ -61,6 +61,7 @@ source "googlecompute" "pit-common" {
   service_account_email = "${var.google_service_account_email}"
   ssh_username = "root"
   zone = "${var.google_zone}"
+  image_guest_os_features = "${var.image_guest_os_features}"
   image_family = "${var.google_destination_image_family}"
   image_name = "vshasta-${var.image_name}-${var.artifact_version}"
   image_description = "build.source-artifact = ${var.google_source_image_url}, build.url = ${var.build_url}"

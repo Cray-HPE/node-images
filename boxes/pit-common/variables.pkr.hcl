@@ -196,3 +196,8 @@ variable "build_url" {
   type = string
   default = ""
 }
+
+variable "image_guest_os_features" {
+  type = list(string)
+  default = ["MULTI_IP_SUBNET"]
+}
