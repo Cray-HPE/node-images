@@ -2,6 +2,9 @@
 
 set -e
 
+# Establish that this is a google system
+touch /etc/google_system
+
 echo "activate public cloud module"
 product=$(sudo SUSEConnect --list-extensions | grep -o "sle-module-public-cloud.*")
 [[ -n "$product" ]] && sudo SUSEConnect -p "$product"

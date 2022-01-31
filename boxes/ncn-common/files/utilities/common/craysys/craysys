@@ -34,7 +34,7 @@ def setup_cli(): # pragma: NO COVER
     return parser.parse_args()
 
 def get_system_type():
-    if Path('/usr/bin/google_network_daemon').is_file():
+    if Path('/etc/google_system').is_file():
         return 'google'
     else:
         return 'metal'

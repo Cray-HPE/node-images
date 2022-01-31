@@ -7,7 +7,7 @@
 function pre-pull-internal-images() {
   local image_names="$@"
   for image_name in $image_names; do
-    if [ -f /usr/bin/google_network_daemon ]; then
+    if [ -f /etc/google_system ]; then
       # no need to truly pre-pull in these cases, we'll use runtime
       # auth to pull at that time for Google/Virtual Shasta
       echo "Delaying pre-pull of gcr.io/vshasta-cray/${image_name} to runtime"
