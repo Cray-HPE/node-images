@@ -25,7 +25,7 @@ export num_storage_nodes=$(craysys metadata get num-storage-nodes)
 echo "number of storage nodes: $num_storage_nodes"
 
 for node in $(seq 1 $num_storage_nodes); do
-  if [[ "$CRAYSYS_TYPE == "metal" ]]
+  if [[ "$CRAYSYS_TYPE" == "metal" ]]
   then
     nodename=$(printf "ncn-s%03d.nmn" $node)
   else
@@ -39,7 +39,7 @@ for node in $(seq 1 $num_storage_nodes); do
 done
 
 for node in $(seq 1 $num_storage_nodes); do
-  if [[ "$CRAYSYS_TYPE == "metal" ]]
+  if [[ "$CRAYSYS_TYPE" == "metal" ]]
   then
     nodename=$(printf "ncn-s%03d.nmn" $node)
   else
@@ -49,7 +49,7 @@ for node in $(seq 1 $num_storage_nodes); do
 done
 
 for node in $(seq 1 $num_storage_nodes); do
-  if [[ "$CRAYSYS_TYPE == "metal" ]]
+  if [[ "$CRAYSYS_TYPE" == "metal" ]]
   then
     nodename=$(printf "ncn-s%03d.nmn" $node)
   else
