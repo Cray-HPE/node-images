@@ -370,7 +370,16 @@ build {
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes",
       "virtualbox-ovf.storage-ceph",
-      "qemu.storage-ceph"]
+      "qemu.storage-ceph"
+    ]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/google/cleanup.sh"
+    only = [
+      "googlecompute.kubernetes",
+      "googlecompute.storage-ceph"
+    ]
   }
 
   provisioner "shell" {
