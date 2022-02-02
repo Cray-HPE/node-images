@@ -382,7 +382,7 @@ pipeline {
             steps {
                 build job: 'Cray-HPE/livecd-gcp-infrastructure/main', parameters: [
                     string(name: 'GCPREGION', value: 'us-central1'),
-                    string(name: 'ENVIRONMENT', value: 'dev'),
+                    string(name: 'ENVIRONMENT', value: 'test'),
                     string(name: 'PITNODE_IMAGE_ID', value: "vshasta-pit-common-${VERSION}"),
                     string(name: 'ARTIFACT_VERSION', value: "${VERSION}")]
             }
