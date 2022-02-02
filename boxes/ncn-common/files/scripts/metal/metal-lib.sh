@@ -306,8 +306,9 @@ function efi_enforce {
     local boot_order
     boot_order_bbs=$(cat /tmp/bbs*   | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//')
     boot_order_rbbs=$(cat /tmp/rbbs* | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//')
+    # Note: if $efibootmgr_prefix is set, it will already contain the necessary trailing comma
     # remove trailing commas in case 'cat /tmp/rbbs*' is empty
-    boot_order=$(echo $efibootmgr_prefix,$boot_order_bbs,$boot_order_rbbs | sed 's/,*$//g')
+    boot_order=$(echo ${efibootmgr_prefix}${boot_order_bbs},${boot_order_rbbs} | sed 's/,*$//g')
     echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o $boot_order | grep -i bootorder
     echo activating boot entries && cat /tmp/bbs* | awk '!x[$0]++' | sed 's/^Boot//g' | tr -d '*' | awk '{print $1}' | xargs -r -i efibootmgr -b {} -a
 }
