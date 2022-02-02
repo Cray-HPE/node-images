@@ -301,7 +301,14 @@ function efi_enforce {
     # IMPORTANT: The ENTIRE list of entries needs to exist, otherwise iLO/HPE servers will undo any changes.
     # both /tmp/bbs* and /tmp/rbbs* are concatenated together; the ordinal order of the /tmp/bbsNUM files
     # will enforce NICs first.
-    echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o $efibootmgr_prefix$(cat /tmp/bbs* | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//'),$(cat /tmp/rbbs* | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//') | grep -i bootorder
+    local boot_order_bbs
+    local boot_order_rbbs
+    local boot_order
+    boot_order_bbs=$(cat /tmp/bbs*   | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//')
+    boot_order_rbbs=$(cat /tmp/rbbs* | sed 's/^Boot//g' | awk '{print $1} ' | tr -d '*' | tr -d '\n' | sed -r 's/(.{4})/\1,/g;s/,$//')
+    # remove trailing commas in case 'cat /tmp/rbbs*' is empty
+    boot_order=$(echo $efibootmgr_prefix,$boot_order_bbs,$boot_order_rbbs | sed 's/,*$//g')
+    echo enforcing boot order $(cat /tmp/bbs*) && efibootmgr -o $boot_order | grep -i bootorder
     echo activating boot entries && cat /tmp/bbs* | awk '!x[$0]++' | sed 's/^Boot//g' | tr -d '*' | awk '{print $1}' | xargs -r -i efibootmgr -b {} -a
 }
 
