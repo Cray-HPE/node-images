@@ -51,7 +51,7 @@ install_grub2() {
 
     # Remove all existing entries; anything with CRAY (lower or uppercase). We
     # only want our boot-loader.
-    for entry in $(efibootmgr | awk -F '*' 'toupper($0) ~ /CRAY/ {print $1}'); do
+    for entry in $(efibootmgr | awk -F '[* ]' 'toupper($0) ~ /CRAY/ {print $1}'); do
          efibootmgr -q -b ${entry:4:8} -B
     done
 
