@@ -1,3 +1,13 @@
+variable "artifactory_user" {
+  type = string
+  default = ""
+}
+
+variable "artifactory_token" {
+  type = string
+  default = ""
+}
+
 variable "boot_wait" {
   type = string
   default = "10s"

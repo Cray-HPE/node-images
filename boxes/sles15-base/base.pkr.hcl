@@ -86,6 +86,10 @@ build {
   }
 
   provisioner "shell" {
+    environment_vars = [
+      "ARTIFACTORY_USER=${var.artifactory_user}",
+      "ARTIFACTORY_TOKEN=${var.artifactory_token}"
+    ]
     script = "${path.root}/scripts/kernel.sh"
   }
 
