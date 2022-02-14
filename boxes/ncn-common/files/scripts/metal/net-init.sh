@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function fail_and_die() {
     echo >&2 ${1:-"$0 failed and is exiting"}
@@ -38,8 +38,26 @@ function ifconf() {
 
     # FIXME: Understand why cloud-init doesn't fix this for us; what is "Running interface command ['systemctl', 'restart', 'systemd-networkd', 'systemd-resolved'] failed"
     # Load our new configurations, or reload the daemon if nothing states it needs to be reloaded.
+    printf 'net-init: [ % -20s ]\n' 'sleeping 30s'
+    sleep 30
+    ip a show mgmt0
+    ip a show mgmt1
+    ip a show bond0
     printf 'net-init: [ % -20s ]\n' 'running: ifreload'
     wicked ifreload all
+    printf 'net-init: [ % -20s ]\n' 'sleeping 30s'
+    sleep 30
+    ip a show mgmt0
+    ip a show mgmt1
+    ip a show bond0
+
+    unenslavednic=$(ip a | grep -v SLAVE | awk -F': ' /mgmt/'{print $2}')
+    if [[ "$unenslavednic" =~ mgmt ]]; then
+        printf 'net-init: [ % -20s ]\n' 'repairing bond0'
+        ip link set $unenslavednic down
+        ip link set $unenslavednic master bond0
+    fi
+    ip a | grep bond
 
     # PHASE 2: cloud-init local meta will be invalid now that our topology changed; re-init cloud-init
     cloud-init clean
