@@ -11,7 +11,7 @@ echo "Pre-loading local images"
 # done
 
 podman image load registry.local/ceph/ceph:v15.2.8 -i /srv/cray/resources/common/images/ceph_v15.2.8.tar
-podman image load registry.local/ceph/ceph:v15.2.12 -i /srv/cray/resources/common/images/ceph_v15.2.12.tar
+podman image load registry.local/ceph/ceph:v15.2.15 -i /srv/cray/resources/common/images/ceph_v15.2.15.tar
 podman image load registry.local/ceph/ceph-grafana:6.6.2 -i /srv/cray/resources/common/images/ceph-grafana_6.6.2.tar
 podman image load registry.local/ceph/ceph-grafana:6.7.4 -i /srv/cray/resources/common/images/ceph-grafana_6.7.4.tar
 podman image load registry.local/quay.io/prometheus/prometheus:v2.18.1 -i /srv/cray/resources/common/images/prometheus_v2.18.1.tar
