@@ -3,7 +3,7 @@
 set -e
 
 kubernetes_version="1.20.13-0"
-ceph_version='15.2.12.83+g528da226523-3.25.1'
+ceph_version='15.2.14.84+gb6e5642e260-3.31.1'
 ansible_version='2.9.21'
 mkdir -p /etc/kubernetes
 echo "export KUBECONFIG=\"/etc/kubernetes/admin.conf\"" >> /etc/profile.d/cray.sh
@@ -50,9 +50,9 @@ systemctl start podman
 podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8
 podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8 registry.local/ceph/ceph:v15.2.8
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8
-podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12
-podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12 registry.local/ceph/ceph:v15.2.12
-podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.12
+podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.15
+podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.15 registry.local/ceph/ceph:v15.2.15
+podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.15
 podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
 podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0 registry.local/prometheus/alertmanager:v0.20.0
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
@@ -89,7 +89,7 @@ echo "Saving ceph image to tar file as backup"
 # done
 
 podman save registry.local/ceph/ceph:v15.2.8 -o /srv/cray/resources/common/images/ceph_v15.2.8.tar
-podman save registry.local/ceph/ceph:v15.2.12 -o /srv/cray/resources/common/images/ceph_v15.2.12.tar
+podman save registry.local/ceph/ceph:v15.2.15 -o /srv/cray/resources/common/images/ceph_v15.2.15.tar
 podman save registry.local/prometheus/alertmanager:v0.20.0 -o /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
 podman save registry.local/prometheus/alertmanager:v0.21.0 -o /srv/cray/resources/common/images/alertmanager_v0.21.0.tar
 podman save registry.local/prometheus/node-exporter:v0.18.1 -o /srv/cray/resources/common/images/node-exporter_v0.18.1.tar
