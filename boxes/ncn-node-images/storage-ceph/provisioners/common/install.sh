@@ -50,9 +50,9 @@ systemctl start podman
 podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8
 podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8 registry.local/ceph/ceph:v15.2.8
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8
-podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.15
-podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.15 registry.local/ceph/ceph:v15.2.15
-podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.15
+podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
+podman tag artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/ceph/ceph:v15.2.15
+podman rmi artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
 podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
 podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0 registry.local/prometheus/alertmanager:v0.20.0
 podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
