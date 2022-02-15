@@ -198,8 +198,8 @@ function init() {
    ceph config set mgr mgr/cephadm/container_image_prometheus    "$registry/prometheus/prometheus:v2.18.1"
    ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/quay.io/prometheus/alertmanager:v0.21.0"
    ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/quay.io/prometheus/node-exporter:v1.2.2"
-   ceph config set mgr mgr/cephadm/container_image_base "$regsistry/ceph/ceph:$CEPH_VERS"
-   ceph config set glocal container_image "$regsistry/ceph/ceph:$CEPH_VERS"
+   ceph config set mgr mgr/cephadm/container_image_base "$registry/ceph/ceph:v$CEPH_VERS"
+   ceph config set global container_image "$registry/ceph/ceph:v$CEPH_VERS"
    echo "Dashboard and monitoring images values set"
 
    echo "Deploying alertmanager, grafana, node-exporter and prometheus"
