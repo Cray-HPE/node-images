@@ -198,7 +198,8 @@ function init() {
    ceph config set mgr mgr/cephadm/container_image_prometheus    "$registry/prometheus/prometheus:v2.18.1"
    ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/quay.io/prometheus/alertmanager:v0.21.0"
    ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/quay.io/prometheus/node-exporter:v1.2.2"
-
+   ceph config set mgr mgr/cephadm/container_image_base "$regsistry/ceph/ceph:$CEPH_VERS"
+   ceph config set glocal container_image "$regsistry/ceph/ceph:$CEPH_VERS"
    echo "Dashboard and monitoring images values set"
 
    echo "Deploying alertmanager, grafana, node-exporter and prometheus"
@@ -207,15 +208,18 @@ function init() {
    ceph orch apply node-exporter
    ceph orch apply prometheus
 
-   for SERVICE in mon mgr osd mds client
-    do
-     CURRENT_IMG_VALUE=$(ceph config get $SERVICE container_image)
-     echo "Current image value for $SERVICE is $CURRENT_IMG_VALUE"
-     if [[ "$CURRENT_IMG_VALUE" != "$registry/ceph/ceph:v$CEPH_VERS" ]]
-     then
-      ceph config set $SERVICE container_image $registry/ceph/ceph:v$CEPH_VERS
-     fi
-    done
+## TEMP commenting out to test better method
+#
+#   for SERVICE in mon mgr osd mds client
+#    do
+#     CURRENT_IMG_VALUE=$(ceph config get $SERVICE container_image)
+#     echo "Current image value for $SERVICE is $CURRENT_IMG_VALUE"
+#     if [[ "$CURRENT_IMG_VALUE" != "$registry/ceph/ceph:v$CEPH_VERS" ]]
+#     then
+#      ceph config set $SERVICE container_image $registry/ceph/ceph:v$CEPH_VERS
+#     fi
+#    done
+##
 
    echo "Sleeping for 30 seconds to allow ceph devices to discover"
    sleep 30
