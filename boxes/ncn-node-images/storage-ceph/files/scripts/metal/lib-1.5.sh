@@ -208,19 +208,6 @@ function init() {
    ceph orch apply node-exporter
    ceph orch apply prometheus
 
-## TEMP commenting out to test better method
-#
-#   for SERVICE in mon mgr osd mds client
-#    do
-#     CURRENT_IMG_VALUE=$(ceph config get $SERVICE container_image)
-#     echo "Current image value for $SERVICE is $CURRENT_IMG_VALUE"
-#     if [[ "$CURRENT_IMG_VALUE" != "$registry/ceph/ceph:v$CEPH_VERS" ]]
-#     then
-#      ceph config set $SERVICE container_image $registry/ceph/ceph:v$CEPH_VERS
-#     fi
-#    done
-##
-
    echo "Sleeping for 30 seconds to allow ceph devices to discover"
    sleep 30
 
