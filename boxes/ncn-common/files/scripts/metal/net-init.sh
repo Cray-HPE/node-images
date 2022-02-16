@@ -1,7 +1,10 @@
-#!/bin/sh
+#!/bin/bash
+
+# don't complain about unquoted vars / word splitting
+# shellcheck disable=SC2086
 
 function fail_and_die() {
-    echo >&2 ${1:-"$0 failed and is exiting"}
+    echo >&2 "${1:-"$0 failed and is exiting"}"
     exit 1
 }
 
@@ -15,21 +18,22 @@ sed -i 's/NETCONFIG_DNS_POLICY=.*/NETCONFIG_DNS_POLICY=""/g' /etc/sysconfig/netw
 if [[ -f /etc/resolv.conf ]]; then
     rm /etc/resolv.conf
 fi
-cloud-init query --format="$(cat /etc/cloud/templates/resolv.conf.tmpl)" >/etc/resolv.conf || fail_and_die
+cloud-init query --format="$(cat /etc/cloud/templates/resolv.conf.tmpl)" >/etc/resolv.conf || fail_and_die "cloud-init query failed to render resolv.conf.tmpl"
 # Cease updating the default route; use the templated config files.
 sed -i 's/^DHCLIENT_SET_DEFAULT_ROUTE=.*/DHCLIENT_SET_DEFAULT_ROUTE="no"/' /etc/sysconfig/network/dhcp
 netconfig update -f
 
 # FIXME: MTL-1440 Use the default update_etc_hosts module.
 printf 'net-init: [ % -20s ]\n' 'running: hosts file'
-cloud-init query --format="$(cat /etc/cloud/templates/hosts.suse.tmpl)" >/etc/hosts || fail_and_die
+cloud-init query --format="$(cat /etc/cloud/templates/hosts.suse.tmpl)" >/etc/hosts || fail_and_die "cloud-init query failed to render hosts.suse.tmpl"
 
 # This function runs cloud-init commands twice;
 # once to generate the ifcfg files,
-# and again to reload cloud-init metadata after network daemons restart. 
+# and again to reload cloud-init metadata after network daemons restart.
 function ifconf() {
+    # Render the template
     printf 'net-init: [ % -20s ]\n' 'running: sysconfig'
-    cloud-init query --format="$(cat /etc/cloud/templates/cloud-init-network.tmpl)" >/etc/cloud/cloud.cfg.d/00_network.cfg || fail_and_die
+    cloud-init query --format="$(cat /etc/cloud/templates/cloud-init-network.tmpl)" >/etc/cloud/cloud.cfg.d/00_network.cfg || fail_and_die "cloud-init query failed to render cloud-init-network.tmpl"
     printf 'net-init: [ % -20s ]\n' 'running: acclimating'
 
     # PHASE 1: Invoke the generated template; generate the ifcfg files
@@ -51,8 +55,10 @@ ifconf
 function check_ips() {
     local flunk=${1:-0}
     # only fetch IPs for our networks
-    for nic in $(ls /etc/sysconfig/network/ifcfg-bond*.*); do
+    for nic in /etc/sysconfig/network/ifcfg-bond*.*; do
         ipv4_lease=$(wicked ifstatus --verbose ${nic#*-} | grep addr | grep ipv4)
+        # shellcheck disable=SC2076
+        # Intentional quotes. This is not a regex.
         if [[ "$ipv4_lease" =~ "[static]" ]]; then
             :
          else
