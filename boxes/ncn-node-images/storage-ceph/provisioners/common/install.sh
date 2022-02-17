@@ -71,8 +71,8 @@ podman rmi  artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.7.4
 podman pull artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1
 podman tag  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1 registry.local/prometheus/prometheus:v2.18.1
 podman tag  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1 
+podman rmi  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1
 
-podman rmi arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
 echo "Image pull complete"
 
 echo "Saving ceph image to tar file as backup"
