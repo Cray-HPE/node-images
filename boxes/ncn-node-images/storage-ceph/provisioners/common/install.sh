@@ -47,33 +47,30 @@ systemctl start podman
 
 # Note to clean this up.  CASMINST-2148
 
-podman pull arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8
-podman tag arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8 registry.local/ceph/ceph:v15.2.8
-podman rmi arti.dev.cray.com/third-party-docker-stable-local/ceph/ceph:v15.2.8
+podman pull artifactory.algol60.net/csm-docker/stable/ceph/ceph:v15.2.8
+podman tag  artifactory.algol60.net/csm-docker/stable/ceph/ceph:v15.2.8 registry.local/ceph/ceph:v15.2.8
+podman rmi  artifactory.algol60.net/csm-docker/stable/ceph/ceph:v15.2.8
 podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
-podman tag artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/ceph/ceph:v15.2.15
-podman rmi artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
-podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
-podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0 registry.local/prometheus/alertmanager:v0.20.0
-podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.20.0
-podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.21.0
-podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.21.0 registry.local/prometheus/alertmanager:v0.21.0
-podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/alertmanager:v0.21.0
-podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v0.18.1
-podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v0.18.1 registry.local/prometheus/node-exporter:v0.18.1
-podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v0.18.1
-podman pull arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v1.2.2
-podman tag arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v1.2.2 registry.local/prometheus/node-exporter:v1.2.2
-podman rmi arti.dev.cray.com/third-party-docker-stable-local/quay.io/prometheus/node-exporter:v1.2.2
-podman pull arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2
-podman tag arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2 registry.local/ceph/ceph-grafana:6.6.2
-podman rmi arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.6.2
-podman pull arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.7.4
-podman tag arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.7.4 registry.local/ceph/ceph-grafana:6.7.4
-podman rmi arti.dev.cray.com:443/docker-stable-local/ceph/ceph-grafana:6.7.4
-podman pull arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
-podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/prometheus/prometheus:v2.18.1
-podman tag arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1 
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/ceph/ceph:v15.2.15
+podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
+podman pull artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.20.0
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.20.0 registry.local/prometheus/alertmanager:v0.20.0
+podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.20.0
+podman pull artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.21.0
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.21.0 registry.local/prometheus/alertmanager:v0.21.0
+podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.21.0
+podman pull artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/node-exporter:v1.2.2
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/node-exporter:v1.2.2 registry.local/prometheus/node-exporter:v1.2.2
+podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/node-exporter:v1.2.2
+podman pull artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.6.2
+podman tag  artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.6.2 registry.local/ceph/ceph-grafana:6.6.2
+podman rmi  artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.6.2
+podman pull artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.7.4
+podman tag  artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.7.4 registry.local/ceph/ceph-grafana:6.7.4
+podman rmi  artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.7.4
+podman pull artifactory.algol60.net/csm-docker/stable/prometheus/prometheus:v2.18.1
+podman tag  artifactory.algol60.net/csm-docker/stable/prometheus/prometheus:v2.18.1 registry.local/prometheus/prometheus:v2.18.1
+podman tag  artifactory.algol60.net/csm-docker/stable/prometheus/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1 
 
 podman rmi arti.dev.cray.com:443/docker-stable-local/prometheus/prometheus:v2.18.1
 echo "Image pull complete"
@@ -92,7 +89,6 @@ podman save registry.local/ceph/ceph:v15.2.8 -o /srv/cray/resources/common/image
 podman save registry.local/ceph/ceph:v15.2.15 -o /srv/cray/resources/common/images/ceph_v15.2.15.tar
 podman save registry.local/prometheus/alertmanager:v0.20.0 -o /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
 podman save registry.local/prometheus/alertmanager:v0.21.0 -o /srv/cray/resources/common/images/alertmanager_v0.21.0.tar
-podman save registry.local/prometheus/node-exporter:v0.18.1 -o /srv/cray/resources/common/images/node-exporter_v0.18.1.tar
 podman save registry.local/prometheus/node-exporter:v1.2.2 -o /srv/cray/resources/common/images/node-exporter_v1.2.2.tar
 podman save registry.local/ceph/ceph-grafana:6.6.2 -o /srv/cray/resources/common/images/ceph-grafana_6.6.2.tar
 podman save registry.local/ceph/ceph-grafana:6.7.4 -o /srv/cray/resources/common/images/ceph-grafana_6.7.4.tar
