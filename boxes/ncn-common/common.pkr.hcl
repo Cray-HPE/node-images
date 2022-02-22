@@ -83,7 +83,7 @@ build {
   }
 
   provisioner "file" {
-    source = "csm-rpms"
+    source = "vendor/github.com/Cray-HPE/csm-rpms"
     destination = "/tmp/files/"
   }
 
