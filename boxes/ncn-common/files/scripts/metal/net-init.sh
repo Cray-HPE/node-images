@@ -43,20 +43,36 @@ function ifconf() {
     cloud-init clean
     cloud-init init
 
-    # FIXME: Understand why cloud-init doesn't fix this for us; what is "Running interface command ['systemctl', 'restart', 'systemd-networkd', 'systemd-resolved'] failed"
-    # Load our new configurations, or reload the daemon if nothing states it needs to be reloaded.
-    sleep 15
+    # Print diagnostic info
+    ip r
     ip a show mgmt0
     ip a show mgmt1
-    # bond0 should *not* exist at this point
-    ip a show bond0
+
+    gw=$(craysys metadata get --level node ipam | jq .cmn.gateway | tr -d '"')
+    if [ "$gw" = "" ]; then
+        echo "FATAL ERROR: unable to determine default route via craysys"
+        exit 1
+    else
+        echo "default ${gw} - $nic" >/etc/sysconfig/network/ifroute-$nic
+    fi
+
+    # removing eth0 configs
+    # ALWAYS DO THIS; THESE SHOULD NOT EXIST IN METAL
+    # Any interface file that exists is tracked by wicked, if the interface does
+    # not actually exist in reality then wicked will complain. Remove the needless files.
+    rm -rfv /etc/sysconfig/network/*eth*
+
     printf 'net-init: [ % -20s ]\n' 'running: ifreload'
-    wicked ifreload all
+    # Load our new configurations, or reload the daemon if nothing states it needs to be reloaded.
+    wicked ifreload all || systemctl restart wickedd
     printf 'net-init: [ % -20s ]\n' 'running: acclimating'
-    sleep 15
+
+    sleep 10
+
+    # Print diagnostic info
+    ip r
     ip a show mgmt0
     ip a show mgmt1
-    # bond0 *should* exist at this point
     ip a show bond0
 
     unenslavednic=$(ip a | grep -v SLAVE | awk -F': ' /mgmt/'{print $2}')
