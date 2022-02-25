@@ -20,14 +20,18 @@
 #
 # (MIT License)
 
+# shellcheck disable=SC2086,SC2046,SC2010
+
 fslabel=BOOTRAID
+# shellcheck disable=SC1091
 type mprint >/dev/null 2>&1 || . /srv/cray/scripts/common/lib.sh
 
 set -e
 
 # initrd - fetched from /proc/cmdline ; grab the horse we rode in on, not what the API aliens say.
-export initrd=$(grep -Po 'initrd=([\w\.]+)' /proc/cmdline | cut -d '=' -f2)
-[ -z "$initrd" ] && initrd=initrd.img.xz
+INITRD=$(grep -Po 'initrd=([\w\.]+)' /proc/cmdline | cut -d '=' -f2)
+export INITRD
+[ -z "$INITRD" ] && INITRD=initrd.img.xz
 
 trim() {
     local var="$*"
@@ -37,16 +41,21 @@ trim() {
 
 remove_fs_overwrite() {
     echo 'note: re-running cloud-init will not wipe any LVMs in /dev/md/AUX; to purge these on a re-run, source the metal-lib and invoke enable_fs_overwrite'
-    find /etc/cloud -name *metalfs.cfg -exec sed -i 's/overwrite:.*/overwrite: false/g' {} \;
+    find /etc/cloud -name "*metalfs.cfg" -exec sed -i 's/overwrite:.*/overwrite: false/g' {} \;
 }
 
 enable_fs_overwrite() {
+    # shellcheck disable=SC2210
     echo >2 'warning: re-running cloud-init will now wipe all LVMs in /dev/md/AUX!'
-    find /etc/cloud -name *metalfs.cfg -exec sed -i 's/overwrite:.*/overwrite: true/g' {} \;
+    find /etc/cloud -name "*metalfs.cfg" -exec sed -i 's/overwrite:.*/overwrite: true/g' {} \;
 }
 
 install_grub2() {
     local working_path=${1:-/metal/recovery}
+    local name
+    local index
+    local init_cmdline
+    local disk_cmdline
     mount -v -L $fslabel $working_path 2>/dev/null || echo 'continuing ...'
 
     # Remove all existing entries; anything with CRAY (lower or uppercase). We
@@ -56,19 +65,19 @@ install_grub2() {
     done
 
     # Install grub2.
-    local name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
-    local index=0
+    name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
+    index=0
     [ -z "$name" ] && name='CRAY Linux' # Note: if CRAY Linux is observed then the customer has installed a non-SLES distro.
     for disk in $(mdadm --detail $(blkid -L $fslabel) | grep /dev/sd | awk '{print $NF}'); do
         # Add '--suse-enable-tpm' to grub2-install once we need TPM.
         grub2-install --no-rs-codes --suse-force-signed --root-directory $working_path --removable "$disk"
         efibootmgr -c -D -d "$disk" -p 1 -L "CRAY UEFI OS $index" -l '\efi\boot\bootx64.efi' | grep CRAY
-        index=$(($index + 1))
+        index=$((index + 1))
     done
 
     # Get the kernel command we used to boot.
-    local init_cmdline=$(cat /proc/cmdline)
-    local disk_cmdline=''
+    init_cmdline=$(cat /proc/cmdline)
+    disk_cmdline=''
     for cmd in $init_cmdline; do
         # cleans up first argument when running this script on a disk-booted system
         if [[ $cmd =~ kernel$ ]]; then
@@ -110,7 +119,7 @@ menuentry "$name" --class sles --class gnu-linux --class gnu {
     echo    'Loading kernel ...'
     linuxefi \$prefix/../$disk_cmdline
     echo    'Loading initial ramdisk ...'
-    initrdefi \$prefix/../$initrd
+    initrdefi \$prefix/../$INITRD
 }
 EOF
 }
@@ -147,7 +156,7 @@ function get_boot_artifacts {
     base_dir="$(lsblk $(blkid -L $squashfs_storage) -o MOUNTPOINT -n)/$live_dir"
     [ -d $base_dir ] || echo >&2 'SQFSRAID was not mounted!' return 1
     cp -pv "${base_dir}kernel" "$working_path/boot/" || echo >&2 "Kernel file NOT found in $base_dir!" || artifact_error=1
-    cp -pv "${base_dir}${initrd}" "$working_path/boot/" || echo >&2 "${initrd} file NOT found in $base_dir!" || artifact_error=1
+    cp -pv "${base_dir}${INITRD}" "$working_path/boot/" || echo >&2 "${INITRD} file NOT found in $base_dir!" || artifact_error=1
 
     [ "$artifact_error" = 0 ] && return 0 || return 1
 }
@@ -155,7 +164,7 @@ function get_boot_artifacts {
 function configure_lldp() {
     local interfaces
     # Grab all bond interfaces and their members; mgmt and sun NICs. Remove duplicates from partial matches.
-    interfaces=`ls /sys/class/net/ | grep -oP '(mgmt|bond|sun)\d+' | sort -u`
+    interfaces=$(ls /sys/class/net/ | grep -oP '(mgmt|bond|sun)\d+' | sort -u)
     systemctl is-active lldpad >/dev/null || systemctl start lldpad
     for i in $interfaces; do
       echo "Configuring LLDP [$i] ..."
@@ -238,8 +247,8 @@ function enable_amsd() {
             # systemctl start cpqScsi
             ;;
         *)
-        echo >&2 not enabling iLO services for detected vendor: $vendor
-        ;;
+            echo >&2 not enabling iLO services for detected vendor: $vendor
+            ;;
     esac
 }
 
