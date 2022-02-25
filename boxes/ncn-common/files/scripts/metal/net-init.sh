@@ -98,7 +98,7 @@ function ifconf() {
     ip a show mgmt1
     ip a show bond0
 
-    unenslavednic=$(ip a | grep -v SLAVE | awk -F': ' /mgmt/'{print $2}')
+    unenslavednic=$(ip a | grep -v SLAVE | awk -F': ' /mgmt[01]/'{print $2}')
     if [[ "$unenslavednic" =~ mgmt ]]; then
         printf 'net-init: [ % -20s ]\n' 'repairing bond0'
         ip link set $unenslavednic down
