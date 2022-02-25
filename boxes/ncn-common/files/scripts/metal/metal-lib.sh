@@ -252,14 +252,6 @@ function enable_amsd() {
     esac
 }
 
-function clean_bogies {
-    # removing eth0 configs
-    # ALWAYS DO THIS; THESE SHOULD NOT EXIST IN METAL
-    # Any interface file that exists is tracked by wicked, if the interface does
-    # not actually exist in reality then wicked will complain. Remove the needless files.
-    rm -rfv /etc/sysconfig/network/*eth*
-}
-
 function drop_metal_tcp_ip {
     local nic=$1
     [ -z "$nic" ] && return 0
@@ -275,16 +267,6 @@ function drop_metal_tcp_ip {
         echo "Deleting ephemeral bootstrap IP $ip6addr from $nic"
         ip a d $ip6addr dev $nic
     fi
-}
-
-function write_default_route {
-    # Setup the route
-    # ALWAYS CLOBBER; ROUTE SHOULD ALWAYS BE THE SAME
-    # CLOBBER=UPDATE; ALWAYS UPDATE.
-    local gw
-    local nic=bond0.cmn0
-    gw=$(craysys metadata get --level node ipam | jq .cmn.gateway | tr -d '"')
-    echo "default ${gw} - $nic" >/etc/sysconfig/network/ifroute-$nic && wicked ifreload all || systemctl restart wickedd && sleep 3
 }
 
 # This will let the order fall into however the BIOS wants it; grouping netboot, disk, and removable options.
