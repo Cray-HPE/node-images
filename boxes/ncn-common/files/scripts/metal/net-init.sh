@@ -31,6 +31,9 @@ cloud-init query --format="$(cat /etc/cloud/templates/hosts.suse.tmpl)" >/etc/ho
 # once to generate the ifcfg files,
 # and again to reload cloud-init metadata after network daemons restart.
 function ifconf() {
+    local gw
+    local nic=bond0.cmn0
+
     # Render the template
     printf 'net-init: [ % -20s ]\n' 'running: sysconfig'
     cloud-init query --format="$(cat /etc/cloud/templates/cloud-init-network.tmpl)" >/etc/cloud/cloud.cfg.d/00_network.cfg || fail_and_die "cloud-init query failed to render cloud-init-network.tmpl"
