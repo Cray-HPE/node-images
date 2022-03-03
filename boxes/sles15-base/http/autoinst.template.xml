@@ -98,7 +98,7 @@
           <size>max</size>
           <filesystem config:type="symbol">ext4</filesystem>
           <mountby config:type="symbol">label</mountby>
-          <label>SQUASHFS</label>
+          <label>SQFSRAID</label>
         </partition>
       </partitions>
     </drive>
