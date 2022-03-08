@@ -6,6 +6,9 @@ echo "Ensuring /srv/cray/utilities locations are available for use system-wide"
 ln -s /srv/cray/utilities/common/craysys/craysys /bin/craysys
 echo "export PYTHONPATH=\"/srv/cray/utilities/common\"" >> /etc/profile.d/cray.sh
 
+echo "Configuring podman so it will run with fuse-overlayfs"
+sed -i 's/.*mount_program =.*/mount_program = "\/usr\/bin\/fuse-overlayfs"/' /etc/containers/storage.conf
+
 echo "Enabling services"
 systemctl enable multi-user.target
 systemctl set-default multi-user.target
