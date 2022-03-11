@@ -437,11 +437,28 @@ EOM
 function paginate() {
     local url="$1"
     local token
+
+    if test -z $url; then
+        echo "ERROR: paginate() called without an argument"
+        exit 1
+    fi
+
     { token="$(curl -sSk "$url" | tee /dev/fd/3 | jq -r '.continuationToken // null')"; } 3>&1
+
+    if test -z $token; then
+        echo "ERROR on line $LINENO: unable to retreive continuation token, exiting"
+        exit 1
+    fi
+
     until [[ "$token" == "null" ]]; do
         {
             token="$(curl -sSk "$url&continuationToken=${token}" | tee /dev/fd/3 | jq -r '.continuationToken // null')";
         } 3>&1
+
+        if test -z $token; then
+            echo "ERROR on line $LINENO: unable to retreive continuation token, exiting"
+            exit 1
+        fi
     done
 }
 
