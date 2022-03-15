@@ -62,6 +62,7 @@ podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertma
 podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.21.0
 podman pull artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/node-exporter:v1.2.2
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/node-exporter:v1.2.2 registry.local/prometheus/node-exporter:v1.2.2
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/node-exporter:v1.2.2 registry.local/iquay.io/prometheus/node-exporter:v1.2.2
 podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/node-exporter:v1.2.2
 podman pull artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.6.2
 podman tag  artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.6.2 registry.local/ceph/ceph-grafana:6.6.2
