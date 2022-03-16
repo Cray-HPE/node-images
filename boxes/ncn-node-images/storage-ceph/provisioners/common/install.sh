@@ -47,9 +47,9 @@ systemctl start podman
 
 # Note to clean this up.  CASMINST-2148
 
-podman pull artifactory.algol60.net/csm-docker/stable/ceph/ceph:v15.2.8
-podman tag  artifactory.algol60.net/csm-docker/stable/ceph/ceph:v15.2.8 registry.local/ceph/ceph:v15.2.8
-podman rmi  artifactory.algol60.net/csm-docker/stable/ceph/ceph:v15.2.8
+podman pull artifactory.algol60.net/csm-docker/stable/docker.io/ceph/ceph:v15.2.8
+podman tag  artifactory.algol60.net/csm-docker/stable/docker.io/ceph/ceph:v15.2.8 registry.local/ceph/ceph:v15.2.8
+podman rmi  artifactory.algol60.net/csm-docker/stable/docker.io/ceph/ceph:v15.2.8
 podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/ceph/ceph:v15.2.15
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
