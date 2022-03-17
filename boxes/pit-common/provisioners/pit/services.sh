@@ -4,6 +4,7 @@ set -e
 
 systemctl enable apache2
 systemctl enable basecamp
+systemctl enable conman
 systemctl enable chronyd
 systemctl enable dnsmasq
 systemctl enable nexus
