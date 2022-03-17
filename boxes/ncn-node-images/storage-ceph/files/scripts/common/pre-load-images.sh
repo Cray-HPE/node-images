@@ -18,7 +18,8 @@ podman image load -i /srv/cray/resources/common/images/ceph-grafana_6.7.4.tar
 podman image load -i /srv/cray/resources/common/images/prometheus_v2.18.1.tar
 podman image load -i /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
 podman image load -i /srv/cray/resources/common/images/alertmanager_v0.21.0.tar
-podman image load -i /srv/cray/resources/common/images/node-exporter_v0.18.1.tar
+podman tag registry.local/prometheus/alertmanager:v0.21.0 registry.local/quay.io/prometheus/alertmanager:v0.21.0
 podman image load -i /srv/cray/resources/common/images/node-exporter_v1.2.2.tar
+podman tag registry.local/prometheus/node-exporter:v1.2.2 registry.local/quay.io/prometheus/node-exporter:v1.2.2
 
 echo "Images loaded"
