@@ -54,6 +54,10 @@ podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/ceph/ceph:v15.2.15
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
 podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
+podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16 registry.local/ceph/ceph:v15.2.16
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16
+podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16
 podman pull artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.20.0
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.20.0 registry.local/prometheus/alertmanager:v0.20.0
 podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.20.0
@@ -89,6 +93,7 @@ echo "Saving ceph image to tar file as backup"
 
 podman save registry.local/ceph/ceph:v15.2.8 -o /srv/cray/resources/common/images/ceph_v15.2.8.tar
 podman save registry.local/ceph/ceph:v15.2.15 -o /srv/cray/resources/common/images/ceph_v15.2.15.tar
+podman save registry.local/ceph/ceph:v15.2.16 -o /srv/cray/resources/common/images/ceph_v15.2.16.tar
 podman save registry.local/prometheus/alertmanager:v0.20.0 -o /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
 podman save registry.local/prometheus/alertmanager:v0.21.0 -o /srv/cray/resources/common/images/alertmanager_v0.21.0.tar
 podman save registry.local/prometheus/node-exporter:v1.2.2 -o /srv/cray/resources/common/images/node-exporter_v1.2.2.tar

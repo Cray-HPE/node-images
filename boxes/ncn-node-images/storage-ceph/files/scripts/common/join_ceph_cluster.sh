@@ -4,19 +4,19 @@
 
 host=$(hostname)
 
-> ~/.ssh/known_hosts
+truncate --size=0 ~/.ssh/known_hosts  2>&1
 
 /srv/cray/scripts/common/pre-load-images.sh
 
 function gather_ceph_conf () {
-  FSID=$(pdsh -w $node -N 'ceph -s --format=json-pretty|jq -r .fsid')
-  WAS_MON=$(pdsh -w $node -N ceph node ls|jq -r --arg h $host 'any(.mon|keys; .[] == $h)')
-  WAS_OSD=$(pdsh -w $node -N ceph node ls|jq -r --arg h $host 'any(.osd|keys; .[] == $h)')
+  FSID=$(ssh $node 'ceph -s --format=json-pretty|jq -r .fsid')
+  WAS_MON=$(ssh $node ceph node ls|jq -r --arg h $host 'any(.mon|keys; .[] == $h)')
+  WAS_OSD=$(ssh $node ceph node ls|jq -r --arg h $host 'any(.osd|keys; .[] == $h)')
   if $WAS_OSD
   then
-    OSDS+=($(pdsh -w $node -N "ceph osd ls-tree $host"))
+    OSDS+=($(ssh $node "ceph osd ls-tree $host"))
   fi
-  CONF=$(pdsh -w $node -N ceph config generate-minimal-conf)
+  CONF=$(ssh $node ceph config generate-minimal-conf)
   echo "fsid $FSID"
   echo "OSDS ${OSDS[@]}"
   echo "WAS_MON $WAS_MON"
@@ -47,8 +47,9 @@ function apply_ceph_conf () {
 
 for node in ncn-s001 ncn-s002 ncn-s003; do
 
-  if [[ $counter -eq 0 ]] && nc -z -w 10 $node 22 
+  if [[ $counter -eq 0 ]] && nc -z -w 10 $node 22
     then
+      ssh-keygen -R "$node"
       ssh-keyscan -H "$node" >> ~/.ssh/known_hosts
       if [[ "$host" =~ ^("ncn-s001"|"ncn-s002"|"ncn-s003")$ ]] && [[ "$host" != "$node" ]]
       then
@@ -62,7 +63,7 @@ for node in ncn-s001 ncn-s002 ncn-s003; do
 
       if $WAS_OSD
       then
-        if [[ $counter_a -eq 0 ]] && [[ $(pdsh -w $node -N "ceph orch host rm $host") ]]
+        if [[ $counter_a -eq 0 ]] && [[ $(ssh $node "ceph orch host rm $host") ]]
         then
           (( counter_a+=1 ))
         fi
@@ -70,10 +71,10 @@ for node in ncn-s001 ncn-s002 ncn-s003; do
 
       if $WAS_MON
       then
-	pdsh -w $node -N "ceph mon rm $host"
+	ssh $node "ceph mon rm $host"
       fi
 
-      if [[ ! $(pdsh -w $node "ceph cephadm generate-key; ceph cephadm get-pub-key > ~/ceph.pub; ssh-keyscan -H $host >> ~/.ssh/known_hosts ;ssh-copy-id -f -i ~/ceph.pub root@$host; ceph orch host add $host") ]]
+      if [[ ! $(ssh -o StrictHostKeyChecking=no $node "ceph cephadm generate-key; ceph cephadm get-pub-key > ~/ceph.pub; ssh-keygen -R $host; ssh-keyscan -H $host >> ~/.ssh/known_hosts ;ssh-copy-id -f -i ~/ceph.pub root@$host; ceph orch host add $host") ]]
       then
         if [[ "$node" =~ "ncn-s003" ]]
         then
@@ -100,7 +101,7 @@ then
         echo "Failed to bring in OSDs, manual troubleshooting required."
         exit 1
       fi
-      if pdsh -w $node ceph mgr fail
+      if ssh -o StrictHostKeyChecking=no $node ceph mgr fail
       then
         (( ceph_mgr_successful_restarts+1 ))
         sleep 120
@@ -120,16 +121,16 @@ if $WAS_OSD
 then
     if [[ "$host" != "$node" ]]
     then
-      active_mgr=$(pdsh -w $node -N "ceph mgr dump|jq -r '.active_name'")
-      pdsh -w $node ceph mgr fail
-      until [[ "$active_mgr" != $(pdsh -w $node "ceph mgr dump|jq '.active_name'") ]]
+      active_mgr=$(ssh $node "ceph mgr dump|jq -r '.active_name'")
+      ssh $node ceph mgr fail
+      until [[ "$active_mgr" != $(ssh $node "ceph mgr dump|jq '.active_name'") ]]
       do
          sleep 15
       done
       for osd in ${OSDS[@]}
       do
          echo "redeploying osd.$osd"
-         pdsh -w $node -N "ceph orch daemon redeploy osd.$osd"
+         ssh $node "ceph orch daemon redeploy osd.$osd"
          (( loop_counter+=1 ))
          sleep 5
      done
@@ -142,11 +143,15 @@ fi
 echo “loop counter: $loop_counter”
 done
 
+num_storage_nodes=$(craysys metadata get num_storage_nodes)
+
 if [ ! -f "/etc/ceph/ceph.client.ro.keyring" ]
 then
   truncate --size=0 ~/.ssh/known_hosts  2>&1
+  echo "*** num of storage nodes $num_storage_nodes"
   for node in $(seq 1 $num_storage_nodes); do
    nodename=$(printf "ncn-s%03d.nmn" $node)
+   echo "****** ssh-keyscan $nodename"
    ssh-keyscan -t rsa -H $nodename >> ~/.ssh/known_hosts
   done
 
