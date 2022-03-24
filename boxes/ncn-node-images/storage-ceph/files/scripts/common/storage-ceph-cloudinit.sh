@@ -10,7 +10,7 @@ registry="${1:-registry.local}"
 CSM_RELEASE="${2:-1.5}"
 CEPH_VERS="${3:-15.2.15}"
 
-. /srv/cray/scripts/${CRAYSYS_TYPE}/lib-${CSM_RELEASE}.sh
+. /srv/cray/scripts/${CRAYSYS_TYPE}/lib.sh
 . /srv/cray/scripts/common/wait-for-k8s-worker.sh
 . /srv/cray/scripts/common/mark_step_complete.sh
 . /srv/cray/scripts/common/auditing_config.sh
