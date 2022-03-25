@@ -25,5 +25,7 @@
 
 set -ex
 
-sed -i '/^root:/c\root:\*:18969::::::' /etc/shadow
+seconds_per_day=$(( 60*60*24 ))
+days_since_1970=$(( $(date +%s) / seconds_per_day ))
+sed -i "/^root:/c\root:\*:$days_since_1970::::::" /etc/shadow
 rm -rf /root/.ssh
