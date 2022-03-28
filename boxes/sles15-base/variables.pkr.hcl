@@ -11,6 +11,14 @@ variable "cpus" {
 variable "disk_size" {
   type = string
   default = "8000"
+  description = "The initial disk size for QEMU builds."
+}
+
+variable "vbox_disk_size" {
+  type = string
+  default = "42000"
+  description = "The initial disk size for VirtualBox builds"
+
 }
 
 variable "disk_cache" {
