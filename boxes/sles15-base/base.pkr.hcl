@@ -9,7 +9,7 @@ source "virtualbox-iso" "sles15-base" {
   boot_wait = "${var.boot_wait}"
   cpus = "${var.cpus}"
   memory = "${var.memory}"
-  disk_size = "${var.disk_size}"
+  disk_size = "${var.vbox_disk_size}"
   format = "${var.vbox_format}"
   guest_additions_path = "VBoxGuestAdditions_{{ .Version }}.iso"
   guest_os_type = "OpenSUSE_64"
