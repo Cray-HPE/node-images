@@ -163,7 +163,7 @@ function create_cephfs_storage_class {
       parameters:
          clusterID: $FSID
          fsName: cephfs
-         pool: cephfs.cephfs.data
+         pool: $(ceph fs ls --format json-pretty|jq -r '.[].data_pools[]')
          csi.storage.k8s.io/provisioner-secret-name: csi-cephfs-secret
          csi.storage.k8s.io/provisioner-secret-namespace: default
          csi.storage.k8s.io/controller-expand-secret-name: csi-cephfs-secret
@@ -368,7 +368,7 @@ function create_cephfs_1.2_storage_class {
       parameters:
          clusterID: $FSID
          fsName: cephfs
-         pool: cephfs.cephfs.data
+         pool: $(ceph fs ls --format json-pretty|jq -r '.[].data_pools[]')
          csi.storage.k8s.io/provisioner-secret-name: csi-cephfs-secret
          csi.storage.k8s.io/provisioner-secret-namespace: default
          csi.storage.k8s.io/controller-expand-secret-name: csi-cephfs-secret
