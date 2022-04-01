@@ -24,7 +24,6 @@
 #
 set -exu
 
-
 # Find device and partition of /
 cd /
 df . | tail -n 1 | tr -s " " | cut -d " " -f 1 | sed -E -e 's/^([^0-9]+)([0-9]+)$/\1 \2/' |
@@ -38,24 +37,24 @@ if read DEV_DISK DEV_PARTITION_NR && [ -n "$DEV_PARTITION_NR" ]; then
   resize2fs ${DEV_DISK}${DEV_PARTITION_NR}
 fi
 
-echo "Initializing log location(s)"
-mkdir -p /var/log/cray
-touch /var/log/cray/no.log
-cat << 'EOF' > /etc/logrotate.d/cray
-/var/log/cray/*.log {
-  size 1M
-  create 744 root root
-  rotate 4
-}
-EOF
+#!/bin/bash
+set -e
 
-echo "Initializing directories and resources"
-mkdir -p /srv/cray
-cp -r /tmp/files/* /srv/cray/
-chmod +x -R /srv/cray/scripts
-rm -rf /tmp/files
-cp /srv/cray/sysctl/common/* /etc/sysctl.d/
-cp /srv/cray/limits/98-cray-limits.conf /etc/security/limits.d/98-cray-limits.conf
+ANSIBLE_VERSION=${ANSIBLE_VERSION:-2.11.10}
+REQUIREMENTS=( boto3 netaddr )
 
-# Change hostname from lower layer to ncn.
-echo 'ncn' > /etc/hostname
+echo "Installing CSM Ansible $ANSIBLE_VERSION"
+mkdir -pv /etc/ansible
+pushd /etc/ansible
+pip3 install virtualenv
+virtualenv csm_ansible
+. csm_ansible/bin/activate
+pip3 install ansible-core==$ANSIBLE_VERSION
+pip3 install ansible
+
+echo "Installing requirements: ${REQUIREMENTS[@]}"
+for requirement in ${REQUIREMENTS[@]}; do
+    pip3 install $requirement
+done
+deactivate
+popd

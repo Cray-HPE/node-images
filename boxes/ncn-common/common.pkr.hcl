@@ -77,39 +77,42 @@ build {
     "source.qemu.ncn-common",
     "source.googlecompute.ncn-common"]
 
-  provisioner "file" {
-    source = "${path.root}files"
-    destination = "/tmp/"
-  }
 
-  provisioner "file" {
-    source = "vendor/github.com/Cray-HPE/csm-rpms"
-    destination = "/tmp/files/"
-  }
+  # TODO: We shouldn't need this if we figure out CASMINST-4571
+#  provisioner "file" {
+#    source = "vendor/github.com/Cray-HPE/csm-rpms"
+#    destination = "/tmp/files/"
+#  }
 
-  provisioner "file" {
-    source = "custom"
-    destination = "/tmp/files/"
-  }
+  # TODO: This should be replaced in CASMINST-4571
+#  provisioner "file" {
+#    source = "custom"
+#    destination = "/tmp/files/"
+#  }
 
   // Setup each context (e.g. common, google, and metal)
+  // common/setup.sh expands disk and preps ansible environment
   provisioner "shell" {
-    script = "${path.root}provisioners/common/setup.sh"
+    script = "${path.root}/provisioners/common/setup.sh"
   }
 
-  provisioner "shell" {
-    script = "${path.root}provisioners/google/setup.sh"
+  provisioner "ansible-local" {
+    inventory_file  = "ansible/packer.yml"
+    playbook_dir    = "ansible"
+    playbook_file   = "ansible/pb_ncn_common_setup.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,metal"
+    only = [
+      "qemu.ncn-common",
+      "virtualbox-ovf.ncn-common"
+    ]
+  }
+
+  provisioner "ansible-local" {
+    inventory_file  = "ansible/packer.yml"
+    playbook_dir    = "ansible"
+    playbook_file   = "ansible/pb_ncn_common_setup.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,gcp"
     only = ["googlecompute.ncn-common"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/metal/setup.sh"
-    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
   }
 
   provisioner "shell" {
@@ -132,57 +135,67 @@ build {
     ]
   }
 
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/google/setup.sh"
+#    only = ["googlecompute.ncn-common"]
+#  }
+
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/metal/setup.sh"
+#    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
+#  }
+
   // Install packages by context (e.g. base (a.k.a. common), google, or metal)
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
-    valid_exit_codes = [0, 123]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
-    valid_exit_codes = [0, 123]
-    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/cms.packages'"]
-    valid_exit_codes = [0, 123]
-  }
+#  provisioner "shell" {
+#    inline = [
+#      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
+#    valid_exit_codes = [0, 123]
+#  }
+#
+#  provisioner "shell" {
+#    inline = [
+#      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
+#    valid_exit_codes = [0, 123]
+#    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
+#  }
+#
+#  provisioner "shell" {
+#    inline = [
+#      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/cms.packages'"]
+#    valid_exit_codes = [0, 123]
+#  }
 
   // Install all generic installers first by context (e.g. common, google, and metal).
   provisioner "shell" {
-    script = "${path.root}provisioners/common/install.sh"
+    script = "${path.root}/provisioners/common/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/google/install.sh"
+    script = "${path.root}/provisioners/google/install.sh"
     only = ["googlecompute.ncn-common"]
+
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/metal/install.sh"
+    script = "${path.root}/provisioners/metal/install.sh"
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
   // Install all team installers last, grouped by context (e.g. common, google metal).
   provisioner "shell" {
-    script = "${path.root}provisioners/common/csm/install.sh"
+    script = "${path.root}/provisioners/common/csm/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/common/cms/install.sh"
-  }
-
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/common/cos/install.sh"
+    script = "${path.root}/provisioners/common/cms/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/metal/csm/install.sh"
+    script = "${path.root}/provisioners/common/cos/install.sh"
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/metal/csm/install.sh"
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
@@ -234,7 +247,7 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}files/scripts/common/cleanup.sh"
+    script = "${path.root}/scripts/cleanup.sh"
   }
 
   provisioner "shell" {
