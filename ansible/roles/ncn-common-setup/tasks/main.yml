@@ -1,0 +1,228 @@
+---
+- name: Initialize cray directories
+  file:
+    path: /srv/cray
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  register: create_cray_dir
+  tags:
+    - common
+
+- name: Copy /srv/cray files
+  copy:
+    src: files/srv/cray/
+    dest: /srv/cray/
+    owner: root
+    group: root
+  tags:
+    - common
+
+# common/setup.sh
+- name: Initialize log directory
+  file:
+    path: /var/log/cray
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  tags:
+    - common
+
+- name: Initialize log file
+  file:
+    path: /var/log/cray/no.log
+    state: touch
+    mode: '0644'
+    owner: root
+    group: root
+  tags:
+    - common
+
+- name: Copy logrotate file
+  copy:
+    src: files/etc/logrotate.d/cray
+    dest: /etc/logrotate.d/cray
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - common
+
+- name: Set Cray scripts executable
+  file:
+    path: /srv/cray/scripts
+    state: directory
+    recurse: yes
+    mode: '0755'
+  tags:
+    - common
+
+- name: Move sysctl files into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/sysctl/common/
+    dest: /etc/sysctl.d/
+  tags:
+    - common
+
+- name: Move cray-limits file into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/limits/98-cray-limits.conf
+    dest: /etc/security/limits.d/98-cray-limits.conf
+  tags:
+    - common
+
+- name: Set a hostname
+  hostname:
+    name: ncn
+  tags:
+    - common
+
+- name: Import Shasta RPM key
+  rpm_key:
+    state: present
+    key: https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc
+  tags:
+    - common
+
+# google/setup.sh
+- name: Ensure it is known this is a google system
+  file:
+    path: /etc/google_system
+    state: touch
+    mode: '0644'
+    owner: root
+    group: root
+  tags:
+    - gcp
+
+- name: Install google guest environment packages
+  zypper:
+    update_cache: yes
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - google-guest-agent
+    - google-guest-configs
+    - google-guest-oslogin
+    - google-osconfig-agent
+  tags:
+    - gcp
+
+- name: Enable google services and ensure they are not masked
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+  with_items:
+    - google-guest-agent.service
+    - google-osconfig-agent.service
+    - google-oslogin-cache.service
+    - google-oslogin-cache.timer
+    - google-shutdown-scripts.service
+    - google-startup-scripts.service
+  tags:
+    - gcp
+
+- name: Modify DNS to use Cray DNS servers
+  lineinfile:
+    path: /etc/sysconfig/network/config
+    regexp: '^NETCONFIG_DNS_STATIC_SERVERS='
+    line: 'NETCONFIG_DNS_STATIC_SERVERS="172.31.84.40 172.30.84.40"'
+  tags:
+    - gcp
+
+- name: Restart network service, in all cases, also issue daemon-reload to pick up config changes
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: network
+  tags:
+    - gcp
+
+- name: Stubbing out network interface configuration files
+  copy:
+    src: files/etc/sysconfig/network/ifcfg-eth
+    dest: "/etc/sysconfig/network/ifcfg-eth{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ range(0, 10 + 1, 1)|list }}"
+  tags:
+    - gcp
+
+- name: Move gcp sysctl files into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/sysctl/google/
+    dest: /etc/sysctl.d/
+  tags:
+    - gcp
+
+- name: Scheduling job to ensure /root/.ssh/authorized_keys file is our /root/.ssh/id_rsa.pub only every 1 minute
+  cron:
+    name: "gcp authorized keys"
+    minute: "*/1"
+    job: "cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys >> /var/log/cray/cron.log 2>&1"
+  tags:
+    - gcp
+
+# metal/install.sh
+- name: Adding sysctl vars for metal
+  copy:
+    remote_src: yes
+    src: /srv/cray/sysctl/metal/
+    dest: /etc/sysctl.d/
+  tags:
+    - metal
+
+- name: Copy custom systemd files into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/systemd/
+    dest: /usr/lib/systemd/system/
+  tags:
+    - metal
+
+- name: Enable google services and ensure they are not masked
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+  with_items:
+    - kdump-cray
+    - cloud-init-oneshot
+  tags:
+    - metal
+
+- name: Adding sshd_config for metal
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/sshd_config
+    dest: /etc/ssh/sshd_config
+  tags:
+    - metal
+
+
+
+
+
+#
+#- name: Install Base Packages
+#  zypper:
+#    oldpackage: yes
+#    name: "{{ base_packages }}"
+#    state: present
+#
+#- name: Install Metal Packages
+#  zypper:
+#    name: "{{ metal_packages }}"
+#    state: present
+#
+#- name: Install CMS Packages
+#  zypper:
+#    name: "{{ cms_packages }}"
+#    state: present
