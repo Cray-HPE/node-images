@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  rados_conf: |-
+    int_endpoint_url: {{ cray_http_rgw_vip_endpoint_url }}
+    ext_endpoint_url: {{ cray_http_rgw_vip_endpoint_url }}
+    arn: {{ cray_sts_role_arn }}
+metadata:
+  name: sts-rados-config
+

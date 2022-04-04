@@ -1,0 +1,25 @@
+# Copyright 2018, 2019, Cray Inc. All Rights Reserved.
+---
+- name: Validate Ceph Health
+  any_errors_fatal: false
+  run_once: true
+  block:
+   - name: Check for Required Ceph Services
+     command: ceph health
+     retries: 3
+     delay: 3
+     changed_when: false
+     register: ceph_health
+     when:
+       - groups['mons'] is defined
+     delegate_to: "{{ groups['mons'][0] }}"
+
+   - debug:
+      msg: "{{ ceph_health.stdout_lines }}"
+
+   - fail:
+       msg: |
+              "{{ ceph_health.stdout }} is != HEALTH_OK, restart ceph services and re-run"
+     when: >
+       'HEALTH_OK' not in ceph_health.stdout and
+       'HEALTH_WARN' not in ceph_health.stdout

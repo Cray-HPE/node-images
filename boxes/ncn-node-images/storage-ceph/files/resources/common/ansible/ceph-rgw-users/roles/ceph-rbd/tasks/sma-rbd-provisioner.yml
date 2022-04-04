@@ -1,0 +1,69 @@
+# Copyright 2018-2020, Cray Inc. All Rights Reserved.
+---
+- name: Determine if running on cloud or metal
+  shell: "craysys type get"
+  register: infra_type
+  ignore_errors: yes
+
+- name: Set fact for base infrastructure
+  set_fact:
+    build_type: "{{ infra_type.stdout }}"
+  ignore_errors: yes
+
+- name: Render templates
+  when: ceph_rbd_enabled|bool
+  run_once: true
+  delegate_to: "{{ groups['managers'][0] }}"
+  block:
+    - name: Create /root/k8s/ceph/rbd directory
+      file:
+        path: /root/k8s/ceph/rbd
+        state: directory
+      loop: "{{ provisioner_namespaces }}"
+    - name: Render manifest for SMA Ceph RBD provisioner
+      template:
+        src: provisioner.yaml.j2
+        dest: "/root/k8s/ceph/rbd/{{ item }}-provisioner.yaml"
+        trim_blocks: false
+      loop: "{{ sma_provisioner_namespaces }}"
+    - name: Render manifest for sma block  storage class
+      template:
+        src: sma-block.storageclass.yaml.j2
+        dest: "/root/k8s/ceph/rbd/sma-block-storageclass.yaml"
+        trim_blocks: false
+
+- name: Initialize SMA/SMF Ceph pool
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  block:
+    - name: Create Ceph OSD pool
+      command: "ceph osd pool create {{ item.pool_name }} {{ item.args }}"
+      loop: "{{ sma_block_pools }}"
+      register: ceph_rbd_osd_pool
+      changed_when: ceph_rbd_osd_pool.rc == 0 and "already exists" not in ceph_rbd_osd_pool.stderr
+    - name: Initialize Ceph OSD pool
+      command: "rbd pool init {{ item.pool_name }}"
+      loop: "{{ sma_block_pools }}"
+      register: ceph_rbd_init_pool
+    - name: Create K8s Block OSD pool credentials
+      command: "ceph auth add client.{{ item.pool_name }} mon 'profile rbd' osd 'profile rbd pool={{ item.pool_name }}'"
+      loop: "{{ sma_block_pools }}"
+    - name: Set compression_algorithm for Ceph pools
+      command: "ceph osd pool set {{ item.pool_name }} compression_algorithm {{ item.compression_algorithm }}"
+      loop: "{{ sma_block_pools }}"
+    - name: Set compression_mode for Ceph pools
+      command: "ceph osd pool set {{ item.pool_name }} compression_mode {{ item.compression_mode }}"
+      loop: "{{ sma_block_pools }}"
+    - name: Set compression_required_ratio for Ceph pools
+      command: "ceph osd pool set {{ item.pool_name }} compression_required_ratio {{ item.compression_required_ratio }}"
+      loop: "{{ sma_block_pools }}"
+
+- name: Set SMF pool to 2 x replication
+  run_once: true
+  delegate_to: "{{ groups['managers'][0] }}"
+  command: "{{ item }}"
+  loop:
+    - "ceph osd pool set smf size 2"
+    - "ceph osd pool set smf min_size 1"
+  when: build_type == 'metal'
+

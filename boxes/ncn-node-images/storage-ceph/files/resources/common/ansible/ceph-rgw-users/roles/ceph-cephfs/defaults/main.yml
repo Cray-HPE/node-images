@@ -1,0 +1,12 @@
+# Copyright 2018, 2019, Cray Inc. All Rights Reserved.
+---
+
+ceph_cephfs_enabled: "{{ external_ceph_enabled | default(true) | bool }}"
+ceph_cephfs_namespace: ceph-cephfs
+#ceph_cephfs_provisioner_image: quay.io/external_storage/cephfs-provisioner:v2.1.0-k8s1.11
+ceph_cephfs_provisioner_image: "gcr.io/vshasta-cray/cray/cephfs-provisioner:shasta_1.2"
+metal_cephfs_provisioner_image: "dtr.dev.cray.com/cray/cray-cephfs-provisioner:0.1.0-nautilus-1.3"
+ceph_cephfs_provisioner_type: ceph.com/cephfs
+ceph_cephfs_admin_user: admin
+ceph_cephfs_admin_secret: ceph-cephfs-admin
+ceph_cephfs_claim_root: /pvc-volumes

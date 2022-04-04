@@ -1,0 +1,9 @@
+[alt_name_extensions]
+basicConstraints=CA:FALSE
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer
+subjectAltName = @alt_names
+[alt_names]
+{% for san in host_cert_sans %}
+DNS.{{ loop.index }} = {{ san }}
+{% endfor %}

@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "${RESOURCE_LIMITS_NAMESPACE}"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-mem-limit-range-requests
+  namespace: "${RESOURCE_LIMITS_NAMESPACE}"
+spec:
+  limits:
+  - type: Container
+    defaultRequest:
+      cpu: "10m"
+      memory: "64Mi"
