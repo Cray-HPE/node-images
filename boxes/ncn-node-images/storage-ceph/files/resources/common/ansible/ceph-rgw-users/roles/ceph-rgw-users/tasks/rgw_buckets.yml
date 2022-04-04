@@ -1,0 +1,58 @@
+# Copyright 2019, Cray Inc. All Rights Reserved.
+---
+- name: Determine if running on cloud or metal
+  shell: "craysys type get"
+  register: infra_type
+  ignore_errors: yes
+
+- name: Set fact for base infrastructure
+  set_fact:
+    build_type: "{{ infra_type.stdout }}"
+  ignore_errors: yes
+
+- name: Create S3 bucket {{ item.bucket_name }} for vshasta
+  s3_bucket:
+    aws_access_key: "{{ sts_s3_user.access_key }}"
+    aws_secret_key: "{{ sts_s3_user.secret_key }}"
+    name: "{{ item.bucket_name }}"
+    s3_url: "{{ cray_rgw_vshasta_endpoint_url }}"
+    ceph: true
+    versioning: false
+    policy: "{{ item.bucket_policy }}"
+  register: s3_create
+  ignore_errors: true
+  when: build_type != "metal"
+
+- name: Create S3 bucket {{ item.bucket_name }} for metal
+  s3_bucket:
+    aws_access_key: "{{ sts_s3_user.access_key }}"
+    aws_secret_key: "{{ sts_s3_user.secret_key }}"
+    name: "{{ item.bucket_name }}"
+    s3_url: "{{ cray_http_rgw_vip_endpoint_url }}"
+    ceph: true
+    versioning: false
+    policy: "{{ item.bucket_policy }}"
+  register: s3_create
+  ignore_errors: true
+  when: build_type == "metal"
+
+- name: Fail if {{ item.bucket_name }} wasn't successfully created
+  fail:
+    msg: "Bucket {{ item.bucket_name }} was not created"
+  when: s3_create.error is defined and s3_create.error.code != 'BucketAlreadyExists'
+
+- name: Set quota for {{ item.bucket_name }} bucket if specified
+  command: "radosgw-admin quota set --quota-scope=bucket --bucket={{ item.bucket_name }} --max-size={{ item.bucket_quota }}"
+  register: quota_set_bucket
+  until: quota_set_bucket.rc == 0 or quota_set_bucket.rc == 17
+  failed_when: quota_set_bucket.rc != 0 and quota_set_bucket.rc != 17
+  changed_when: quota_set_bucket.rc == 0
+  when: item.bucket_quota is defined
+
+- name: Enable quota for {{ item.user_name }} bucket if specified
+  command: "radosgw-admin quota enable --quota-scope=bucket --bucket={{ item.bucket_name }}"
+  register: quota_enable_bucket
+  until: quota_enable_bucket.rc == 0 or quota_enable_bucket.rc == 17
+  failed_when: quota_enable_bucket.rc != 0 and quota_enable_bucket.rc != 17
+  changed_when: quota_enable_bucket.rc == 0
+  when: item.bucket_quota is defined

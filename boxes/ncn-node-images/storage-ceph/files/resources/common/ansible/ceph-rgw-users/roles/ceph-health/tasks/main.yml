@@ -1,0 +1,7 @@
+- name: Validate Ceph Install
+  any_errors_fatal: true
+  block:
+   - name: Check for Required Ceph Services
+     include_tasks: validate-install.yml
+   - name: Check Ceph Health
+     include_tasks: ceph-health.yml

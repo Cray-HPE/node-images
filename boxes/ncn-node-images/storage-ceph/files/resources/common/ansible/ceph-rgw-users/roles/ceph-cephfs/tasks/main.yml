@@ -1,0 +1,76 @@
+# Copyright 2018, 2019, Cray Inc. All Rights Reserved.
+---
+- name: Determine if running on cloud or metal
+  shell: "craysys type get"
+  register: infra_type
+  ignore_errors: yes
+
+- name: Set fact for base infrastructure
+  set_fact:
+    build_type: "{{ infra_type.stdout }}"
+  ignore_errors: yes
+
+- name: Render templates
+  when: ceph_cephfs_enabled
+  run_once: true
+  delegate_to: "{{ groups['managers'][0] }}"
+  block:
+    - name: Create /root/k8s/ceph/cephfs directory
+      file:
+        path: /root/k8s/ceph/cephfs
+        state: directory
+    - name: Render manifest for Ceph FS provisioner
+      template:
+        src: provisioner.yaml.j2
+        dest: /root/k8s/ceph/cephfs/provisioner.yaml
+        trim_blocks: false
+    - name: Render manifest for Ceph RBD storage class
+      template:
+        src: storageclasses.yaml.j2
+        dest: /root/k8s/ceph/cephfs/storageclasses.yaml
+        trim_blocks: false
+
+- name: Deploy CephFS provisioner
+  when: ceph_cephfs_enabled
+  run_once: true
+  delegate_to: "{{ groups['managers'][0] }}"
+  block:
+    - name: Apply manifest for CephFS provisioner
+      command: kubectl apply -f /root/k8s/ceph/cephfs/provisioner.yaml
+      register: ceph_cephfs_provisioner
+      changed_when: ceph_cephfs_provisioner.rc == 0 and "unchanged" not in ceph_cephfs_provisioner.stdout
+    - name: Wait for CephFS provisioner to be available
+      command: "kubectl --namespace={{ ceph_cephfs_namespace }} wait --for=condition=available --timeout=60s deployment cephfs-provisioner"
+      changed_when: false
+
+- name: Update Kubernetes secret for Ceph admin key
+  when: ceph_cephfs_enabled
+  run_once: true
+  delegate_to: "{{ groups['managers'][0] }}"
+  block:
+    - name: Get Ceph admin key
+      command: "ceph auth get-key client.{{ ceph_cephfs_admin_user }}"
+      register: ceph_cephfs_admin_key
+      no_log: true
+    - name: Create temporary file for Ceph admin key
+      tempfile:
+        state: file
+        prefix: ceph-cephfs-admin-
+        suffix: .key
+      register: ceph_cephfs_admin_keyfile
+    - name: Write Ceph admin key to temporary file
+      copy:
+        content: "{{ hostvars[groups['mons'][0]]['ceph_cephfs_admin_key']['stdout'] }}"
+        dest: "{{ ceph_cephfs_admin_keyfile.path }}"
+    - name: Create Kubernetes secret for Ceph admin key
+      shell: "kubectl --namespace={{ ceph_cephfs_namespace }} create secret generic {{ ceph_cephfs_admin_secret }} --from-file={{ ceph_cephfs_admin_keyfile.path }} --save-config --dry-run -o yaml | kubectl apply -f -"
+      register: ceph_cephfs_admin_secret_results
+      changed_when: ceph_cephfs_admin_secret_results.rc == 0 and "unchanged" not in ceph_cephfs_admin_secret_results.stdout
+
+- name: Deploy Ceph FS storage class
+  when: ceph_cephfs_enabled
+  run_once: true
+  delegate_to: "{{ groups['managers'][0] }}"
+  command: kubectl apply -f /root/k8s/ceph/cephfs/storageclasses.yaml
+  register: ceph_cephfs_storage_class
+  changed_when: ceph_cephfs_storage_class.rc == 0 and "unchanged" not in ceph_cephfs_storage_class.stdout

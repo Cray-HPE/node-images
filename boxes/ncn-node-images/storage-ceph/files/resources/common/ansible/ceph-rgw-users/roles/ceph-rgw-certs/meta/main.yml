@@ -1,0 +1,16 @@
+# Copyright 2019, Cray Inc. All Rights Reserved.
+---
+dependencies:
+  #@DEP@- networks
+  #@DEP@- ceph-rgw-cert-authority
+
+
+# NOTE: Ansible is very inefficent at handling complex
+#       recursive dependencies.  So rather than depending on
+#       dependencies to pull in the necessary roles, your
+#       play list should include those roles that should be
+#       run before your roles.  See CASMCMS-1958 for more info.
+
+#       The "#@DEP@" tag in the above dependencies is for
+#       scripts to be able to easily edit and restore the
+#       dependencies if needed (such as for Ansible molecule)

@@ -1,0 +1,122 @@
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ item }}
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ item }}-provisioner
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["services"]
+    resourceNames: ["kube-dns","coredns"]
+    verbs: ["list", "get"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ item }}-provisioner
+  namespace: {{ item }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ item }}-provisioner
+  namespace: {{ item }}
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ item }}-provisioner
+  namespace: {{ item }}
+roleRef:
+  kind: ClusterRole
+  name: {{ item }}-provisioner
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: {{ item }}-provisioner
+    namespace: {{ item }}
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ item }}-provisioner
+  namespace: {{ item }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ item }}-provisioner
+subjects:
+- kind: ServiceAccount
+  name: {{ item }}-provisioner
+  namespace: {{ item }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ item }}-provisioner
+  namespace: {{ item }}
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 100%
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: {{ item }}-provisioner
+  template:
+    metadata:
+      labels:
+        app: {{ item }}-provisioner
+    spec:
+      containers:
+        - name: {{ item }}-provisioner
+          {% if build_type == 'google' %}
+          image: "{{ ceph_rbd_provisioner_image }}"
+          {% else %}
+          image: "{{ metal_rbd_provisioner_image }}"
+          {% endif %}
+          env:
+            - name: PROVISIONER_NAME
+              value: {{ ceph_rbd_provisioner_type }}
+      serviceAccount: {{ item }}-provisioner

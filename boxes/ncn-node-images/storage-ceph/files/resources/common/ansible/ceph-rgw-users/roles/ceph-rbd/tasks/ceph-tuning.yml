@@ -1,0 +1,80 @@
+# Copyright 2018-2020, Cray Inc. All Rights Reserved.
+---
+- name: Pre-create any pools that would normally get auto created later so we can tune them
+  when: ceph_rbd_enabled|bool
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  command: "ceph osd pool create {{ item }} 32 replicated"
+  loop:
+    - zone1.rgw.buckets.data
+
+- name: Configure Ceph to enable placement group auto scaling
+  when: ceph_rbd_enabled|bool
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  block:
+    - name: Enable pg_autoscaler module
+      command: "ceph mgr module enable pg_autoscaler"
+
+    - name: Turn pg_autoscale mode on by default
+      command: "ceph config set global osd_pool_default_pg_autoscale_mode on"
+
+    - name: List any osd pools already created
+      command: "ceph osd pool ls"
+      register: ceph_osd_pools
+
+    - name: Enable pg_autoscale for existing pools
+      command: "ceph osd pool set {{ item }} pg_autoscale_mode on"
+      with_items: "{{ ceph_osd_pools.stdout_lines }}"
+
+- name: Set the target_size_ratio for heavily used pools
+  when: ceph_rbd_enabled|bool and build_type == 'metal'
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  command: "ceph osd pool set {{ item }} target_size_ratio {{ ceph_meta_target_size_ratio }}"
+  loop: "{{ ceph_heavily_used_pools }}"
+  ignore_errors: yes
+
+- name: Set the target_size_ratio for meta data and index pools
+  when: ceph_rbd_enabled|bool and build_type == 'metal'
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  command: "ceph osd pool set {{ item }} target_size_ratio {{ ceph_target_size_ratio }}"
+  loop: "{{ ceph_metadata_index_pools }}"
+  ignore_errors: yes
+
+- name: Set default application for rgw ceph-ansible created pools
+  when: ceph_rbd_enabled|bool
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  command: "ceph osd pool application enable {{ item }} rgw"
+  loop:
+    - zone1.rgw.buckets.index
+    - zone1.rgw.buckets.data
+    - .rgw.root
+
+- name: Enable Ceph PG auto balancer
+  when: ceph_rbd_enabled|bool
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  block:
+    - name: Set flag to indicate we aren't supporting client backward compatibility
+      command: "ceph osd set-require-min-compat-client luminous"
+
+    - name: See if auto balancer is already enableed
+      shell: "ceph balancer status | jq '.active'"
+      register: ceph_balancer_status
+
+    - name: Set auto balancer status to on
+      command: "ceph balancer on"
+      when: ceph_balancer_status.stdout == "false"
+
+    - name: Set auto balancer mode to upmap
+      command: "ceph balancer mode upmap"
+      when: ceph_balancer_status.stdout == "false"
+
+    - name: Now verify the auto balancer mode is on and had correct mode
+      shell: "ceph balancer status"
+      register: ceph_balancer_status_new
+      when: ceph_balancer_status.stdout == "false"
+      failed_when: ("upmap" not in ceph_balancer_status_new.stdout) or ("true" not in ceph_balancer_status_new.stdout)
