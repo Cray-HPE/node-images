@@ -110,6 +110,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "${path.root}/provisioners/common/disk_resize.sh"
+  }
+
+  provisioner "shell" {
     inline = [
       "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
   }
@@ -121,10 +125,6 @@ build {
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
     inline = ["bash -c /srv/cray/custom/repos.sh"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/disk_resize.sh"
   }
 
   provisioner "shell" {
@@ -189,6 +189,10 @@ build {
       "qemu.ncn-common",
       "virtualbox-ovf.ncn-common"
     ]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/common/csm/ansible.sh"
   }
 
   provisioner "shell" {
