@@ -9,20 +9,17 @@ mkdir -p /etc/kubernetes
 echo "export KUBECONFIG=\"/etc/kubernetes/admin.conf\"" >> /etc/profile.d/cray.sh
 
 echo "Moving ceph operations files into place"
-mkdir -p /etc/ansible
 mkdir -p /srv/cray/tmp
 mkdir -p /srv/cray/tmp/storage_classes
-mkdir -p /etc/ansible
 
-echo "Creating directory for caching pomdan images"
+echo "Creating directory for caching podman images"
 image_dir="/srv/cray/resources/common/images/"
 mkdir -p $image_dir
 
 mv /srv/cray/resources/common/ansible/* /etc/ansible/
 
-echo "Installing Ansible"
+echo "Installing New Ansible Env"
 pushd /etc/ansible
-pip3 install virtualenv
 virtualenv boto3_ansible
 . boto3_ansible/bin/activate
 pip3 install ansible
