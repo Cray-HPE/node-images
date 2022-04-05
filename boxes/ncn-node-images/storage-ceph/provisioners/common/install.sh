@@ -31,17 +31,6 @@ pip3 install netaddr
 deactivate
 popd
 
-echo "Installing ceph"
-zypper install -y --auto-agree-with-licenses \
-       python3-boto3 \
-       python3-xml \
-       python3-six \
-       python3-netaddr \
-       netcat \
-       jq \
-       ceph-common-$ceph_version \
-       cephadm
-
 echo "Pulling the ceph container image"
 systemctl start podman
 
