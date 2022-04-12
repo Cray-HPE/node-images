@@ -69,6 +69,10 @@ variable "artifact_version" {
   default = "none"
 }
 
+variable "kernel_version" {
+  type    = string
+}
+
 variable "create_kis_artifacts_arguments" {
   type = string
   default = "kernel-initrd-only"

@@ -3,7 +3,7 @@ source "virtualbox-ovf" "ncn-common" {
   format = "${var.vbox_format}"
   checksum = "none"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
@@ -41,7 +41,7 @@ source "qemu" "ncn-common" {
   headless = "${var.headless}"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
@@ -142,6 +142,13 @@ build {
     environment_vars = [
       "SLES15_KERNEL_VERSION=${var.kernel_version}"
     ]
+    script = "${path.root}/scripts/kernel.sh"
+  }
+
+  provisioner "shell" {
+    environment_vars = [
+      "SLES15_KERNEL_VERSION=${var.kernel_version}"
+    ]
     script = "${path.root}/scripts/kernel-debug.sh"
     only = [
       "qemu.ncn-common",
@@ -233,9 +240,9 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.packages explicit'",
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.deps.packages deps'",
-      "sudo -S bash -c 'zypper lr -e /tmp/installed.repos'"
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.packages explicit'",
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/installed.deps.packages deps'",
+      "bash -c 'zypper lr -e /tmp/installed.repos'"
     ]
     only = [
       "qemu.ncn-common",
@@ -284,7 +291,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo -S bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh ${var.create_kis_artifacts_arguments}'"]
+      "bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh ${var.create_kis_artifacts_arguments}'"]
     only = ["qemu.ncn-common"]
   }
 

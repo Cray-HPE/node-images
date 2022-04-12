@@ -19,7 +19,7 @@ source "virtualbox-iso" "sles15-base" {
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
   sata_port_count = 8
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_port = 22
   ssh_username = "${var.ssh_username}"
@@ -66,7 +66,7 @@ source "qemu" "sles15-base" {
   http_directory = "${path.root}/http"
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_port = 22
   ssh_username = "${var.ssh_username}"
@@ -80,17 +80,6 @@ build {
   sources = [
     "source.virtualbox-iso.sles15-base",
     "source.qemu.sles15-base"]
-
-  provisioner "shell" {
-    script = "${path.root}/scripts/wait-for-autoyast-completion.sh"
-  }
-
-  provisioner "shell" {
-    environment_vars = [
-      "SLES15_KERNEL_VERSION=${var.kernel_version}"
-    ]
-    script = "${path.root}/scripts/kernel.sh"
-  }
 
   provisioner "shell" {
     script = "${path.root}/scripts/virtualbox.sh"
