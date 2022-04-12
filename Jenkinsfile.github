@@ -38,6 +38,7 @@ pipeline {
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
         NRAM = '4096'
+        PKR_VAR_kernel_version="5.3.18-150300.59.43.1"
     }
 
     parameters {

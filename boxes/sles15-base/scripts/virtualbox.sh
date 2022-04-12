@@ -6,7 +6,7 @@ set -e
 #rm -f /etc/zypp/locks
 
 # install required packages for virtualbox
-packages=( bzip2 gcc jq make kernel-devel kernel-macros kernel-default-devel gptfdisk parted )
+packages=( bzip2 gcc make kernel-devel kernel-macros kernel-default-devel gptfdisk parted )
 zypper --non-interactive install --no-recommends --force-resolution "${packages[@]}"
 
 # Installing the virtualbox guest additions
@@ -20,3 +20,6 @@ sh /mnt/VBoxLinuxAdditions.run install --force || echo "unable to install driver
 umount /mnt || echo "unable to umount iso"
 rm -rf /root/VBoxGuestAdditions*.iso || echo "unable to rm iso"
 echo "guest additions installed"
+
+echo "removing dependencies for building VMware/Virtualbox extensions"
+zypper --non-interactive rm --clean-deps gcc make kernel-devel kernel-macros kernel-default-devel

@@ -45,11 +45,3 @@ cp /srv/cray/limits/98-cray-limits.conf /etc/security/limits.d/98-cray-limits.co
 
 # Change hostname from lower layer to ncn.
 echo 'ncn' > /etc/hostname
-
-# Lock the kernel before we move onto installing anything []for NCNs
-uname -r
-rpm -qa kernel-default
-zypper addlock kernel-default
-
-# Install jq
-command -v jq >/dev/null 2>&1 || zypper -n install --auto-agree-with-licenses jq=1.6-3.3.1

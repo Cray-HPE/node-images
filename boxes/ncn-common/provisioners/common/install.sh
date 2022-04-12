@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 echo "Ensuring /srv/cray/utilities locations are available for use system-wide"
 ln -s /srv/cray/utilities/common/craysys/craysys /bin/craysys

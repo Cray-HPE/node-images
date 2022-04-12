@@ -71,7 +71,6 @@ variable "artifact_version" {
 
 variable "kernel_version" {
   type    = string
-  default = "5.3.18-150300.59.43.1"
 }
 
 variable "create_kis_artifacts_arguments" {

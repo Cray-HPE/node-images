@@ -26,7 +26,7 @@ source "virtualbox-ovf" "kubernetes" {
   format = "${var.vbox_format}"
   checksum = "none"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
@@ -52,7 +52,7 @@ source "virtualbox-ovf" "storage-ceph" {
   format = "${var.vbox_format}"
   checksum = "none"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
@@ -84,7 +84,7 @@ source "qemu" "kubernetes" {
   iso_checksum = "${var.source_iso_checksum}"
   iso_url = "${var.source_iso_uri}"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
@@ -109,7 +109,7 @@ source "qemu" "storage-ceph" {
   iso_url = "${var.source_iso_uri}"
   iso_checksum = "none"
   headless = "${var.headless}"
-  shutdown_command = "echo '${var.ssh_password}'|sudo -S /sbin/halt -h -p"
+  shutdown_command = "echo '${var.ssh_password}'|/sbin/halt -h -p"
   ssh_password = "${var.ssh_password}"
   ssh_username = "${var.ssh_username}"
   ssh_wait_timeout = "${var.ssh_wait_timeout}"
@@ -237,8 +237,8 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
-      "sudo -E bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
     ]
     except = [
       "googlecompute.kubernetes",
@@ -269,7 +269,7 @@ build {
   }
 
   provisioner "shell" {
-    inline = ["sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/base.packages'"]
+    inline = ["bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/base.packages'"]
     only = [
       "virtualbox-ovf.ceph",
       "qemu.storage-ceph",
@@ -278,7 +278,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo -S bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/metal.packages'"]
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/metal.packages'"]
     only = [
       "virtualbox-ovf.ceph",
       "qemu.storage-ceph"]

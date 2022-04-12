@@ -135,6 +135,13 @@ build {
   }
 
   provisioner "shell" {
+    environment_vars = [
+      "SLES15_KERNEL_VERSION=${var.kernel_version}"
+    ]
+    script = "${path.root}/provisioners/pit/kernel.sh"
+  }
+
+  provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/cray-pre-install-toolkit/base.packages'"]
     valid_exit_codes = [0, 123]
