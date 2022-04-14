@@ -146,17 +146,6 @@ build {
   }
 
   provisioner "shell" {
-    environment_vars = [
-      "SLES15_KERNEL_VERSION=${var.kernel_version}"
-    ]
-    script = "${path.root}/scripts/kernel-debug.sh"
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
-  }
-
-  provisioner "shell" {
     script = "${path.root}/provisioners/metal/hpc.sh"
     only = [
       "qemu.ncn-common",
