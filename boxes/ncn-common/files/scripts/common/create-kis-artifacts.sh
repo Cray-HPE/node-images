@@ -16,7 +16,6 @@ version_base=${version_full%%-*}
 version_suse=${version_full##*-}
 version_suse=${version_suse%.*.*}
 version="$version_base-$version_suse-default"
-initrd_name="/boot/initrd-$version-dev"
 
 if [[ "$1" != "squashfs-only" ]]; then
   echo "Creating initrd/kernel artifacts"
