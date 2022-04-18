@@ -1,9 +1,33 @@
 #!/bin/bash
-# Copyright 2021 HPED LP
+#
+# MIT License
+#
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
 # create-kdump-artifacts.sh creates an initrd for use with kdump
 #   this specialized initrd is booted when a node crashes
 #   it is specifically designed to work with the persistent overlay and RAIDs in use in Shasta 1.4+
 set -e
+set -u
+set -o pipefail
 
 # show the line that we failed and on and exit non-zero
 trap 'catch $? $LINENO; cleanup; exit 1' ERR
@@ -22,10 +46,6 @@ catch() {
 cleanup() {
   # Ensures things are unmounted via 'trap' even if the command fails
   echo "CLEANUP: cleanup function running..."
-  # remove the temporary fstab file
-  if [ -f $fstab_kdump ]; then
-    rm -f $fstab_kdump
-  fi
 
   # during the script this config causes complications with the dracut command
   # so it's moved out the way; this puts it back to where it belongs
@@ -146,11 +166,19 @@ kdump_omit+="plymouth "
 kdump_omit+="resume "
 kdump_omit+="usrmount "
 kdump_omit+="haveged "
+# new in 1.2+, these are added by default unless explicitly omitted
+# they increase the size and complexity of the kdump initrd
+# so they need to be removed to prevent OOM errors
+kdump_omit+="kernel-network-modules "
+kdump_omit+="network "
+kdump_omit+="network-legacy "
+kdump_omit+="cray-udev-rules "
+kdump_omit+="cray-ifmove "
 # the metal modules conflict and add extra complexity here so we remove them
 # the kdump and raid modules handle everything we need:
 #    discover RAID
 #    mount squash
-#    create overlay *handled by a custom pre-script
+#    create overlay *mounted via fstab, but it waits for the other mounts to become available
 #    save the dump
 #    reboot
 # so all the logic in the metal modules are completely unnecessary
@@ -160,32 +188,31 @@ kdump_omit+="metalmdsquash "
 echo ">> kdump_omit=\"$kdump_omit\"" >/dev/null
 
 # This will be used in fstab and translate to /var/crash on the overlay when the node comes back up.
-# This is also unique to each host and the disks it lands on
+# This is also unique to each host and the disks it lands on so the UUID is required
 sqfs_uuid=$(blkid -lt LABEL=SQFSRAID | tr ' ' '\n' | awk -F '"' ' /UUID/ {print $2}')
-# the above will be used in the fstab file used to facilitate mounting all the pieces we need for the overlay
-fstab_kdump=/tmp/fstab.kdump
-
-# mount the root raid
-# mount the squashfs raid
-# mount the squash image
-# create the overlay with mount_kdump_overlay.sh
-# a fstab entry could be used here, but it ran into issues, so the pre-script just runs a 'mount' commmand instead:
-#        overlay /kdump/overlay overlay ro,relatime,lowerdir=/kdump/mnt2,upperdir=/kdump/mnt0/LiveOS/overlay-SQFSRAID-${sqfs_uuid},workdir=/kdump/mnt0/LiveOS/ovlwork 0 2
-cat << EOF > "$fstab_kdump"
-LABEL=ROOTRAID /kdump/mnt0/ xfs defaults 0 0
-LABEL=SQFSRAID /kdump/mnt1/ xfs defaults 0 0
-/kdump/mnt1/LiveOS/filesystem.squashfs /kdump/mnt2 squashfs ro,defaults 0 0
-# overlay is mounted via mount_kdump_overlay.sh
-EOF
+sqfs_fstype=$(blkid -lt LABEL=SQFSRAID | tr ' ' '\n' | awk -F '"' ' /TYPE/ {print $2}')
+# We only need the fstype for the ROOTRAID
+raid_fstype=$(blkid -lt LABEL=ROOTRAID | tr ' ' '\n' | awk -F '"' ' /TYPE/ {print $2}')
 
 # move the 05-metal.conf file out of the way while the initrd is generated
-# it causes some conflicts if it's in place when 'dracut' is called
+# this file adds /etc/fstab.metal to dracut, which is ok for bootstrapping, 
+# but the mounts in that file to do not map to the kdump environment correctly
 mkdir -p /tmp/metalconf
-mv /etc/dracut.conf.d/05-metal.conf /tmp/metalconf/
+if [[ -f /etc/dracut.conf.d/05-metal.conf ]]; then
+  mv /etc/dracut.conf.d/05-metal.conf /tmp/metalconf/
+fi
 
 # generate the kdump initrd
 #   --hostonly trims down the size by keeping only what is needed for the specific host
+#   --no-hostonly-cmdline removes the cmdline parameters that are specific to the host.  
+#                         since we only need a few parts of it like the RAID and root directives,
+#                         it can be crafted within this script so it defined explicitly
 #   --omit omits the modules we don't want from the list crafted earlier in the script
+#   --mount: (explicitly define the mounts we need in order to write to the overlay)
+#          /kdump/mnt0 is SQFSRAID (the upperdir: LiveOS/overlay* and the workdir: LiveOS/ovlwork)
+#          /kdump/mnt1 is ROOTRAID (the overlay writes files here)
+#          /kdump/mnt2 is the mounted r/o squashfs (lowerdir)
+#          /kdump/overlay is the overlayfs (writeable to ROOTRAID, so the dump is available in the OS upon reboot) -- there are options here to ensure the other mount points are active before this is mounted
 #   --tmpdir is needed to avoid an error where 'init is on a different filesystem' (overlay-related)
 #   --install can be used to add other binaries to the environment.  This is useful for debug, but can also be removed if the initrd needs to be smaller
 #   --force-drivers will add the driver even if --hostonly is passed, which can sometimes leave things out we actually want
@@ -194,8 +221,12 @@ dracut \
   -L 4 \
   --force \
   --hostonly \
+  --no-hostonly-cmdline \
   --omit "${kdump_omit}" \
-  --add-fstab ${fstab_kdump} \
+  --mount "LABEL=ROOTRAID /kdump/mnt0 ${raid_fstype} defaults"  \
+  --mount "LABEL=SQFSRAID /kdump/mnt1 ${sqfs_fstype} defaults"  \
+  --mount '/kdump/mnt1/LiveOS/filesystem.squashfs /kdump/mnt2 squashfs ro,defaults' \
+  --mount "overlay /kdump/overlay overlay rw,relatime,lowerdir=/kdump/mnt2,upperdir=/kdump/mnt0/LiveOS/overlay-SQFSRAID-${sqfs_uuid},workdir=/kdump/mnt0/LiveOS/ovlwork,x-systemd.requires-mounts-for=/kdump/mnt0,x-systemd.requires-mounts-for=/kdump/mnt1,x-systemd.requires-mounts-for=/kdump/mnt2 0 0" \
   --compress 'xz -0 --check=crc32' \
   --kernel-cmdline "${kdump_cmdline}" \
   --add 'mdraid kdump' \
@@ -226,15 +257,12 @@ sed -i 's/^\(KDUMP_SAVEDIR\)=.*$/\1=\"file:\/\/\/var\/crash\"/' etc/sysconfig/kd
 # optionally, uncomment to stay in the initrd after the dump is complete
 #sed -i 's/^\(KDUMP_IMMEDIATE_REBOOT\)=.*$/\1=\"no"/' etc/sysconfig/kdump
 
-# Use a here doc to create a simple pre-script that mounts the overlay
-cat << EOF > sbin/mount_kdump_overlay.sh
-mount -t overlay overlay -o rw,relatime,lowerdir=/kdump/mnt2,upperdir=/kdump/mnt0/LiveOS/overlay-SQFSRAID-${sqfs_uuid},workdir=/kdump/mnt0/LiveOS/ovlwork /kdump/overlay
-EOF
-chmod 755 sbin/mount_kdump_overlay.sh
-
-# set the above script to run as a kdump prescript, which runs just before makedumpfile
-sed -i 's/^\(KDUMP_REQUIRED_PROGRAMS\)=.*$/\1=\"\/sbin\/mount_kdump_overlay.sh\"/' etc/sysconfig/kdump
-sed -i 's/^\(KDUMP_PRESCRIPT\)=.*$/\1=\"\/sbin\/mount_kdump_overlay.sh\"/' etc/sysconfig/kdump
+# this is a hacky workaround to remove a rogue fstab entry in 1.2+
+# /kdump/mnt0 should be the ROOTRAID, not SQFSRAID
+# it is added by the kdump dracut module, but can be inaccurate if the root label matches the squashfs label
+# prior to this commit, earlier versions of csm will hit this issue, 
+# so this can help provide backwards compatibility if kdump needs to be enabled on those environments
+sed -i '/^LABEL=SQFSRAID \/kdump\/mnt0/d' etc/fstab
 
 # Remove the original and create the new kdump initrd with our modified script
 echo "Generating modified kdump initrd..."
