@@ -1,4 +1,27 @@
 #!/usr/bin/python
+#
+# MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
 import glob
 import os
 import re
@@ -18,7 +41,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def create_chrony_config(allow, confpath, peers, pools, servers, local_hostname):
     """Create a chrony config file with the specified parameters.
     """
-    file_loader = FileSystemLoader('templates')
+    file_loader = FileSystemLoader('/srv/cray/scripts/common/chrony/templates')
     env = Environment(loader=file_loader)
     env.trim_blocks = True
     env.lstrip_blocks = True
@@ -62,21 +85,24 @@ def get_bss_data(token, xname):
     @param token: string. Specify a BSS token.
     @param xname: string. Specify the xname of the current node.
     """
+    # import pdb; pdb.set_trace()
+    response = None
     bearer_token = "Bearer {}".format(token)
     endpoint = 'https://api-gw-service-nmn.local/apis/bss/boot/v1/bootparameters'
     data = {'name': xname}
     headers = {"Authorization": bearer_token}
-    bss_data = requests.get(endpoint, params=data, headers=headers, verify=False)
-    # If BSS is down, check the local cloud-init cache
-    if bss_data.ok:
-        # BSS response has a different structure than the local cache
-        try:
-            return bss_data.json()[0]["cloud-init"]["user-data"]
-        except KeyError:
-            print("Please validate your BSS data.")
-            sys.exit(2)
-    else:
-        print("{} BSS query failed.  Checking local cache...".format(bss_data.status_code))
+    try:
+        response = requests.get(endpoint, params=data, headers=headers, verify=False, timeout=5)
+        # If BSS is down, check the local cloud-init cache
+        if response.ok:
+            # BSS response has a different structure than the local cache
+            try:
+                return bss_data.json()[0]["cloud-init"]["user-data"]
+            except KeyError:
+                print("Please validate your BSS data.")
+                sys.exit(2)
+    except:
+        print("BSS query failed.  Checking local cache...")
         user_data = get_cache_data(USER_DATA_FILE)
         return user_data
 
@@ -162,9 +188,11 @@ if __name__ == "__main__":
         enabled = bss_data["ntp"]["enabled"]
         ntp_client = bss_data["ntp"]["ntp_client"]
         peers = bss_data["ntp"]["peers"]
-        pools = bss_data["ntp"]["pools"]
+        # no pools may be defined, so set it to an empty list
+        pools = bss_data['ntp'].get('pools', '')
         servers = bss_data["ntp"]["servers"]
         local_hostname = bss_data["local_hostname"]
+
     except KeyError:
         print("Please validate your BSS data.")
         sys.exit(2)
@@ -177,7 +205,9 @@ if __name__ == "__main__":
         servers=servers,
         local_hostname=local_hostname)
 
+    print("Chrony configuration created")
     remove_dist_files(confdir=CONF_DIR)
     remove_pool_conf(confdir=CONF_DIR)
     comment_default_pool(confpath=DEFAULT_CONF)
     restart_chrony()
+    print("Restarted chronyd")

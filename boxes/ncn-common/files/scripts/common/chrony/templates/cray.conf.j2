@@ -33,6 +33,7 @@ peer {{ peer }} minpoll -2 maxpoll 9 iburst
 {% endfor %}
 {% for net in allow | sort -%}
 allow {{ net }}
+cmdallow {{ net }}
 {% endfor %}
 {% if local_hostname == 'ncn-m001' %}
 # {{ local_hostname }} has a lower stratum than other NCNs since it is the primary server
@@ -41,6 +42,8 @@ local stratum 8 orphan
 # {{ local_hostname }} has a higher stratum so it selects ncn-m001 in the event of a tie
 local stratum 10 orphan
 {% endif %}
+# listen for monitoring command packets (issued by chronyc) on all interfaces
+bindcmdaddress 0.0.0.0
 log measurements statistics tracking
 logchange 1.0
 makestep 0.1 3
