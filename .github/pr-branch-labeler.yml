@@ -1,6 +1,0 @@
-# Apply label "feature" if head matches "feature/*"
-feature: "feature/*"
-
-# Apply label "release" if base matches "main" or "lts/*"
-release:
-  base: ["main", "lts/*]
