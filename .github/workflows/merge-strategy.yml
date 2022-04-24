@@ -1,8 +1,12 @@
-name: Merge Strategy
+name: Image Merge Strategy
 on:
   pull_request:
     branches:
+      - develop
       - main
+      - lts/csm-1.0
+  issue_comment:
+    types: [created]
 jobs:
   message-check:
     name: Block Merge Commits
@@ -14,4 +18,19 @@ jobs:
         uses: Morishiri/block-merge-commits-action@v1.0.1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  fast_forward_job:
+    name: Fast Forward
+
+    if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/fast-forward')
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fast Forward PR
+        uses: endre-spotlab/fast-forward-js-action@2.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          production_branch: main
+          staging_branch: develop
 
