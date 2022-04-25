@@ -42,7 +42,6 @@ version="$version_base-$version_suse-default"
 
 if [[ "$1" != "squashfs-only" ]]; then
   echo "Creating initrd/kernel artifacts"
-  kernel_version="$(ls -1tr /boot/vmlinuz-* | tail -n 1 | cut -d '-' -f2,3,4)"
   mkdir -p /mnt/squashfs/proc /mnt/squashfs/run /mnt/squashfs/dev /mnt/squashfs/sys /mnt/squashfs/var
   mount --bind /proc /mnt/squashfs/proc
   mount --bind /tmp /mnt/squashfs/run
@@ -58,9 +57,10 @@ if [[ "$1" != "squashfs-only" ]]; then
     --install 'rmdir wipefs sgdisk vgremove less' \
     --persistent-policy by-label --show-modules --ro-mnt --no-hostonly --no-hostonly-cmdline \
     --kver ${version} \
-    --printsize /tmp/initrd.img.xz"
-  cp /mnt/squashfs/boot/vmlinuz-${kernel_version} /squashfs/vmlinuz.kernel
-  cp /mnt/squashfs/tmp/initrd.img.xz /squashfs/initrd.img.xz
+    --printsize \
+    /tmp/initrd.img.xz"
+  cp -v /mnt/squashfs/boot/vmlinuz-${version} /squashfs/${version}.kernel
+  cp -v /mnt/squashfs/tmp/initrd.img.xz /squashfs/initrd.img.xz
   umount /mnt/squashfs/proc /mnt/squashfs/dev /mnt/squashfs/run /mnt/squashfs/sys /mnt/squashfs/var
 fi
 

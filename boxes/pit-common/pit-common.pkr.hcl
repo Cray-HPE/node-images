@@ -79,7 +79,7 @@ build {
     "source.googlecompute.pit-common"]
 
   provisioner "file" {
-    source = "${path.root}/files"
+    source = "${path.root}files"
     destination = "/tmp/"
   }
 
@@ -96,7 +96,7 @@ build {
   }
 
   provisioner "file" {
-    source = "${path.root}/root"
+    source = "${path.root}root"
     destination = "/tmp/root"
   }
 
@@ -106,11 +106,11 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/setup.sh"
+    script = "${path.root}provisioners/common/setup.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/google/setup.sh"
+    script = "${path.root}provisioners/google/setup.sh"
     only = ["googlecompute.pit-common"]
   }
 
@@ -135,10 +135,7 @@ build {
   }
 
   provisioner "shell" {
-    environment_vars = [
-      "SLES15_KERNEL_VERSION=${var.kernel_version}"
-    ]
-    script = "${path.root}/provisioners/pit/kernel.sh"
+    script = "${path.root}provisioners/pit/kernel.sh"
   }
 
   provisioner "shell" {
@@ -168,23 +165,31 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/pit/k8s.sh"
+    script = "${path.root}provisioners/metal/hpc.sh"
+    only = [
+      "qemu.ncn-common",
+      "virtualbox-ovf.ncn-common"
+    ]
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/pit/firmware.sh"
+    script = "${path.root}provisioners/pit/k8s.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/pit/aliases.sh"
+    script = "${path.root}provisioners/pit/firmware.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/pit/services.sh"
+    script = "${path.root}provisioners/pit/aliases.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/pit/passwd.sh"
+    script = "${path.root}provisioners/pit/services.sh"
+  }
+
+  provisioner "shell" {
+    script = "${path.root}provisioners/pit/passwd.sh"
     only = [
       "qemu.pit-common",
       "virtualbox-ovf.pit-common"
@@ -192,18 +197,18 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/install.sh"
+    script = "${path.root}provisioners/common/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/fstab.sh"
+    script = "${path.root}provisioners/metal/fstab.sh"
     only = [
       "qemu.pit-common",
       "virtualbox-ovf.pit-common"
     ]
   }
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
+    script = "${path.root}provisioners/metal/install.sh"
     only = [
       "qemu.pit-common",
       "virtualbox-ovf.pit-common"
@@ -258,7 +263,7 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/pit/pit-grub.sh"
+    script = "${path.root}provisioners/pit/pit-grub.sh"
     only = [
       "qemu.pit-common",
       "virtualbox-ovf.pit-common"
@@ -266,7 +271,7 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/files/scripts/common/cleanup.sh"
+    script = "${path.root}files/scripts/common/cleanup.sh"
   }
 
 
