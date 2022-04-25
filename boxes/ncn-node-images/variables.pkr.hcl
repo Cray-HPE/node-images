@@ -89,10 +89,6 @@ variable "artifact_version" {
   default = "none"
 }
 
-variable "kernel_version" {
-  type    = string
-}
-
 variable "qemu_accelerator" {
   type = string
   default = "kvm"

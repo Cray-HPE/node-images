@@ -174,7 +174,7 @@ build {
   ]
 
   provisioner "file" {
-    source = "${path.root}/k8s/files"
+    source = "${path.root}k8s/files"
     destination = "/tmp/"
     only = [
       "virtualbox-ovf.kubernetes",
@@ -183,7 +183,7 @@ build {
   }
 
   provisioner "file" {
-    source = "${path.root}/storage-ceph/files"
+    source = "${path.root}storage-ceph/files"
     destination = "/tmp/"
     only = [
       "virtualbox-ovf.storage-ceph",
@@ -207,19 +207,17 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/k8s/provisioners/common/setup.sh"
-    only = [
-      "virtualbox-ovf.kubernetes",
-      "qemu.kubernetes",
-      "googlecompute.kubernetes"]
+    script = "${path.root}provisioners/common/setup.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/common/setup.sh"
-    only = [
-      "virtualbox-ovf.ceph",
-      "qemu.storage-ceph",
-      "googlecompute.storage-ceph"]
+    script = "${path.root}k8s/provisioners/common/setup.sh"
+    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "googlecompute.kubernetes"]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}storage-ceph/provisioners/common/setup.sh"
+    only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph", "googlecompute.storage-ceph"]
   }
 
   provisioner "shell" {
@@ -232,34 +230,23 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/disk_resize.sh"
-  }
-
-  provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
     ]
-    except = [
-      "googlecompute.kubernetes",
-      "googlecompute.storage-ceph"]
+    except = ["googlecompute.kubernetes", "googlecompute.storage-ceph"]
   }
 
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/base.packages'"]
-    only = [
-      "virtualbox-ovf.kubernetes",
-      "qemu.kubernetes",
-      "googlecompute.kubernetes"]
+    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "googlecompute.kubernetes"]
   }
 
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/metal.packages'"]
-    only = [
-      "virtualbox-ovf.kubernetes",
-      "qemu.kubernetes"]
+    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes"]
   }
 
   provisioner "shell" {
@@ -270,18 +257,13 @@ build {
 
   provisioner "shell" {
     inline = ["bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/base.packages'"]
-    only = [
-      "virtualbox-ovf.ceph",
-      "qemu.storage-ceph",
-      "googlecompute.storage-ceph"]
+    only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph", "googlecompute.storage-ceph"]
   }
 
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-storage-ceph/metal.packages'"]
-    only = [
-      "virtualbox-ovf.ceph",
-      "qemu.storage-ceph"]
+    only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph"]
   }
 
   provisioner "shell" {
@@ -290,52 +272,40 @@ build {
       "K8S_IMAGE_REGISTRY=${var.k8s_image_registry}",
       "QUAY_IMAGE_REGISTRY=${var.quay_image_registry}"
     ]
-    script = "${path.root}/k8s/provisioners/common/install.sh"
-    only = [
-      "virtualbox-ovf.kubernetes",
-      "qemu.kubernetes",
-      "googlecompute.kubernetes"]
+    script = "${path.root}k8s/provisioners/common/install.sh"
+    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "googlecompute.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/common/install.sh"
-    only = [
-      "virtualbox-ovf.ceph",
-      "qemu.storage-ceph",
-      "googlecompute.storage-ceph"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/k8s/provisioners/common/sdu/install.sh"
-    only = [
-      "virtualbox-ovf.kubernetes",
-      "qemu.kubernetes",
-      "googlecompute.kubernetes"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/k8s/provisioners/metal/install.sh"
-    only = [
-      "virtualbox-ovf.kubernetes",
-      "qemu.kubernetes"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/metal/install.sh"
-    only = [
-      "virtualbox-ovf.ceph",
-      "qemu.storage-ceph"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/k8s/provisioners/google/install.sh"
+    script = "${path.root}k8s/provisioners/google/install.sh"
     only = ["googlecompute.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/storage-ceph/provisioners/google/install.sh"
+    script = "${path.root}k8s/provisioners/metal/install.sh"
+    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes"]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}k8s/provisioners/common/sdu/install.sh"
+    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "googlecompute.kubernetes"]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}storage-ceph/provisioners/common/install.sh"
+    only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph", "googlecompute.storage-ceph"]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}storage-ceph/provisioners/google/install.sh"
     only = ["googlecompute.storage-ceph"]
   }
+
+  provisioner "shell" {
+    script = "${path.root}storage-ceph/provisioners/metal/install.sh"
+    only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph"]
+  }
+
 
   provisioner "shell" {
     inline = [
@@ -388,32 +358,24 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/cleanup.sh"
+    script = "${path.root}provisioners/common/cleanup.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/cleanup.sh"
+    script = "${path.root}provisioners/google/cleanup.sh"
+    only = [
+      "googlecompute.kubernetes",
+      "googlecompute.storage-ceph"
+    ]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}provisioners/metal/cleanup.sh"
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes",
       "virtualbox-ovf.storage-ceph",
       "qemu.storage-ceph"
-    ]
-  }
-
-  provisioner "shell" {
-     script = "${path.root}/provisioners/metal/security.sh"
-    only = [
-      "qemu.kubernetes",
-      "qemu.storage-ceph"
-    ]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/google/cleanup.sh"
-    only = [
-      "googlecompute.kubernetes",
-      "googlecompute.storage-ceph"
     ]
   }
 
@@ -461,11 +423,7 @@ build {
 
   provisioner "file" {
     direction = "download"
-    sources = [
-      "/squashfs/vmlinuz.kernel",
-      "/squashfs/filesystem.squashfs",
-      "/squashfs/initrd.img.xz",
-    ]
+    source = "/squashfs/"
     destination = "${var.output_directory}/${source.name}/"
     only = [
       "qemu.kubernetes"
@@ -474,11 +432,7 @@ build {
 
   provisioner "file" {
     direction = "download"
-    sources = [
-      "/squashfs/vmlinuz.kernel",
-      "/squashfs/filesystem.squashfs",
-      "/squashfs/initrd.img.xz",
-    ]
+    source = "/squashfs/"
     destination = "${var.output_directory}/${source.name}/"
     only = [
       "qemu.storage-ceph"
@@ -495,7 +449,7 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/zeros.sh"
+    script = "${path.root}provisioners/common/zeros.sh"
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes",
@@ -506,10 +460,12 @@ build {
   post-processors {
     post-processor "shell-local" {
       inline = [
-        "echo 'Putting image name into the squashFS filename.'",
+        "echo 'Rename filesystem.squashfs and move remaining files to receive the image ID'",
         "ls -lR ./${var.output_directory}/${source.name}",
-        "mv ${var.output_directory}/${source.name}/filesystem.squashfs ${var.output_directory}/${source.name}/${source.name}.squashfs",
-        "mv ${var.output_directory}/${source.name}/vmlinuz.kernel ${var.output_directory}/${source.name}/vmlinuz-${var.kernel_version}.kernel"
+        "mv ${var.output_directory}/${source.name}/squashfs/filesystem.squashfs ${var.output_directory}/${source.name}/${source.name}.squashfs",
+        "mv ${var.output_directory}/${source.name}/squashfs/*.kernel ${var.output_directory}/${source.name}/",
+        "mv ${var.output_directory}/${source.name}/squashfs/initrd.img.xz ${var.output_directory}/${source.name}/",
+        "rm -rf ${var.output_directory}/${source.name}/squashfs",
       ]
       only   = [
         "qemu.kubernetes",

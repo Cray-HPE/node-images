@@ -78,7 +78,7 @@ build {
     "source.googlecompute.ncn-common"]
 
   provisioner "file" {
-    source = "${path.root}/files"
+    source = "${path.root}files"
     destination = "/tmp/"
   }
 
@@ -92,25 +92,19 @@ build {
     destination = "/tmp/files/"
   }
 
+  // Setup each context (e.g. common, google, and metal)
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/setup.sh"
+    script = "${path.root}provisioners/common/setup.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/google/setup.sh"
+    script = "${path.root}provisioners/google/setup.sh"
     only = ["googlecompute.ncn-common"]
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/setup.sh"
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/disk_resize.sh"
+    script = "${path.root}provisioners/metal/setup.sh"
+    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
   provisioner "shell" {
@@ -138,21 +132,7 @@ build {
     ]
   }
 
-  provisioner "shell" {
-    environment_vars = [
-      "SLES15_KERNEL_VERSION=${var.kernel_version}"
-    ]
-    script = "${path.root}/scripts/kernel.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/hpc.sh"
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
-  }
-
+  // Install packages by context (e.g. base (a.k.a. common), google, or metal)
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
@@ -163,10 +143,7 @@ build {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
     valid_exit_codes = [0, 123]
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
+    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
   provisioner "shell" {
@@ -175,60 +152,39 @@ build {
     valid_exit_codes = [0, 123]
   }
 
+  // Install all generic installers first by context (e.g. common, google, and metal).
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/install.sh"
+    script = "${path.root}provisioners/common/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/csm/cloud-init.sh"
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
+    script = "${path.root}provisioners/google/install.sh"
+    only = ["source.googlecompute.ncn-common"]
+
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/common/csm/ansible.sh"
+    script = "${path.root}provisioners/metal/install.sh"
+    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
+  }
+
+  // Install all team installers last, grouped by context (e.g. common, google metal).
+  provisioner "shell" {
+    script = "${path.root}provisioners/common/csm/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/google/pyenv.sh"
+    script = "${path.root}provisioners/common/cms/install.sh"
+  }
+
+
+  provisioner "shell" {
+    script = "${path.root}provisioners/common/cos/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/provisioners/metal/fstab.sh"
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/python_symlink.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/cms/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/install.sh"
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/cos/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/cos/rsyslog.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/common/kernel/modules.sh"
+    script = "${path.root}provisioners/metal/csm/install.sh"
+    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
   provisioner "shell" {
@@ -279,22 +235,12 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}/files/scripts/common/cleanup.sh"
+    script = "${path.root}files/scripts/common/cleanup.sh"
   }
 
   provisioner "shell" {
     inline = [
       "bash -c '/srv/cray/scripts/common/create-kis-artifacts.sh ${var.create_kis_artifacts_arguments}'"]
-    only = ["qemu.ncn-common"]
-  }
-
-  provisioner "file" {
-    direction = "download"
-    sources = [
-      "/squashfs/vmlinuz.kernel",
-      "/squashfs/initrd.img.xz",
-    ]
-    destination = "${var.output_directory}/"
     only = ["qemu.ncn-common"]
   }
 
@@ -313,6 +259,7 @@ build {
     ]
   }
 
+  // FIXME: These should run for ALL sources; verify these work correctly with Google.
   provisioner "shell" {
     inline = [
       "bash -c 'goss -g /srv/cray/tests/metal/goss-image-common.yaml validate -f junit | tee /tmp/goss_metal_out.xml'"]
@@ -339,12 +286,6 @@ build {
   }
 
   post-processors {
-    post-processor "shell-local" {
-      inline = [
-        "mv ${var.output_directory}/vmlinuz.kernel ${var.output_directory}/vmlinuz-${var.kernel_version}.kernel"
-      ]
-      only = ["qemu.ncn-common"]
-    }
     post-processor "shell-local" {
       inline = [
         "if cat ${var.output_directory}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]

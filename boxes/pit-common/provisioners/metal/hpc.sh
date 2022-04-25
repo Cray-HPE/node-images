@@ -7,5 +7,6 @@
 set -ex
 
 echo "Etching release file"
-HPC_VERSION=$(cat /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages | grep "SLE_HPC-release")
-zypper -n install --auto-agree-with-licenses --force-resolution ${HPC_VERSION}
+zypper removelock kernel-default || echo 'No lock to remove'
+zypper -n install --auto-agree-with-licenses --force-resolution SLE_HPC-release
+zypper addlock kernel-default
