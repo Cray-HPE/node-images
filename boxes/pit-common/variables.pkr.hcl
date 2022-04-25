@@ -180,7 +180,7 @@ variable "google_source_image_project_id" {
 
 variable "google_source_image_family" {
   type = string
-  default = "vshasta-sles15-base-rc"
+  default = "vshasta-sles15-base"
 }
 
 variable "google_source_image_name" {
@@ -189,7 +189,7 @@ variable "google_source_image_name" {
 }
 variable "google_disk_size_gb" {
   type = string
-  default = "100"
+  default = "16"
 }
 variable "google_source_image_url" {
   type = string

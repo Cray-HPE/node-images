@@ -89,6 +89,10 @@ variable "artifact_version" {
   default = "none"
 }
 
+variable "kernel_version" {
+  type    = string
+}
+
 variable "qemu_accelerator" {
   type = string
   default = "kvm"
@@ -181,17 +185,19 @@ variable "google_source_image_project_id" {
 
 variable "google_source_image_family" {
   type = string
-  default = "vshasta-non-compute-common-rc"
+  default = "vshasta-non-compute-common"
 }
 
 variable "google_source_image_name" {
   type = string
   default = ""
 }
+
 variable "google_disk_size_gb" {
   type = string
-  default = "150"
+  default = "42"
 }
+
 variable "google_source_image_url" {
   type = string
   default = ""
