@@ -286,7 +286,10 @@ build {
 
   provisioner "file" {
     direction = "download"
-    source = "/tmp/kis.tar.gz"
+    sources = [
+      "/squashfs/vmlinuz.kernel",
+      "/squashfs/initrd.img.xz",
+    ]
     destination = "${var.output_directory}/"
     only = ["qemu.ncn-common"]
   }
@@ -334,18 +337,14 @@ build {
   post-processors {
     post-processor "shell-local" {
       inline = [
-        "echo 'Extracting KIS artifacts package'",
-        "echo 'Putting image name into the squashFS filename.'",
-        "ls -lR ./${var.output_directory}",
-        "tar -xzvf ${var.output_directory}/kis.tar.gz -C ${var.output_directory}",
-        "rm ${var.output_directory}/kis.tar.gz"
+        "mv ${var.output_directory}/vmlinuz.kernel ${var.output_directory}/vmlinuz-${var.kernel_version}.kernel"
       ]
-      only   = ["qemu.ncn-common"]
+      only = ["qemu.ncn-common"]
     }
     post-processor "shell-local" {
       inline = [
         "if cat ${var.output_directory}/test-results.xml | grep '<failure>'; then echo 'Error: goss test failures found! See build output for details'; exit 1; fi"]
-      only   = ["qemu.ncn-common"]
+      only = ["qemu.ncn-common"]
     }
   }
 }

@@ -461,10 +461,26 @@ build {
 
   provisioner "file" {
     direction = "download"
-    source = "/tmp/kis.tar.gz"
+    sources = [
+      "/squashfs/vmlinuz.kernel",
+      "/squashfs/filesystem.squashfs",
+      "/squashfs/initrd.img.xz",
+    ]
     destination = "${var.output_directory}/${source.name}/"
     only = [
-      "qemu.kubernetes",
+      "qemu.kubernetes"
+    ]
+  }
+
+  provisioner "file" {
+    direction = "download"
+    sources = [
+      "/squashfs/vmlinuz.kernel",
+      "/squashfs/filesystem.squashfs",
+      "/squashfs/initrd.img.xz",
+    ]
+    destination = "${var.output_directory}/${source.name}/"
+    only = [
       "qemu.storage-ceph"
     ]
   }
@@ -490,12 +506,10 @@ build {
   post-processors {
     post-processor "shell-local" {
       inline = [
-        "echo 'Extracting KIS artifacts package'",
         "echo 'Putting image name into the squashFS filename.'",
         "ls -lR ./${var.output_directory}/${source.name}",
-        "tar -xzvf ${var.output_directory}/${source.name}/kis.tar.gz -C ${var.output_directory}/${source.name}",
         "mv ${var.output_directory}/${source.name}/filesystem.squashfs ${var.output_directory}/${source.name}/${source.name}.squashfs",
-        "rm ${var.output_directory}/${source.name}/kis.tar.gz"
+        "mv ${var.output_directory}/${source.name}/vmlinuz.kernel ${var.output_directory}/${source.name}/vmlinuz-${var.kernel_version}.kernel"
       ]
       only   = [
         "qemu.kubernetes",

@@ -110,17 +110,16 @@
       <product>SLE_HPC</product>
     </products>
     <packages config:type='list'>
+      <!--  jq is required for csm-rpms install functions   -->
       <package>jq</package>
+      <!--   Python 3 is needed for csm-rpms and many other tasks   -->
+      <package>python3</package>
+      <!--   squashfs is needed for kis artifacts   -->
       <package>squashfs</package>
-      <package>sudo</package>
-      <package>tar</package>
     </packages>
     <patterns config:type='list'>
       <pattern>base</pattern>
     </patterns>
-    <remove-packages config:type="list">
-      <package>btrfsmaintenance</package>
-    </remove-packages>
   </software>
 
   <services-manager>
