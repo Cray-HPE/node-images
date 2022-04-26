@@ -46,6 +46,18 @@ frontend https-rgw-frontend
     bind *:443 ssl crt /etc/ceph/rgw.pem
     default_backend rgw-backend
 
+frontend dashboard_front_ssl
+  mode tcp
+  bind *:3444 ssl crt /etc/ceph/rgw.pem
+  default_backend dashboard_back_ssl
+
+frontend grafana-frontend
+    mode tcp
+    bind *:3080
+    option tcplog
+    redirect scheme https code 301 if !{ ssl_fc }
+    default_backend grafana-backend
+
 backend rgw-backend
     option forwardfor
     balance static-rr
@@ -55,4 +67,26 @@ for host in $(ceph --name client.ro orch ls rgw -f json-pretty|jq -r '.[].placem
 do
  ip=$(get_ip_from_metadata $host.nmn)
  echo "        server server-$host-rgw0 $ip:8080 check weight 100"
+done
+
+echo -e "\nbackend grafana-backend
+    mode tcp
+    option httpchk GET /
+    http-check expect status 200"
+
+for host in $(ceph --name client.ro orch ls mgr -f json-pretty|jq -r '.[].placement.hosts|map(.)|join(" ")')
+do
+ ip=$(get_ip_from_metadata $host.nmn)
+ echo "        server server-$host-mgr $ip:3000 check weight 100"
+done
+
+echo -e "\nbackend dashboard_back_ssl
+  mode tcp
+  option httpchk GET /
+  http-check expect status 200"
+
+for host in $(ceph --name client.ro orch ls mgr -f json-pretty|jq -r '.[].placement.hosts|map(.)|join(" ")')
+do
+ ip=$(get_ip_from_metadata $host.nmn)
+ echo "        server server-$host-mgr $ip:8443 check weight 100"
 done
