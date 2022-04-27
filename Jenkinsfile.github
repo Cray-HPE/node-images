@@ -362,25 +362,15 @@ pipeline {
                         file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
                 ]) {
                     script {
-                        publishCsmImages.release('sles15-base', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
-                        publishCsmImages.release('ncn-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
-                        publishCsmImages.release('pit-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                        if (params.rebuildBaseImage) {
+                            publishCsmImages.release('sles15-base', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                        }
+                        if (params.rebuildCommonImage) {
+                            publishCsmImages.release('ncn-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                            publishCsmImages.release('pit-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                        }
                         publishCsmImages.release('storage-ceph', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
                         publishCsmImages.release('kubernetes', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
-                    }
-
-                }
-            }
-        }
-        stage('Clean Up') {
-            when { tag "*" }
-            steps {
-                withCredentials([
-                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
-                ]) {
-                    script {
-                        // Cleans up GCP images
-                        nodeImageHelpers.prune(GOOGLE_CLOUD_SA_KEY)
                     }
 
                 }
