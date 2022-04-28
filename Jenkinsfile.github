@@ -4,7 +4,7 @@ def promotionToken = ~"(master|main|develop|lts\\/.*)"
 def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
 def buildGoogle = true
 def rebuildBaseImage = false
-def rebuildCommonImage = buildAndPublish ? true : false
+def rebuildCommonImage = true
 def sourceBuildVersion = "[RELEASE]" // Pulls the latest release
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
@@ -372,7 +372,6 @@ pipeline {
                         publishCsmImages.release('storage-ceph', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
                         publishCsmImages.release('kubernetes', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
                     }
-
                 }
             }
         }
