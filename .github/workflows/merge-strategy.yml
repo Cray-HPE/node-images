@@ -7,6 +7,7 @@ on:
       - lts/*
   issue_comment:
     types: [created]
+  push:
 jobs:
   message-check:
     name: Block Merge Commits
@@ -15,7 +16,7 @@ jobs:
 
     steps:
       - name: Block Merge Commits
-        uses: 4lambda/block-merge-commits-action@main
+        uses: 4lambda/block-merge-commits-action@beta
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
