@@ -192,6 +192,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "${path.root}/provisioners/google/pyenv.sh"
+  }
+
+  provisioner "shell" {
     script = "${path.root}/provisioners/metal/fstab.sh"
     only = [
       "qemu.ncn-common",

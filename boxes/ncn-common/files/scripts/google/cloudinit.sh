@@ -3,10 +3,10 @@
 set -e
 
 echo "Scheduling local DNS server(s) awareness updates for every 5 minutes"
-echo "*/5 * * * * root . /etc/profile.d/cray.sh; /usr/bin/python3 /srv/cray/scripts/google/update-dns.py >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-update-dns
+echo "*/5 * * * * root . /etc/profile.d/cray.sh; /etc/ansible/csm_gcp/bin/python3 /srv/cray/scripts/google/update-dns.py >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-update-dns
 
 echo "Running initial local DNS server(s) awareness update"
-while ! /usr/bin/python3 /srv/cray/scripts/google/update-dns.py; do
+while ! /etc/ansible/csm_gcp/bin/python3 /srv/cray/scripts/google/update-dns.py; do
   sleep 5
 done
 systemctl restart cron
