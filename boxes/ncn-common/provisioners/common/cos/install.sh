@@ -3,9 +3,6 @@
 # RPM Packages Installed By Inventory:
 # NOTE: CSM has taken over the following remaining packages from COS.
 #
-#     acpid:
-#         Purpose: Used to inform user-space programs about ACPI events.
-#
 #     cray-heartbeat:
 #         Purpose: Used to provide heartbeat from the node. The Hardware State
 #                  Manager stores the state of the NCN based on the presence of
@@ -21,7 +18,6 @@
 set -e
 
 echo "Enabling HPE Cray OS services"
-systemctl enable acpid.service
 systemctl enable cray-heartbeat.service
 systemctl enable csm-node-identity.service
 
