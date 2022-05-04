@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Block Merge Commits
-        uses: 4lambda/block-merge-commits-action@v1.0.2
+        uses: 4lambda/block-merge-commits-action@v1.0.3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
