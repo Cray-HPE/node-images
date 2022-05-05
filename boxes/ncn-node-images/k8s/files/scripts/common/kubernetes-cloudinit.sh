@@ -1,4 +1,27 @@
 #!/bin/bash
+#
+# MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
 
 set -e
 
@@ -289,13 +312,13 @@ function reconfigure_coredns() {
 
   echo "Applying resource limits and pod anti-affinity to coredns pods"
   while true; do
-    output=$(kubectl get po -n kube-system | grep -q coredns.*Running)
-    if [[ "$?" -eq 0 ]]; then
-      echo "Coredns pods are up, continuing..."
+    pod_count=$(kubectl get pods -n kube-system | grep "^coredns-" | wc -l)
+    if [ $pod_count -gt 0 ]; then
+      echo "Coredns pods are created, continuing..."
       break
     fi
     sleep 5
-    echo "Sleeping for five seconds waiting coredns deployment to be up..."
+    echo "Sleeping for five seconds waiting for coredns pods to start..."
   done
 
   cfile=/tmp/coredns-deployment.yaml
@@ -363,8 +386,6 @@ if [[ "$(hostname)" == $FIRST_MASTER_HOSTNAME ]] || [[ "$(hostname)" =~ ^$FIRST_
   echo "Initializing Kubernetes on the first control plane node, pod cidr $PODS_CIDR, service cidr $SERVICES_CIDR"
   kubeadm init --config /etc/cray/kubernetes/kubeadm.yaml --upload-certs | tee /etc/cray/kubernetes/init-result
 
-  /srv/cray/scripts/common/apply-networking-manifests.sh
-
   post-kubeadm-init
 
   echo "Installing pod security policies"
@@ -386,6 +407,41 @@ if [[ "$(hostname)" == $FIRST_MASTER_HOSTNAME ]] || [[ "$(hostname)" =~ ^$FIRST_
   unset RESOURCE_LIMITS_NAMESPACE
 
   post-join first-master
+
+  # Wait for a quorum of nodes to join before applying the network manifests
+  exp_node_count=$(craysys metadata get host-records | jq '.[] | .aliases | .[]' | grep "ncn-[mw].*nmn" | wc -l)
+
+  if [ $exp_node_count -le 0 ]; then
+    echo "ERROR: Failed to find expected number of nodes"
+    exit 1
+  fi
+
+  # subtract 1 from the expected count for m001 which won't be joining yet
+  quorum_count=$(( (exp_node_count - 1)/2 + 1 ))
+
+  node_count=$(kubectl get nodes --no-headers=true | wc -l)
+  net_config_applied=false
+
+  echo "Waiting for $quorum_count nodes to join before applying network manifests"
+
+  # Wait 20 minutes for the nodes to join
+  for i in $(seq 1 240); do
+    echo "$node_count nodes have joined"
+    if [ $node_count -ge $quorum_count ]; then
+      echo "Applying the network manifests"
+      /srv/cray/scripts/common/apply-networking-manifests.sh
+      net_config_applied=true
+      break
+    fi
+    sleep 5
+    node_count=$(kubectl get nodes --no-headers=true | wc -l)
+  done
+
+  if ! $net_config_applied; then
+    echo "ERROR: Timed out waiting for $quorum_count nodes to join"
+    exit 1
+  fi
+
   exit 0
 fi
 
