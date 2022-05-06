@@ -194,7 +194,7 @@ function init() {
    done
 
    echo "Container image values"
-   ceph config set mgr mgr/cephadm/container_image_grafana       "$registry/quay.io/ceph/ceph-grafana:8.3.5"
+   ceph config set mgr mgr/cephadm/container_image_grafana       "$registry/ceph/ceph-grafana:6.7.4"
    ceph config set mgr mgr/cephadm/container_image_prometheus    "$registry/prometheus/prometheus:v2.18.1"
    ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/quay.io/prometheus/alertmanager:v0.21.0"
    ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/quay.io/prometheus/node-exporter:v1.2.2"
