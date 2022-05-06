@@ -66,5 +66,5 @@ fi
 
 if [[ "$1" != "kernel-initrd-only" ]]; then
   echo "Creating squashfs artifact"
-  mksquashfs /mnt/squashfs /squashfs/filesystem.squashfs -no-xattrs -comp gzip -no-exports -noappend -no-recovery -processors $(nproc) -e /mnt/squashfs/squashfs/filesystem.squashfs
+  mksquashfs /mnt/squashfs /squashfs/filesystem.squashfs -no-xattrs -comp gzip -no-exports -noappend -no-recovery -processors "$(nproc)" -e /mnt/squashfs/squashfs/filesystem.squashfs
 fi

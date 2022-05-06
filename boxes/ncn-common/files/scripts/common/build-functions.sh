@@ -5,6 +5,7 @@
 # from the same place as builds for metal artifacts
 
 function pre-pull-internal-images() {
+  #shellcheck disable=SC2124
   local image_names="$@"
   for image_name in $image_names; do
     if [ -f /etc/google_system ]; then
