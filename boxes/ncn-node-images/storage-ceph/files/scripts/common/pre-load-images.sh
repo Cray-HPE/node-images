@@ -13,17 +13,24 @@ echo "Pre-loading local images"
 podman image load -i /srv/cray/resources/common/images/ceph_v16.2.7.tar
 podman image load -i /srv/cray/resources/common/images/ceph_v15.2.15.tar
 podman image load -i /srv/cray/resources/common/images/ceph_v15.2.16.tar
-podman tag  registry.local/ceph/ceph:v15.2.15 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
+podman tag  registry.local/ceph/ceph:v15.2.15 artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
+podman tag  registry.local/ceph/ceph:v15.2.15 artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
+podman tag  registry.local/ceph/ceph:v15.2.16 artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16
+podman tag  registry.local/ceph/ceph:v16.2.7 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7
 podman tag  registry.local/ceph/ceph:v15.2.16 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16
 podman tag  registry.local/ceph/ceph:v16.2.7 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7
 podman image load -i /srv/cray/resources/common/images/ceph-grafana_8.3.5.tar
 podman tag registry.local/ceph/ceph-grafana:8.3.5 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph-grafana:8.3.5
+podman tag registry.local/ceph/ceph-grafana:8.3.5 artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph-grafana:8.3.5
 podman image load -i /srv/cray/resources/common/images/ceph-grafana_6.7.4.tar
 podman image load -i /srv/cray/resources/common/images/prometheus_v2.18.1.tar
+podman tag registry.local/prometheus/prometheus:v2.18.1  artifactory.algol60.net/csm-docker/stable/prometheus/prometheus:v2.18.1
 podman image load -i /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
 podman image load -i /srv/cray/resources/common/images/alertmanager_v0.21.0.tar
 podman tag registry.local/prometheus/alertmanager:v0.21.0 registry.local/quay.io/prometheus/alertmanager:v0.21.0
+podman tag registry.local/prometheus/alertmanager:v0.21.0 artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/alertmanager:v0.21.0
 podman image load -i /srv/cray/resources/common/images/node-exporter_v1.2.2.tar
 podman tag registry.local/prometheus/node-exporter:v1.2.2 registry.local/quay.io/prometheus/node-exporter:v1.2.2
+podman tag registry.local/prometheus/node-exporter:v1.2.2 artifactory.algol60.net/csm-docker/stable/quay.io/prometheus/node-exporter:v1.2.2
 
 echo "Images loaded"
