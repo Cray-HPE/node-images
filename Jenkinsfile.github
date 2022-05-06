@@ -3,7 +3,7 @@
 def promotionToken = ~"(master|main|develop|lts\\/.*)"
 def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
 def buildGoogle = true
-def buildPIT = false // MTL-1476 will set this to true
+def buildPIT = false // Toggle to True once we have ISOs working (MTL-1476)
 def rebuildBaseImage = false
 def rebuildCommonImage = true
 def sourceBuildVersion = "[RELEASE]" // Pulls the latest release
@@ -41,6 +41,10 @@ pipeline {
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
         NRAM = '4096'
+        BUILD_DATE = sh(returnStdout: true, script: "date -u '+%Y%m%d%H%M%S'").trim()
+        GIT_TAG = sh(returnStdout: true, script: "git fetch origin --tags && git describe --tags --abbrev=0").trim()
+        GIT_HASH = "${GIT_COMMIT[0..6]}"
+        PKR_VAR_pit_slug = "${GIT_TAG}/${BUILD_DATE}/g${GIT_HASH}"
     }
 
     parameters {

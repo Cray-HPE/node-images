@@ -26,7 +26,6 @@ BOOTPROTO='dhcp'
 STARTMODE='auto'
 EOF
 done
-cp /srv/cray/sysctl/google/* /etc/sysctl.d/
 
 # TODO: something keeps removing authorized_keys for root, at the very least in Virtual Shasta, we need it to stick around
 echo "Scheduling job to ensure /root/.ssh/authorized_keys file is our /root/.ssh/id_rsa.pub only every 1 minute"

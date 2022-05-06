@@ -2,16 +2,14 @@
 
 set -e
 
-#echo "Enabling sysstat service for metal only"
-#cp -pv /srv/cray/resources/metal/sysstat.cron /etc/sysstat/sysstat.cron
-#/usr/lib64/sa/sa1 -S DISK 1 1
-#systemctl enable sysstat.service
+echo "Etching release file"
+zypper removelock kernel-default || echo 'No lock to remove'
+zypper -n install --auto-agree-with-licenses --force-resolution SLE_HPC-release
+zypper addlock kernel-default
 
-#echo "Adding mdadm.conf"
-#cp -pv /srv/cray/resources/metal/mdadm.conf /etc/
-
-# Agentless Management Service only works on servers with iLO4/5; disable by default.
-if rpm -qi amsd ; then
+# Agentless Management Service only works on servers with iLO4/5.
+# Disable by default, enable during runtime.
+function ams {
     echo "Disabling Agentless Management Daemon"
     systemctl disable ahslog
     systemctl disable amsd
@@ -25,7 +23,12 @@ if rpm -qi amsd ; then
     systemctl stop cpqIde
     systemctl stop cpqScsi
     systemctl stop smad
-fi
+}
+ams
+
+# Setup the bootloader.
+sed -e '/^\s*GRUB_CMDLINE_LINUX_DEFAULT=/s/="[^"]*"/="splash=silent mediacheck=0 biosdevname=1 console=tty0 console=ttyS0,115200 mitigations=auto iommu=pt pcie_ports=native transparent_hugepage=never rd.shell rd.md=0 rd.md.conf=0"/' /etc/default/grub
+grub2-mkconfig -o /boot/grub2/grub.cfg
 
 # Allow domains.
 sed -i 's/^DHCLIENT_FQDN_ENABLED=.*/DHCLIENT_FQDN_ENABLED="enabled"/' /etc/sysconfig/network/dhcp
