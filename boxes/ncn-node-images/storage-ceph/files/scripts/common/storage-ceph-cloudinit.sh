@@ -6,11 +6,7 @@ ceph_k8s_initialized_file="/etc/cray/ceph/ceph_k8s_initialized"
 csi_initialized_file="/etc/cray/ceph/csi_initialized"
 export KUBECONFIG=/etc/kubernetes/admin.conf
 export CRAYSYS_TYPE=$(craysys type get)
-if [[ $CRAYSYS_TYPE == "google" ]]; then
-  registry="${1:-artifactory.algol60.net/csm-docker/stable}"
-else
-  registry="${1:-registry.local}"
-fi
+registry="${1:-registry.local}"
 CSM_RELEASE="${2:-1.5}"
 CEPH_VERS="${3:-16.2.7}"
 
@@ -25,48 +21,42 @@ CEPH_VERS="${3:-16.2.7}"
 expand-root-disk
 
 echo "Pre-loading ceph images"
+export num_storage_nodes=$(craysys metadata get num-storage-nodes)
+echo "number of storage nodes: $num_storage_nodes"
 
-if [[ "$CRAYSYS_TYPE" == "google" ]]
-then
-  /srv/cray/scripts/common/pre-load-images.sh
-else
-  export num_storage_nodes=$(craysys metadata get num-storage-nodes)
-  echo "number of storage nodes: $num_storage_nodes"
-  
-  for node in $(seq 1 $num_storage_nodes); do
-    if [[ "$CRAYSYS_TYPE" == "metal" ]]
-    then
-      nodename=$(printf "ncn-s%03d.nmn" $node)
-    else
-      nodename=$(printf "ncn-s%03d" $node)
-    fi
-    echo "Checking for node $nodename status"
-    until nc -z -w 10 $nodename 22; do
-      echo "Waiting for $nodename to be online, sleeping 60 seconds between polls"
-      sleep 60
-    done
+for node in $(seq 1 $num_storage_nodes); do
+  if [[ "$CRAYSYS_TYPE" == "metal" ]]
+  then
+    nodename=$(printf "ncn-s%03d.nmn" $node)
+  else
+    nodename=$(printf "ncn-s%03d" $node)
+  fi
+  echo "Checking for node $nodename status"
+  until nc -z -w 10 $nodename 22; do
+    echo "Waiting for $nodename to be online, sleeping 60 seconds between polls"
+    sleep 60
   done
-  
-  for node in $(seq 1 $num_storage_nodes); do
-    if [[ "$CRAYSYS_TYPE" == "metal" ]]
-    then
-      nodename=$(printf "ncn-s%03d.nmn" $node)
-    else
-      nodename=$(printf "ncn-s%03d" $node)
-    fi
-   ssh-keyscan -t rsa -H $nodename >> ~/.ssh/known_hosts
-  done
-  
-  for node in $(seq 1 $num_storage_nodes); do
-    if [[ "$CRAYSYS_TYPE" == "metal" ]]
-    then
-      nodename=$(printf "ncn-s%03d.nmn" $node)
-    else
-      nodename=$(printf "ncn-s%03d" $node)
-    fi
-    ssh "$nodename" /srv/cray/scripts/common/pre-load-images.sh
-  done
-fi
+done
+
+for node in $(seq 1 $num_storage_nodes); do
+  if [[ "$CRAYSYS_TYPE" == "metal" ]]
+  then
+    nodename=$(printf "ncn-s%03d.nmn" $node)
+  else
+    nodename=$(printf "ncn-s%03d" $node)
+  fi
+ ssh-keyscan -t rsa -H $nodename >> ~/.ssh/known_hosts
+done
+
+for node in $(seq 1 $num_storage_nodes); do
+  if [[ "$CRAYSYS_TYPE" == "metal" ]]
+  then
+    nodename=$(printf "ncn-s%03d.nmn" $node)
+  else
+    nodename=$(printf "ncn-s%03d" $node)
+  fi
+  ssh "$nodename" /srv/cray/scripts/common/pre-load-images.sh
+done
 
 echo "Configuring node auditing software"
 configure_auditing
