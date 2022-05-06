@@ -132,7 +132,7 @@ function init() {
   done
 
   if [[ "$(hostname)" =~ "ncn-s001" ]]; then
-    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-monitoring-stack --skip-dashboard --skip-pull --mon-ip $(ip -4 -br  address show dev bond0.nmn0 |awk '{split($3,ip,"/"); print ip[1]}')
+    cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --initial-dashboard-user cray_cephadm --skip-pull --mon-ip $(ip -4 -br  address show dev bond0.nmn0 |awk '{split($3,ip,"/"); print ip[1]}')
     cephadm shell -- ceph -s
 
    while [[ $avail != "true" ]] && [[ $backend != "cephadm" ]]
@@ -288,6 +288,14 @@ function init() {
   # Enable Ceph device monitoring
   ceph device monitoring on
   ceph config set global device_failure_prediction_mode local
+
+  # Disable unused dashboard plugins
+  ceph dashboard feature disable iscsi
+  ceph dashboard feature disable nfs
+
+  # Enable rbd stats collection
+  ceph config set mgr mgr/prometheus/rbd_stats_pools "kube,smf"
+  ceph config set mgr mgr/prometheus/rbd_stats_pools_refresh_interval 600
 
 }
 

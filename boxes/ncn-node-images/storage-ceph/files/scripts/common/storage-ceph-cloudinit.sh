@@ -8,7 +8,7 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 export CRAYSYS_TYPE=$(craysys type get)
 registry="${1:-registry.local}"
 CSM_RELEASE="${2:-1.5}"
-CEPH_VERS="${3:-15.2.15}"
+CEPH_VERS="${3:-16.2.7}"
 
 . /srv/cray/scripts/${CRAYSYS_TYPE}/lib.sh
 . /srv/cray/scripts/common/wait-for-k8s-worker.sh
