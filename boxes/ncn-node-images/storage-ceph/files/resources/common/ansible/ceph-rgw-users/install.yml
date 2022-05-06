@@ -10,7 +10,6 @@
     - ceph-rgw-users
     # Still need ceph-rbd to setup some pre-configuration
     - ceph-rbd
-    - benji-backups
     - ceph-health
     - ceph-pool-quotas
     ## Commenting out old provisioner will remove after final testing of ceph-csi
