@@ -3,6 +3,7 @@
 def promotionToken = ~"(master|main|develop|lts\\/.*)"
 def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
 def buildGoogle = true
+def buildPIT = false // MTL-1476 will set this to true
 def rebuildBaseImage = false
 def rebuildCommonImage = true
 def sourceBuildVersion = "[RELEASE]" // Pulls the latest release
@@ -45,7 +46,8 @@ pipeline {
     parameters {
         booleanParam(name: 'buildAndPublish', defaultValue: buildAndPublish, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to actually rebuild and publish for a stable merge build job.')
         booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the base image; unchecked will pull latest STABLE base. (This overrides rebuildCommonImage; if this is true, rebuildCommonImage is bypassed.)')
-        booleanParam(name: 'buildGoogle', defaultValue: buildGoogle, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build Google images for vshasta.)')
+        booleanParam(name: 'buildGoogle', defaultValue: buildGoogle, description: 'Build Google images for vshasta.')
+        booleanParam(name: 'buildPIT', defaultValue: buildPIT, description: 'Build the PIT Image (disabled until MTL-1476).')
         booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildCommonImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the common image; unchecked will pull latest STABLE ncn-common.')
         string(name: 'sourceBuildVersion', defaultValue: sourceBuildVersion, description: 'The stable version to use for the build.')
         string(name: 'googleSourceImageProjectId', defaultValue: "artifactory-202004", description: 'The source Project ID for pulling Google images.')
@@ -173,6 +175,7 @@ pipeline {
                     when {
                         expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
                         expression { params.rebuildCommonImage }
+                        expression { params.buildPIT }
                     }
                     steps {
                         withCredentials([
@@ -245,6 +248,7 @@ pipeline {
                         expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
                         expression { params.rebuildCommonImage }
                         expression { params.buildGoogle }
+                        expression { params.buildPIT }
                     }
                     steps {
                         withCredentials([
@@ -366,6 +370,8 @@ pipeline {
                         }
                         if (params.rebuildCommonImage) {
                             publishCsmImages.release('ncn-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                        }
+                        if (params.buildPIT) {
                             publishCsmImages.release('pit-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
                         }
                         publishCsmImages.release('storage-ceph', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
