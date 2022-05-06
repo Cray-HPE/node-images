@@ -1,0 +1,46 @@
+# Copyright 2018, 2019, Cray Inc. All Rights Reserved.
+---
+
+- name: Update Kubernetes secret for Ceph admin key
+  when: ceph_rbd_enabled
+  run_once: true
+  delegate_to: "{{ groups['mons'][0] }}"
+  block:
+    - name: Get Ceph admin key
+      command: "ceph auth get-key client.{{ ceph_rbd_admin_user }}"
+      register: ceph_rbd_admin_key
+      no_log: true
+
+    - name: Create temporary file for Ceph admin key
+      tempfile:
+        state: file
+        prefix: ceph-rbd-admin-
+        suffix: .key
+      register: ceph_rbd_admin_keyfile
+
+    - name: Check for backups namepsace
+      shell:  "kubectl get namespaces"
+      register: namespace_check
+      changed_when: false
+
+    - name: Create backups namespace
+      shell: "kubectl create namespace {{ benji_backup_namespace }}"
+      register: backups_namespace
+      when: namespace_check.rc == 0 and "backups" not in namespace_check.stdout
+      failed_when: namespace_check.rc != 0 or "already exists" in backups_namespace.stdout
+
+    - name: Create backups secret for Ceph admin key
+      shell: "kubectl --namespace={{ benji_backup_namespace }} create secret generic {{ benji_admin_secret }} --from-file=/etc/ceph/ceph.client.admin.keyring --type=kubernetes.io/rbd --save-config --dry-run -o yaml | kubectl apply -f -"
+      register: backup_admin_secret
+      changed_when: backup_admin_secret.rc == 0 and "unchanged" not in backup_admin_secret.stdout
+
+    - name: Check is Benji-backup configmap exists
+      shell: "kubectl -n backups get configmaps"
+      register: benji_ceph_configmap
+      changed_when: false
+
+    - name: Create config map for Benji-backup access to ceph
+      shell: "kubectl -n backups create configmap --from-file=/etc/ceph/ceph.conf ceph-etc"
+      register: benji_configmap_results
+      when: benji_ceph_configmap.rc == 0 and "ceph-etc" not in benji_ceph_configmap.stdout
+      changed_when: benji_configmap_results.rc == 0

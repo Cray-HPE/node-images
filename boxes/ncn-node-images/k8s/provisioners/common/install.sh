@@ -62,10 +62,6 @@ chmod a+x /usr/bin/weave
 
 echo "Installing Velero cli utility"
 wget -q "https://github.com/vmware-tanzu/velero/releases/download/${VELERO_VERSION}/velero-${VELERO_VERSION}-linux-amd64.tar.gz" -O - | tar -xzO "velero-${VELERO_VERSION}-linux-amd64/velero" > /usr/bin/velero
-echo "Dowloading newer velero cli utiliy versions to support upgrades"
-mkdir -p /srv/cray/tmp
-wget -q "https://github.com/vmware-tanzu/velero/releases/download/v1.6.3/velero-v1.6.3-linux-amd64.tar.gz" -O /srv/cray/tmp/velero-v1.6.3-linux-amd64.tar.gz
-wget -q "https://github.com/vmware-tanzu/velero/releases/download/v1.7.2/velero-v1.7.2-linux-amd64.tar.gz" -O /srv/cray/tmp/velero-v1.7.2-linux-amd64.tar.gz
 chmod 750 /usr/bin/velero
 
 echo "Ensuring that the kubernetes package repo exists in zypper"
@@ -110,7 +106,8 @@ zypper -n addrepo --refresh --no-gpgcheck /var/local-repos/conntrack local-connt
 zypper -n install --force -y conntrack-tools
 zypper -n install --force -y \
   kubelet-${kubernetes_version} \
-  kubeadm-${kubernetes_version}
+  kubeadm-${kubernetes_version} \
+  kubectl-${kubernetes_version}
 
 echo "Ensuring ipvs-required modules are loaded and will reload on reboot"
 cat > /usr/lib/modules-load.d/01-ipvs.conf <<EOF

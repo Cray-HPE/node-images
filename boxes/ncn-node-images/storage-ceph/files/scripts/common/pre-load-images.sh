@@ -10,14 +10,10 @@ echo "Pre-loading local images"
 #  podman image load "registry.local/$name:$tag" -i $image_path$image_file
 # done
 
-podman image load -i /srv/cray/resources/common/images/ceph_v16.2.7.tar
+podman image load -i /srv/cray/resources/common/images/ceph_v15.2.8.tar
 podman image load -i /srv/cray/resources/common/images/ceph_v15.2.15.tar
-podman image load -i /srv/cray/resources/common/images/ceph_v15.2.16.tar
 podman tag  registry.local/ceph/ceph:v15.2.15 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
-podman tag  registry.local/ceph/ceph:v15.2.16 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16
-podman tag  registry.local/ceph/ceph:v16.2.7 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7
-podman image load -i /srv/cray/resources/common/images/ceph-grafana_8.3.5.tar
-podman tag registry.local/ceph/ceph-grafana:8.3.5 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph-grafana:8.3.5
+podman image load -i /srv/cray/resources/common/images/ceph-grafana_6.6.2.tar
 podman image load -i /srv/cray/resources/common/images/ceph-grafana_6.7.4.tar
 podman image load -i /srv/cray/resources/common/images/prometheus_v2.18.1.tar
 podman image load -i /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
