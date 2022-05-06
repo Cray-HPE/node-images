@@ -133,7 +133,7 @@ function init() {
   #ceph-deploy install --release ${CEPH_RELEASE} $HOSTNAME
 
   # Create your initial files for cluster creation
-  cephadm --retry 60 --image $registry/ceph/ceph:v$CEPH_VERS bootstrap --skip-monitoring-stack --skip-mon-network --skip-pull --skip-dashboard --mon-ip $(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')
+  cephadm --retry 60 --image artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v$CEPH_VERS bootstrap --single-host-defaults --skip-monitoring-stack --skip-mon-network --skip-pull --skip-dashboard --mon-ip $(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')
 
 
   # Add in the options that allow this to run as a single node cluster
@@ -172,6 +172,7 @@ function init() {
       ceph orch set backend cephadm
     fi
   done
+  ceph orch apply mgr --placement=1
 
   echo "Running ceph orch apply osd"
   ceph orch apply osd --all-available-devices
@@ -182,7 +183,7 @@ function init() {
   wait_for_osds
 
   echo "Container image values"
-  ceph config set mgr mgr/cephadm/container_image_grafana       "$registry/ceph/ceph-grafana:6.7.4"
+  ceph config set mgr mgr/cephadm/container_image_grafana       "$registry/quay.io/ceph/ceph-grafana:8.3.5"
   ceph config set mgr mgr/cephadm/container_image_prometheus    "$registry/prometheus/prometheus:v2.18.1"
   ceph config set mgr mgr/cephadm/container_image_alertmanager  "$registry/quay.io/prometheus/alertmanager:v0.21.0"
   ceph config set mgr mgr/cephadm/container_image_node_exporter "$registry/quay.io/prometheus/node-exporter:v1.2.2"
