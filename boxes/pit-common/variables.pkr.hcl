@@ -201,3 +201,7 @@ variable "image_guest_os_features" {
   type = list(string)
   default = ["MULTI_IP_SUBNET"]
 }
+
+variable "pit_slug" {
+  type = string
+}

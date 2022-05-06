@@ -95,23 +95,28 @@ build {
     destination = "/tmp/files/"
   }
 
-  provisioner "file" {
-    source = "${path.root}root"
-    destination = "/tmp/root"
-  }
-
+  // Setup each context (e.g. common, google, and metal)
   provisioner "shell" {
-    inline = [
-      "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
-  }
-
-  provisioner "shell" {
+    environment_vars = [
+      "PIT_SLUG=${var.pit_slug}"
+    ]
     script = "${path.root}provisioners/common/setup.sh"
   }
 
   provisioner "shell" {
     script = "${path.root}provisioners/google/setup.sh"
     only = ["googlecompute.pit-common"]
+  }
+
+# Placeholder: if/when Metal needs a setup.sh (e.g. actions before RPMs are installed).
+#  provisioner "shell" {
+#    script = "${path.root}provisioners/metal/setup.sh"
+#    only = ["qemu.pit-common", "virtualbox-ovf.pit-common"]
+#  }
+
+  provisioner "shell" {
+    inline = [
+      "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
   }
 
   provisioner "shell" {
@@ -134,10 +139,7 @@ build {
     ]
   }
 
-  provisioner "shell" {
-    script = "${path.root}provisioners/pit/kernel.sh"
-  }
-
+  // Install packages by context (e.g. base (a.k.a. common), google, or metal)
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/cray-pre-install-toolkit/base.packages'"]
@@ -148,65 +150,21 @@ build {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/cray-pre-install-toolkit/firmware.packages'"]
     valid_exit_codes = [0, 123]
-    only = [
-      "qemu.pit-common",
-      "virtualbox-ovf.pit-common"
-    ]
+    only = ["qemu.pit-common", "virtualbox-ovf.pit-common"]
   }
 
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/cray-pre-install-toolkit/metal.packages'"]
     valid_exit_codes = [0, 123]
-    only = [
-      "qemu.pit-common",
-      "virtualbox-ovf.pit-common"
-    ]
+    only = ["qemu.pit-common", "virtualbox-ovf.pit-common"]
   }
 
-  provisioner "shell" {
-    script = "${path.root}provisioners/metal/hpc.sh"
-    only = [
-      "qemu.ncn-common",
-      "virtualbox-ovf.ncn-common"
-    ]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/pit/k8s.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/pit/firmware.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/pit/aliases.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/pit/services.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/pit/passwd.sh"
-    only = [
-      "qemu.pit-common",
-      "virtualbox-ovf.pit-common"
-    ]
-  }
-
+  // Install all generic installers first by context (e.g. common, google, and metal).
   provisioner "shell" {
     script = "${path.root}provisioners/common/install.sh"
   }
 
-  provisioner "shell" {
-    script = "${path.root}provisioners/metal/fstab.sh"
-    only = [
-      "qemu.pit-common",
-      "virtualbox-ovf.pit-common"
-    ]
-  }
   provisioner "shell" {
     script = "${path.root}provisioners/metal/install.sh"
     only = [
@@ -256,14 +214,6 @@ build {
     direction = "download"
     source = "/tmp/installed.repos"
     destination = "${var.output_directory}/installed.repos"
-    only = [
-      "qemu.pit-common",
-      "virtualbox-ovf.pit-common"
-    ]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/pit/pit-grub.sh"
     only = [
       "qemu.pit-common",
       "virtualbox-ovf.pit-common"
