@@ -319,7 +319,7 @@ pipeline {
                         }
                     }
                 }
-                stage('GCP Kubernetes Image') {
+                stage('GCP Node Images') {
                     when {
                         expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
                         expression { params.buildGoogle }
