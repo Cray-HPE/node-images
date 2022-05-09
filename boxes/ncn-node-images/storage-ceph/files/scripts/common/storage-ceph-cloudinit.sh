@@ -9,7 +9,7 @@ export CRAYSYS_TYPE=$(craysys type get)
 if [[ $CRAYSYS_TYPE == "google" ]]; then
   registry="${1:-artifactory.algol60.net/csm-docker/stable}"
 else
-  registry="${1:-registry.local}"
+  registry="${1:-localhost}"
 fi
 CSM_RELEASE="${2:-1.5}"
 CEPH_VERS="${3:-16.2.7}"
@@ -61,11 +61,19 @@ else
     if [[ "$CRAYSYS_TYPE" == "metal" ]]
     then
       nodename=$(printf "ncn-s%03d.nmn" $node)
+      nodelist="${nodelist}${nodelist:+,}$nodename"
     else
       nodename=$(printf "ncn-s%03d" $node)
+      nodelist="${nodelist}${nodelist:+,}$nodename"
     fi
-    ssh "$nodename" /srv/cray/scripts/common/pre-load-images.sh
   done
+  if [[ -z $nodelist ]]
+  then
+    echo "nodelist is empty.  exiting..."
+    exit 1
+  else
+    pdsh -w $nodelist /srv/cray/scripts/common/pre-load-images.sh
+  fi
 fi
 
 echo "Configuring node auditing software"
@@ -96,6 +104,9 @@ fi
 . /srv/cray/scripts/common/ceph-enable-services.sh
 . /srv/cray/scripts/common/enable-ceph-mgr-modules.sh
 enable_ceph_prometheus
+
+# Redeploy ceph-grafana to pickup latest version
+ceph orch daemon rm $(ceph orch ps --daemon_type grafana --format json-pretty |jq -r '.[].daemon_name')
 
 # Make ceph read-only client for monitoring
 
