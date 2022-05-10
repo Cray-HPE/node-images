@@ -250,6 +250,7 @@ build {
     only = ["qemu.ncn-common"]
   }
 
+  // FIXME: These should run for ALL sources; verify these work correctly with Google.
   provisioner "shell" {
     inline = [
       "bash -c 'goss -g /srv/cray/tests/common/goss-image-common.yaml validate -f junit | tee /tmp/goss_out.xml'"]
@@ -259,7 +260,6 @@ build {
     ]
   }
 
-  // FIXME: These should run for ALL sources; verify these work correctly with Google.
   provisioner "shell" {
     inline = [
       "bash -c 'goss -g /srv/cray/tests/metal/goss-image-common.yaml validate -f junit | tee /tmp/goss_metal_out.xml'"]
