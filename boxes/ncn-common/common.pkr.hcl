@@ -159,8 +159,7 @@ build {
 
   provisioner "shell" {
     script = "${path.root}provisioners/google/install.sh"
-    only = ["source.googlecompute.ncn-common"]
-
+    only = ["googlecompute.ncn-common"]
   }
 
   provisioner "shell" {

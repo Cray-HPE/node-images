@@ -68,3 +68,6 @@ systemctl enable --now lldpad.service
 systemctl disable postfix.service && systemctl stop postfix.service
 systemctl enable chronyd.service
 systemctl enable spire-agent.service
+
+# Make virtualenv available to all contexts and teams.
+pip3 install virtualenv

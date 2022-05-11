@@ -7,7 +7,6 @@ REQUIREMENTS=( boto3 netaddr )
 echo "Installing CSM Ansible $ANSIBLE_VERSION"
 mkdir -pv /etc/ansible
 pushd /etc/ansible
-pip3 install virtualenv
 virtualenv csm_ansible
 . csm_ansible/bin/activate
 pip3 install ansible-core==$ANSIBLE_VERSION
