@@ -22,11 +22,11 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 set -e
 
-echo "Copying ceph metal operations files into place"
-cp -rpv /srv/cray/resources/metal/ansible/* /etc/ansible/
-
-# Install GitHub Prometheus
-# FIXME: This should be installed via csm-rpms.
-zypper -n install -y golang-github-prometheus-node_exporter
+# Create directories for mountpoints (skip existing).
+# lib-containerd will be an overlayfs, this will allow the added block-device to be transparent to
+# existing files.
+cp -pv /srv/cray/resources/metal/metalfs.service /usr/lib/systemd/system
+systemctl enable metalfs
