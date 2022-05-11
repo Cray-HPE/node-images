@@ -28,3 +28,10 @@ rm -f /var/lib/systemd/random-seed
 echo "clear the history so our install isn't there"
 rm -f /root/.wget-hsts
 export HISTSIZE=0
+
+echo "Running defrag -- this will take a while"
+e4defrag / > /dev/null 2>&1
+echo "Write zeros..."
+filler="$(($(df -BM --output=avail /|grep -v Avail|cut -d "M" -f1)-1024))"
+dd if=/dev/zero of=/root/zero-file bs=1M count=$filler
+rm /root/zero-file

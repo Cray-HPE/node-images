@@ -22,11 +22,14 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-set -e
 
-echo "Copying ceph metal operations files into place"
-cp -rpv /srv/cray/resources/metal/ansible/* /etc/ansible/
+# Adding tmpfiles for metal.
+cp -pvr /srv/cray/resources/metal/tmpfiles.d/* /usr/lib/tmpfiles.d/
 
-# Install GitHub Prometheus
-# FIXME: This should be installed via csm-rpms.
-zypper -n install -y golang-github-prometheus-node_exporter
+echo "Loading in sysctl settings; activating for build-time"
+# Adding sysctl vars for metal.
+cp -pvr /srv/cray/sysctl/metal/* /etc/sysctl.d/
+sysctl -p
+
+# enable this to run on first boot during deployment, and then the kdump script disables it
+systemctl enable kdump-cray
