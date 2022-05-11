@@ -22,16 +22,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 set -e
 
 # TODO: MTL-1513 - convert to ansible configuration
 REQUIREMENTS=( requests )
 
-echo "Installing Python requirements for GCP scripts"
+echo "Installing GCP Python Environment"
+mkdir -pv /etc/ansible
 pushd /etc/ansible
-virtualenv csm_gcp
-. csm_gcp/bin/activate
+virtualenv gcp
+. gcp/bin/activate
 
 echo "Installing requirements: ${REQUIREMENTS[@]}"
 for requirement in "${REQUIREMENTS[@]}"; do
