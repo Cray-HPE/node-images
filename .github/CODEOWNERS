@@ -1,2 +1,2 @@
-# Global
-*               @Cray-HPE/metal
+*                           @Cray-HPE/reviewer-csm-rpms
+packages/*/metal.packages   @Cray-HPE/metal
