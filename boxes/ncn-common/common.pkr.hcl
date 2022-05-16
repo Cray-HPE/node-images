@@ -96,6 +96,7 @@ build {
     script = "${path.root}/provisioners/common/setup.sh"
   }
 
+  // Run ansible for common and metal
   provisioner "ansible-local" {
     inventory_file  = "ansible/packer.yml"
     playbook_dir    = "ansible"
@@ -107,6 +108,7 @@ build {
     ]
   }
 
+  // Run ansible for common and gcp
   provisioner "ansible-local" {
     inventory_file  = "ansible/packer.yml"
     playbook_dir    = "ansible"
@@ -135,35 +137,59 @@ build {
     ]
   }
 
-#  provisioner "shell" {
-#    script = "${path.root}/provisioners/google/setup.sh"
-#    only = ["googlecompute.ncn-common"]
-#  }
+  provisioner "shell" {
+    script = "${path.root}/provisioners/google/setup.sh"
+    only = ["googlecompute.ncn-common"]
+  }
 
-#  provisioner "shell" {
-#    script = "${path.root}/provisioners/metal/setup.sh"
-#    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
-#  }
+  provisioner "shell" {
+    script = "${path.root}/provisioners/metal/setup.sh"
+    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
+  }
 
   // Install packages by context (e.g. base (a.k.a. common), google, or metal)
-#  provisioner "shell" {
-#    inline = [
-#      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
-#    valid_exit_codes = [0, 123]
-#  }
-#
-#  provisioner "shell" {
-#    inline = [
-#      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
-#    valid_exit_codes = [0, 123]
-#    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
-#  }
-#
-#  provisioner "shell" {
-#    inline = [
-#      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/cms.packages'"]
-#    valid_exit_codes = [0, 123]
-#  }
+  # TODO: MTL-1513: Convert to ansible
+  provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
+    valid_exit_codes = [0, 123]
+  }
+
+  # TODO: MTL-1513: Convert to ansible
+  provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
+    valid_exit_codes = [0, 123]
+    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
+  }
+
+  # TODO: MTL-1513: Convert to ansible
+  provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/cms.packages'"]
+    valid_exit_codes = [0, 123]
+  }
+
+  // Run ansible for common and metal
+  provisioner "ansible-local" {
+    inventory_file  = "ansible/packer.yml"
+    playbook_dir    = "ansible"
+    playbook_file   = "ansible/pb_ncn_common_install.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,metal"
+    only = [
+      "qemu.ncn-common",
+      "virtualbox-ovf.ncn-common"
+    ]
+  }
+
+  // Run ansible for common and gcp
+  provisioner "ansible-local" {
+    inventory_file  = "ansible/packer.yml"
+    playbook_dir    = "ansible"
+    playbook_file   = "ansible/pb_ncn_common_install.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,gcp"
+    only = ["googlecompute.ncn-common"]
+  }
 
   // Install all generic installers first by context (e.g. common, google, and metal).
   provisioner "shell" {
