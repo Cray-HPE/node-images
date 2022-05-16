@@ -9,17 +9,14 @@ pool {{ pool }} iburst
 {% endif %}
 {% endfor %}
 {% for server in servers | sort -%}
-{% if local_hostname == 'ncn-m001' %}
-{% if server == 'ncn-m001' %}
+{% if local_hostname == 'ncn-m001' and server == 'ncn-m001' %}
 # server {{ server }} will not be used as itself for a server
 {% else %}
-server {{ server }} iburst trust
+server {{ server }} iburst trust prefer
 initstepslew 1 {{ server }}
 {% endif %}
-{% else %}
-{% if server == 'ncn-m001' %}
-server {{ server }} iburst trust
-{% endif %}
+{% if local_hostname != 'ncn-m001' and server != 'ncn-m001' %}
+# {{ local_hostname }}
 {% endif %}
 {% endfor %}
 {% for peer in peers | sort -%}
