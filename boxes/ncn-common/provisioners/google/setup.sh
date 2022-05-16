@@ -2,10 +2,10 @@
 
 set -e
 
-# TODO: I don't think we need this?
-echo "activate public cloud module"
-product=$(SUSEConnect --list-extensions | grep -o "sle-module-public-cloud.*")
-[[ -n "$product" ]] && SUSEConnect -p "$product"
+# TODO: MTL-1513: I don't think we need this
+#echo "activate public cloud module"
+#product=$(SUSEConnect --list-extensions | grep -o "sle-module-public-cloud.*")
+#[[ -n "$product" ]] && SUSEConnect -p "$product"
 
 # TODO: default root ssh key details should be parameterized. These keys should ALWAYS
 # be overridden at install/upgrade time based on customer configuration, and thus these
