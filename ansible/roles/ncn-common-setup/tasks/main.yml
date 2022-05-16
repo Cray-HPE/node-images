@@ -1,14 +1,104 @@
 ---
-- name: Initialize cray directories
+- name: Symlink python3
   file:
-    path: /srv/cray
-    state: directory
-    mode: '0755'
-    owner: root
-    group: root
-  register: create_cray_dir
+    src: /usr/bin/python
+    dest: /usr/bin/python3
+    state: link
   tags:
     - common
+
+- name: Ensuring /srv/cray/utilities locations are available for use system-wide
+  file:
+    src: /srv/cray/utilities/common/craysys/craysys
+    dest: /bin/craysys
+    state: link
+    tags:
+      - common
+
+- name: Export cray path
+  lineinfile:
+    path: /etc/profile.d/cray.sh
+    regexp: '^export PYTHONPATH='
+    line: 'export PYTHONPATH="/srv/cray/utilities/common"'
+  tags:
+    - common
+
+- name: Configuring podman so it will run with fuse-overlayfs
+  lineinfile:
+    path: /etc/containers/storage.conf
+    regexp: '^mount_program ='
+    line: 'mount_program = "/usr/bin/fuse-overlayfs"'
+  tags:
+    - common
+
+- name: Enable multi-user target
+  systemd:
+    name: multi-user.target
+    enabled: yes
+    masked: no
+  tags:
+    - common
+
+- name: "Get current systemd default"
+  command: "systemctl get-default"
+  changed_when: false
+  register: systemdefault
+  tags:
+    - common
+
+- name: "Set default to multi-user target"
+  command: "systemctl set-default multi-user.target"
+  when: "'multi-user' not in systemdefault.stdout"
+  tags:
+    - common
+
+- name: Enabling services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+    with_items:
+      - ca-certificates.service
+      - issue-generator.service
+      - kdump-early.service
+      - kdump.service
+      - purge-kernels.service
+      - rasdaemon.service
+      - rc-local.service
+      - rollback.service
+      - sshd.service
+      - wicked.service
+      - wickedd-auto4.service
+      - wickedd-dhcp4.service
+      - wickedd-dhcp6.service
+      - wickedd-nanny.service
+      - getty@tty1.service
+      - serial-getty@ttyS0.service
+      - lldpad.service
+      - chronyd.service
+      - spire-agent.service
+    tags:
+      - common
+
+- name: Disable postfix service
+  systemd:
+    name: "{{ item }}"
+    enabled: no
+    state: stopped
+    with_items:
+      - postfix.service
+    tags:
+      - common
+
+- name: Make virtualenv available to all contexts and teams.
+  pip:
+    name: virtualenv
+
+
+
+
+
+
 
 - name: Copy /srv/cray files
   copy:
