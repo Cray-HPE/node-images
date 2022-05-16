@@ -110,6 +110,8 @@
       <product>SLE_HPC</product>
     </products>
     <packages config:type='list'>
+      <!--  git-core is required for csm-rpms   -->
+      <package>git-core</package>
       <!--  jq is required for csm-rpms install functions   -->
       <package>jq</package>
       <!--   Python 3 is needed for csm-rpms and many other tasks   -->

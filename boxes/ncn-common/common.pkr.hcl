@@ -123,7 +123,7 @@ build {
       "ARTIFACTORY_USER=${var.artifactory_user}",
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
-    inline = ["bash -c /srv/cray/custom/repos.sh"]
+    inline = ["bash -c /srv/cray/scripts/repos.sh"]
   }
 
   provisioner "shell" {
@@ -192,34 +192,49 @@ build {
   }
 
   // Install all generic installers first by context (e.g. common, google, and metal).
+  // Installs kernel and kernel modules
   provisioner "shell" {
     script = "${path.root}/provisioners/common/install.sh"
   }
 
+  // Creates a virtualenv for GCP
   provisioner "shell" {
     script = "${path.root}/provisioners/google/install.sh"
     only = ["googlecompute.ncn-common"]
 
   }
 
+  // Installs a package that needs to unlock the kernel
   provisioner "shell" {
     script = "${path.root}/provisioners/metal/install.sh"
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
+  // Run ansible for common and metal for team installers
+  provisioner "ansible-local" {
+    inventory_file  = "ansible/packer.yml"
+    playbook_dir    = "ansible"
+    playbook_file   = "ansible/pb_ncn_common_team.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common"
+  }
+
   // Install all team installers last, grouped by context (e.g. common, google metal).
+  // Previously installed ansible for csm, this was moved to the start so ansible can run right away.
   provisioner "shell" {
     script = "${path.root}/provisioners/common/csm/install.sh"
   }
 
+  // Previously enabled cfs-state-reporter.service
   provisioner "shell" {
     script = "${path.root}/provisioners/common/cms/install.sh"
   }
 
+  // Previously rsyslog config
   provisioner "shell" {
     script = "${path.root}/provisioners/common/cos/install.sh"
   }
 
+  // TODO: MTL-1513 Add another ansible playbook for csm/install.sh
   provisioner "shell" {
     script = "${path.root}/provisioners/metal/csm/install.sh"
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]

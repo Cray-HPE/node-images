@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #
 # MIT License
@@ -24,31 +24,37 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-set -ex
+set -e
 
-echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
-rm -rf /var/adm/autoinstall/cache
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd )"
+echo "$CURRENT_DIR"
 
-echo "cleanup all the downloaded RPMs"
-zypper clean --all
+function list-custom-repos-file() {
+  cat <<EOF
+${CURRENT_DIR}/${CUSTOM_REPOS_FILE}
+EOF
+}
 
-echo "clean up network interface persistence"
-rm -f /etc/udev/rules.d/70-persistent-net.rules;
-touch /etc/udev/rules.d/75-persistent-net-generator.rules;
+function remove-comments-and-empty-lines() {
+  sed -e 's/#.*$//' -e '/^[[:space:]]*$/d' "$@"
+}
 
-echo "truncate any logs that have built up during the install"
-find /var/log/ -type f -name "*.log.*" -exec rm -rf {} \;
-find /var/log -type f -exec truncate --size=0 {} \;
+function zypper-add-repos() {
+  remove-comments-and-empty-lines \
+  | awk '{ NF-=1; print }' \
+  | while read url name flags; do
+    local alias="buildonly-${name}"
+    echo "Adding repo ${alias} at ${url}"
+    zypper -n addrepo $flags "${url}" "${alias}"
+    zypper -n --gpg-auto-import-keys refresh "${alias}"
+  done
+}
 
-echo "remove the contents of /tmp and /var/tmp"
-rm -rf /tmp/* /var/tmp/*
-
-echo "blank netplan machine-id (DUID) so machines get unique ID generated on boot"
-truncate -s 0 /etc/machine-id
-
-echo "force a new random seed to be generated"
-rm -f /var/lib/systemd/random-seed
-
-echo "clear the history so our install isn't there"
-rm -f /root/.wget-hsts
-export HISTSIZE=0
+if [ -z "$CUSTOM_REPOS_FILE" ]; then
+  echo "Not using a custom repo."
+  source /srv/cray/csm-rpms/scripts/rpm-functions.sh
+  setup-package-repos
+else
+  echo "Using custom repos file: '${CUSTOM_REPOS_FILE}'."
+  list-custom-repos-file | xargs -r cat | zypper-add-repos
+fi

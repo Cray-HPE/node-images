@@ -37,9 +37,6 @@ if read DEV_DISK DEV_PARTITION_NR && [ -n "$DEV_PARTITION_NR" ]; then
   resize2fs ${DEV_DISK}${DEV_PARTITION_NR}
 fi
 
-#!/bin/bash
-set -e
-
 ANSIBLE_VERSION=${ANSIBLE_VERSION:-2.11.10}
 REQUIREMENTS=( boto3 netaddr )
 
