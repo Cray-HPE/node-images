@@ -55,6 +55,8 @@ def create_chrony_config(allow, confpath, peers, pools, servers, local_hostname)
         pools=pools,
         servers=servers)
 
+    # clear the config for a fresh start
+    os.remove(confpath)
     with open(confpath, "w") as conf_file:
         conf_file.write(output)
 
