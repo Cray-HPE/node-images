@@ -1,228 +1,193 @@
 ---
-- name: Initialize cray directories
-  file:
-    path: /srv/cray
-    state: directory
-    mode: '0755'
-    owner: root
-    group: root
-  register: create_cray_dir
-  tags:
-    - common
-
-- name: Copy /srv/cray files
-  copy:
-    src: files/srv/cray/
-    dest: /srv/cray/
-    owner: root
-    group: root
-  tags:
-    - common
-
-# common/setup.sh
-- name: Initialize log directory
-  file:
-    path: /var/log/cray
-    state: directory
-    mode: '0755'
-    owner: root
-    group: root
-  tags:
-    - common
-
-- name: Initialize log file
-  file:
-    path: /var/log/cray/no.log
-    state: touch
-    mode: '0644'
-    owner: root
-    group: root
-  tags:
-    - common
-
-- name: Copy logrotate file
-  copy:
-    src: files/etc/logrotate.d/cray
-    dest: /etc/logrotate.d/cray
-    owner: root
-    group: root
-    mode: '0644'
-  tags:
-    - common
-
-- name: Set Cray scripts executable
-  file:
-    path: /srv/cray/scripts
-    state: directory
-    recurse: yes
-    mode: '0755'
-  tags:
-    - common
-
-- name: Move sysctl files into place
-  copy:
-    remote_src: yes
-    src: /srv/cray/sysctl/common/
-    dest: /etc/sysctl.d/
-  tags:
-    - common
-
-- name: Move cray-limits file into place
-  copy:
-    remote_src: yes
-    src: /srv/cray/limits/98-cray-limits.conf
-    dest: /etc/security/limits.d/98-cray-limits.conf
-  tags:
-    - common
-
-- name: Set a hostname
-  hostname:
-    name: ncn
-  tags:
-    - common
-
-- name: Import Shasta RPM key
-  rpm_key:
-    state: present
-    key: https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc
-  tags:
-    - common
-
-# google/setup.sh
-- name: Ensure it is known this is a google system
-  file:
-    path: /etc/google_system
-    state: touch
-    mode: '0644'
-    owner: root
-    group: root
-  tags:
-    - gcp
-
-- name: Install google guest environment packages
-  zypper:
-    update_cache: yes
-    name: "{{ item }}"
-    state: installed
-  with_items:
-    - google-guest-agent
-    - google-guest-configs
-    - google-guest-oslogin
-    - google-osconfig-agent
-  tags:
-    - gcp
-
-- name: Enable google services and ensure they are not masked
-  systemd:
-    name: "{{ item }}"
-    enabled: yes
-    masked: no
-  with_items:
-    - google-guest-agent.service
-    - google-osconfig-agent.service
-    - google-oslogin-cache.service
-    - google-oslogin-cache.timer
-    - google-shutdown-scripts.service
-    - google-startup-scripts.service
-  tags:
-    - gcp
-
-- name: Modify DNS to use Cray DNS servers
-  lineinfile:
-    path: /etc/sysconfig/network/config
-    regexp: '^NETCONFIG_DNS_STATIC_SERVERS='
-    line: 'NETCONFIG_DNS_STATIC_SERVERS="172.31.84.40 172.30.84.40"'
-  tags:
-    - gcp
-
-- name: Restart network service, in all cases, also issue daemon-reload to pick up config changes
-  systemd:
-    state: restarted
-    daemon_reload: yes
-    name: network
-  tags:
-    - gcp
-
-- name: Stubbing out network interface configuration files
-  copy:
-    src: files/etc/sysconfig/network/ifcfg-eth
-    dest: "/etc/sysconfig/network/ifcfg-eth{{ item }}"
-    owner: root
-    group: root
-    mode: '0644'
-  loop: "{{ range(0, 10 + 1, 1)|list }}"
-  tags:
-    - gcp
-
-- name: Move gcp sysctl files into place
-  copy:
-    remote_src: yes
-    src: /srv/cray/sysctl/google/
-    dest: /etc/sysctl.d/
-  tags:
-    - gcp
-
-- name: Scheduling job to ensure /root/.ssh/authorized_keys file is our /root/.ssh/id_rsa.pub only every 1 minute
-  cron:
-    name: "gcp authorized keys"
-    minute: "*/1"
-    job: "cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys >> /var/log/cray/cron.log 2>&1"
-  tags:
-    - gcp
-
-# metal/install.sh
-- name: Adding sysctl vars for metal
-  copy:
-    remote_src: yes
-    src: /srv/cray/sysctl/metal/
-    dest: /etc/sysctl.d/
-  tags:
-    - metal
-
-- name: Copy custom systemd files into place
-  copy:
-    remote_src: yes
-    src: /srv/cray/resources/metal/systemd/
-    dest: /usr/lib/systemd/system/
-  tags:
-    - metal
-
-- name: Enable google services and ensure they are not masked
-  systemd:
-    name: "{{ item }}"
-    enabled: yes
-    masked: no
-  with_items:
-    - kdump-cray
-    - cloud-init-oneshot
-  tags:
-    - metal
-
-- name: Adding sshd_config for metal
-  copy:
-    remote_src: yes
-    src: /srv/cray/resources/metal/sshd_config
-    dest: /etc/ssh/sshd_config
-  tags:
-    - metal
-
-
-
-
-
-#
 #- name: Install Base Packages
 #  zypper:
 #    oldpackage: yes
 #    name: "{{ base_packages }}"
 #    state: present
+#  tags:
+#    - common
 #
 #- name: Install Metal Packages
 #  zypper:
 #    name: "{{ metal_packages }}"
 #    state: present
+#  tags:
+#    - metal
 #
 #- name: Install CMS Packages
 #  zypper:
 #    name: "{{ cms_packages }}"
 #    state: present
+#  tags:
+#    - common
+
+- name: Symlink python3
+  file:
+    src: /usr/bin/python3
+    dest: /usr/bin/python
+    state: link
+  tags:
+    - common
+
+- name: Ensuring /srv/cray/utilities locations are available for use system-wide
+  file:
+    src: /srv/cray/utilities/common/craysys/craysys
+    dest: /bin/craysys
+    state: link
+  tags:
+    - common
+
+- name: Export cray path
+  lineinfile:
+    path: /etc/profile.d/cray.sh
+    regexp: '^export PYTHONPATH='
+    line: 'export PYTHONPATH="/srv/cray/utilities/common"'
+  tags:
+    - common
+
+- name: Configuring podman so it will run with fuse-overlayfs
+  lineinfile:
+    path: /etc/containers/storage.conf
+    regexp: '^mount_program ='
+    line: 'mount_program = "/usr/bin/fuse-overlayfs"'
+  tags:
+    - common
+
+- name: Enable multi-user target
+  systemd:
+    name: multi-user.target
+    enabled: yes
+    masked: no
+  tags:
+    - common
+
+- name: "Get current systemd default"
+  command: "systemctl get-default"
+  changed_when: false
+  register: systemdefault
+  tags:
+    - common
+
+- name: "Set default to multi-user target"
+  command: "systemctl set-default multi-user.target"
+  when: "'multi-user' not in systemdefault.stdout"
+  tags:
+    - common
+
+- name: Enabling services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+    with_items:
+      - ca-certificates.service
+      - issue-generator.service
+      - kdump-early.service
+      - kdump.service
+      - purge-kernels.service
+      - rasdaemon.service
+      - rc-local.service
+      - rollback.service
+      - sshd.service
+      - wicked.service
+      - wickedd-auto4.service
+      - wickedd-dhcp4.service
+      - wickedd-dhcp6.service
+      - wickedd-nanny.service
+      - getty@tty1.service
+      - serial-getty@ttyS0.service
+      - lldpad.service
+      - chronyd.service
+      - spire-agent.service
+  tags:
+    - common
+
+- name: Disable postfix service
+  systemd:
+    name: "{{ item }}"
+    enabled: no
+    state: stopped
+    with_items:
+      - postfix.service
+  tags:
+    - common
+
+- name: Make virtualenv available to all contexts and teams.
+  pip:
+    name: virtualenv
+  tags:
+    - common
+
+- name: "Copy sysstat service into place"
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/sysstat.cron
+    dest: /etc/sysstat/sysstat.cron
+  tags:
+    - metal
+  register: copy_sysstat_service
+
+- name: Disk stuff
+  command: "/usr/lib64/sa/sa1 -S DISK 1 1"
+  when: copy_sysstat_service.changed
+  tags:
+    - metal
+
+- name: Enable sysstat service
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+    with_items:
+      - sysstat.service
+  tags:
+    - metal
+
+- name: "Copy mdadm.conf into place"
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/mdadm.conf
+    dest: /etc/mdadm.conf
+  tags:
+    - metal
+
+# Agentless Management Service only works on servers with iLO4/5.
+# Disable by default, enable during runtime.
+- name: Disabling Agentless Management Daemon
+  systemd:
+    name: "{{ item }}"
+    enabled: no
+    state: stopped
+    with_items:
+      - ahslog
+      - amsd
+      - cpqFca
+      - cpqIde
+      - cpqScsi
+      - smad
+    tags:
+      - metal
+
+- name: Allow domains
+  lineinfile:
+    path: /etc/sysconfig/network/dhcp
+    regexp: '^DHCLIENT_FQDN_ENABLED='
+    line: 'DHCLIENT_FQDN_ENABLED="enabled"'
+  tags:
+    - metal
+
+- name: Notify update on hostname change
+  lineinfile:
+    path: /etc/sysconfig/network/dhcp
+    regexp: '^DHCLIENT_FQDN_UPDATE='
+    line: 'DHCLIENT_FQDN_UPDATE="both"'
+  tags:
+    - metal
+
+- name: Do not let DHCP set hostname, this is set by cloud-init
+  lineinfile:
+    path: /etc/sysconfig/network/dhcp
+    regexp: '^DHCLIENT_SET_HOSTNAME='
+    line: 'DHCLIENT_SET_HOSTNAME="no"'
+  tags:
+    - metal
