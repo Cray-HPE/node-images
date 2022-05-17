@@ -1,0 +1,18 @@
+---
+chrony_port: 123
+chrony_acquisitionport: 1123
+chrony_allow:
+chrony_service_enabled: 'yes'
+chrony_service_state: 'started'
+chrony_service_name: 'chrony'
+chrony_conf_file: '/etc/chrony/chrony.conf'
+cray_conf_file: '/etc/chrony.d/cray.conf'
+chrony_keyfile: '/etc/chrony/chrony.keys'
+chrony_driftfile: '/var/lib/chrony/chrony.drift'
+chrony_log: 'tracking measurements statistics'
+chrony_logdir: '/var/log/chrony'
+chrony_maxupdateskew: 100.0
+chrony_dumpdir: '/var/lib/chrony'
+chrony_initstepslew: false
+chrony_initstepslew_threshold: 30
+chrony_initstepslew_servers: 'time.nist.gov'

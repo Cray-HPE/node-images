@@ -1,0 +1,4 @@
+---
+- package:
+    name: 'chrony'
+    state: present

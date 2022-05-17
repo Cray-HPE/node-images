@@ -1,0 +1,6 @@
+---
+- name: Manage chrony service
+  service:
+    name: "{{ chrony_service_name }}"
+    enabled: "{{ chrony_service_enabled }}"
+    state: "{{ chrony_service_state }}"
