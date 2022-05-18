@@ -1,0 +1,25 @@
+## template:jinja
+# Cloud-init has written this file with configuration data
+# that it has been provided. Cloud-init, by default, will write this file
+# a single time (PER_ONCE).
+# Default SUSE/sshd_config with all empty-lines and default comments removed.
+AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+AcceptEnv LC_IDENTIFICATION LC_ALL
+AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+AuthorizedKeysFile .ssh/authorized_keys
+PermitRootLogin yes
+Subsystem sftp /usr/lib/ssh/sftp-server
+UsePAM yes
+X11Forwarding yes
+
+# NCN Additions:
+AcceptEnv IPMITOOL_PASSWORD
+
+# IP Address Limits
+{% for name, network in ds.meta_data.ipam.items() %}
+{% if name != 'chn' and name != 'can' %}
+# Allow access on {{ name }}0 network
+{% set ip_list = network.ip.split('/') %}
+ListenAddress {{ ip_list[0] }}
+{% endif -%}
+{% endfor %}
