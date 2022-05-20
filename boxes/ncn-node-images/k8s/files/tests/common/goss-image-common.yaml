@@ -1,5 +1,25 @@
 file:
+  /root/.ssh:
+    exists: false
+  /etc/zypp/services.d/Basesystem_Module_15_SP2_x86_64.service:
+    exists: false
+  /etc/zypp/services.d/Server_Applications_Module_15_SP2_x86_64.service:
+    exists: false
+  /etc/zypp/services.d/Public_Cloud_Module_15_SP2_x86_64.service:
+    exists: false
+  /etc/zypp/services.d/SUSE_Linux_Enterprise_Server_15_SP2_x86_64.service:
+    exists: false
   /var/adm/autoinstall/cache:
+    exists: false
+command:
+  no_root_password:
+    exit-status: 0
+    exec: "grep root /etc/shadow"
+    stdout:
+    - root:*:18969::::::
+    stderr: []
+    timeout: 2000 # in milliseconds
+    skip: false
 service:
   chronyd:
     enabled: true
