@@ -1,9 +1,0 @@
-@Library("dst-shared") _
-rpmBuild(
-    specfile: "ceph-ansible-crayctldeploy.spec",
-    channel: "casmpet-builds",
-    product: "shasta-standard,shasta-premium",
-    target_node: "ncn",
-    fanout_params: ["sle15sp1"],
-    masterBranch: "shasta-1.2_stable-4.0"
-)
