@@ -31,5 +31,10 @@ echo "Loading in sysctl settings; activating for build-time"
 cp -pvr /srv/cray/sysctl/metal/* /etc/sysctl.d/
 sysctl -p
 
+# Adding cloud-init.cfg files and templates for metal.
+# Do not delete anything there, incase a lower layer already added common configs.
+[ -f /etc/cloud/cloud.cfg ] || cp -pv /srv/cray/resources/common/cloud.cfg /etc/cloud/
+rsync -av /srv/cray/resources/metal/cloud.cfg.d/ /etc/cloud/cloud.cfg.d/
+
 # enable this to run on first boot during deployment, and then the kdump script disables it
 systemctl enable kdump-cray
