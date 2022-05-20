@@ -4,4 +4,4 @@ service:
     running: false
   kdump-early:
     enabled: true
-    running: false
+    running: true
