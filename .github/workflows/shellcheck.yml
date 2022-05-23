@@ -27,7 +27,9 @@ on:
     branches:
       - develop
       - main
+      - master
       - lts/*
+      - release/*
 
 jobs:
   shellcheck:
@@ -39,8 +41,4 @@ jobs:
     - name: run shellcheck
       uses: ludeeus/action-shellcheck@1.1.0
       with:
-        # initial commit of shellcheck will only check here, remove or modify as we adjust more
-        scandir: 'boxes/ncn-common/files/scripts/common'
-        # fail on any of the following or lower (error, warning, info, style)
-        # in future iterations, this can be adjusted for info and styling as well
         severity: warning
