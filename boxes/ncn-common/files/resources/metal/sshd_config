@@ -1,4 +1,5 @@
 # Default SUSE/sshd_config with all empty-lines and comments (asides this ones) removed.
+# SSH access is filtered on CAN/CHN networks by iptables
 AcceptEnv 			LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
 AcceptEnv 			LC_IDENTIFICATION LC_ALL
 AcceptEnv 			LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
