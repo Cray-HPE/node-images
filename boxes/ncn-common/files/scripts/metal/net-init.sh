@@ -143,19 +143,4 @@ if check_ips 1 ; then
 else
     printf 'net-init: [ % -20s ]\n' 'testing: IPs exist'
 fi
-
-function sshd_config() {
-    if [[ -f /etc/ssh/sshd_config ]]; then
-        rm /etc/ssh/sshd_config
-    fi
-
-    # Render the template
-    printf 'net-init: [ % -20s ]\n' 'running: sshd_config'
-    cloud-init query --format="$(cat /etc/cloud/templates/sshd_config.tmpl)" >/etc/ssh/sshd_config || fail_and_die "cloud-init query failed to render sshd_config.tmpl"
-
-    printf 'net-init: [ % -20s ]\n' 'running: sshd reload'
-    systemctl reload sshd
-}
-sshd_config
-
 printf 'net-init: [ % -20s ]\n' 'completed'
