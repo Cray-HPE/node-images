@@ -143,4 +143,21 @@ if check_ips 1 ; then
 else
     printf 'net-init: [ % -20s ]\n' 'testing: IPs exist'
 fi
+
+function iptables_config() {
+    mkdir -p /etc/iptables/
+
+    if [[ -f /etc/iptables/metal.conf ]]; then
+       rm /etc/iptables/metal.conf
+    fi
+
+    # Render the template
+    printf 'net-init: [ % -20s ]\n' 'running: iptables_config'
+    cloud-init query --format="$(cat /etc/cloud/templates/metal-iptables.conf.tmpl)" >/etc/iptables/metal.conf || fail_and_die "cloud-init query failed to render metal-iptables.conf.tmpl"
+
+    printf 'net-init: [ % -20s ]\n' 'running: metal-iptables restart'
+    systemctl restart metal-iptables
+}
+iptables_config
+
 printf 'net-init: [ % -20s ]\n' 'completed'
