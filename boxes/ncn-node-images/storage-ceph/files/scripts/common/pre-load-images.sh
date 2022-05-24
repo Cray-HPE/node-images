@@ -16,6 +16,7 @@ podman tag  registry.local/ceph/ceph:v15.2.15 registry.local/artifactory.algol60
 podman image load -i /srv/cray/resources/common/images/ceph-grafana_6.6.2.tar
 podman image load -i /srv/cray/resources/common/images/ceph-grafana_6.7.4.tar
 podman image load -i /srv/cray/resources/common/images/prometheus_v2.18.1.tar
+podman tag  registry.local/prometheus/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1
 podman image load -i /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
 podman image load -i /srv/cray/resources/common/images/alertmanager_v0.21.0.tar
 podman tag registry.local/prometheus/alertmanager:v0.21.0 registry.local/quay.io/prometheus/alertmanager:v0.21.0
