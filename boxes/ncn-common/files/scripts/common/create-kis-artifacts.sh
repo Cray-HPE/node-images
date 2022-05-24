@@ -29,6 +29,8 @@
 
 set -ex
 
+. $(dirname $0)/dracut-params.sh
+
 mkdir -p /mnt/squashfs /squashfs
 mount -o bind / /mnt/squashfs
 
@@ -48,13 +50,13 @@ if [[ "$1" != "squashfs-only" ]]; then
   mount --bind /dev /mnt/squashfs/dev
   mount --bind /sys /mnt/squashfs/sys
   mount --bind /var /mnt/squashfs/var
-  [ -f /var/adm/autoinstall/cache ] && rm -rf /var/adm/autoinstall/cache || echo >&2 'Could not remove autoinstall/cache!'
+  [ -f /var/adm/autoinstall/cache ] && rm -rf /var/adm/autoinstall/cache
   chroot /mnt/squashfs /bin/bash -c "dracut --xz --force \
-    --omit 'cifs ntfs-3g btrfs nfs fcoe iscsi modsign fcoe-uefi nbd dmraid multipath dmsquash-live-ntfs' \
-    --omit-drivers 'ecb md5 hmac' \
-    --add 'mdraid' \
-    --force-add 'dmsquash-live livenet mdraid' \
-    --install 'rmdir wipefs sgdisk vgremove less' \
+    --omit "${OMIT[@]}" \
+    --omit-drivers "${OMIT_DRIVERS[@]}" \
+    --add "${ADD[@]}" \
+    --force-add "${FORCE_ADD[@]}" \
+    --install "${INSTALL[@]}" \
     --persistent-policy by-label --show-modules --ro-mnt --no-hostonly --no-hostonly-cmdline \
     --kver ${version} \
     --printsize \

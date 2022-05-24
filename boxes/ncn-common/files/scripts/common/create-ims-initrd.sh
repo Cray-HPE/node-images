@@ -27,6 +27,8 @@
 set -e
 set -x
 
+. $(dirname $0)/dracut-params.sh
+
 echo "Generating initrd..."
 
 version_full=$(rpm -q --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" kernel-default)
@@ -37,10 +39,11 @@ version="$version_base-$version_suse-default"
 
 dracut \
 --force \
---omit 'cifs ntfs-3g btrfs nfs fcoe iscsi modsign fcoe-uefi nbd dmraid multipath dmsquash-live-ntfs' \
---omit-drivers 'ecb md5 hmac' \
---add 'mdraid' \
---force-add 'dmsquash-live livenet mdraid' \
+--omit "${OMIT[@]}" \
+--omit-drivers "${OMIT_DRIVERS[@]}" \
+--add "${ADD[@]}" \
+--force-add "${FORCE_ADD[@]}" \
+--install "${INSTALL[@]}" \
 --kver ${version} \
 --no-hostonly \
 --no-hostonly-cmdline \
