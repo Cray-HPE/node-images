@@ -1,4 +1,27 @@
 #!/bin/bash
+#
+# MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
 
 export PROJECT_ID=$(craysys metadata get /project-id)
 export NETWORK=$(craysys metadata get /network-interfaces/0/network --level node | awk -F'/' '{print $NF}')
@@ -20,6 +43,8 @@ export ETCD_HOSTNAME=$(hostname | awk -F "-" '{print $1 "-" $2}')
 export ETCD_HA_PORT=2379
 export CONTROL_PLANE_HOSTNAME="kubernetes-api.${DOMAIN}"
 export CONTROL_PLANE_ENDPOINT="${CONTROL_PLANE_HOSTNAME}:6443"
+export API_GW=api-gateway.vshasta.io
+echo "API_GW has been set to $API_GW"
 
 function get-access-token() {
   access_token=$(craysys metadata get /service-accounts/default/token --level node | \
@@ -40,6 +65,8 @@ node-tags = worker
 regional = true
 multizone = true
 EOF
+  echo "Copying /etc/ssl/ca-bundle.pem to /etc/kubernetes/pki/oidc.pem for kube-apiserver"
+  cp /etc/ssl/ca-bundle.pem /etc/kubernetes/pki/oidc.pem
 }
 
 function configure-load-balancer-for-master() {

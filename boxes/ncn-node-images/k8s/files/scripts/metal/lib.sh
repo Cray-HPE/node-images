@@ -1,4 +1,27 @@
 #!/bin/bash
+#
+# MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
 
 ip=$(dig +short $(hostname).nmn)
 cnt=0
@@ -31,6 +54,8 @@ echo "IMAGE_REGISTRY has been set to $IMAGE_REGISTRY"
 export FIRST_STORAGE_HOSTNAME=ncn-s001.nmn
 export ETCD_HOSTNAME=$(hostname)
 export ETCD_HA_PORT=2381
+export API_GW=api-gw-service-nmn.local
+echo "API_GW has been set to $API_GW"
 
 function get_ip_from_metadata() {
   host=$1
@@ -40,8 +65,11 @@ function get_ip_from_metadata() {
 
 function pre-configure-node() {
   echo "In pre-configure-node()"
-  # placeholder; nothing todo right now, remove this note if/when code is
-  # added.
+
+  echo "Copying /etc/ssl/ca-bundle.pem to /etc/kubernetes/pki/oidc.pem for kube-apiserver"
+  mkdir -p /etc/kubernetes/pki
+  cp /etc/ssl/ca-bundle.pem /etc/kubernetes/pki/oidc.pem
+
   return 0
 }
 
