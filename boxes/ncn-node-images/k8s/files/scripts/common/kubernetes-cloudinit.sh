@@ -126,6 +126,7 @@ function post-join() {
     reconfigure-kube-api-server
     reconfigure-kube-scheduler
     reconfigure-kube-controller
+    populate-tenant-admin-conf
     complete-initialization
     /srv/cray/scripts/common/prep-for-etcd-backup.sh ${ETCDCTL_BACKUP_ENDPOINTS} ${RGW_VIRTUAL_IP}
   elif [[ "$node_type" == "first-master" ]]; then
@@ -137,7 +138,7 @@ function post-join() {
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 if [[ "$1" != "skip-upload-certs" ]]; then
-  kubeadm init phase upload-certs --upload-certs --config /etc/cray/kubernetes/kubeadm.yaml
+  kubeadm init phase upload-certs --upload-certs --config /etc/cray/kubernetes/kubeadm.cfg
 fi
 kubeadm token create --print-join-command > /etc/cray/kubernetes/join-command 2>/dev/null
 echo "$(cat /etc/cray/kubernetes/join-command) --control-plane --certificate-key $(cat /etc/cray/kubernetes/certificate-key)" \
@@ -169,6 +170,7 @@ EOF
     reconfigure-kube-controller
     reconfigure_coredns
     add_pod_priority_class
+    populate-tenant-admin-conf
     complete-initialization
     /srv/cray/scripts/common/prep-for-etcd-backup.sh ${ETCDCTL_BACKUP_ENDPOINTS} ${RGW_VIRTUAL_IP}
   elif [[ "$node_type" == "worker" ]]; then
@@ -182,6 +184,12 @@ function complete-initialization() {
   get-ceph-config $FIRST_STORAGE_HOSTNAME
   configure-s3fs
   mark-initialized
+}
+
+function populate-tenant-admin-conf () {
+  echo "Creating /etc/kubernetes/tenant-admin.conf file."
+  export CA_CRT=$(cat /etc/kubernetes/pki/ca.crt | base64 -w0)
+  envsubst < /srv/cray/resources/common/tenant-admin.conf > /etc/kubernetes/tenant-admin.conf
 }
 
 function reconfigure-kube-controller() {
@@ -382,7 +390,7 @@ if [[ "$(hostname)" == $FIRST_MASTER_HOSTNAME ]] || [[ "$(hostname)" =~ ^$FIRST_
 
   configure-load-balancer-for-master
 
-  envsubst < /srv/cray/resources/common/kubeadm.yaml > /etc/cray/kubernetes/kubeadm.yaml
+  envsubst < /srv/cray/resources/common/kubeadm.cfg > /etc/cray/kubernetes/kubeadm.yaml
   echo "Initializing Kubernetes on the first control plane node, pod cidr $PODS_CIDR, service cidr $SERVICES_CIDR"
   kubeadm init --config /etc/cray/kubernetes/kubeadm.yaml --upload-certs | tee /etc/cray/kubernetes/init-result
 
