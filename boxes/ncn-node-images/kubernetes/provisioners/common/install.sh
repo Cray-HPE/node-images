@@ -150,24 +150,14 @@ echo "Pre-pulling images for previous version of K8S (to support hybrid mode in 
 # and match the previous version's manifests (and remove the ones
 # that pull from upstream)
 #
-# crictl pull ${K8S_IMAGE_REGISTRY}/coredns:${COREDNS_PREVIOUS_VERSION}
-# crictl pull ${K8S_IMAGE_REGISTRY}/kube-apiserver:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-# crictl pull ${K8S_IMAGE_REGISTRY}/kube-controller-manager:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-# crictl pull ${K8S_IMAGE_REGISTRY}/kube-scheduler:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-# crictl pull ${K8S_IMAGE_REGISTRY}/kube-proxy:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-# crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-npc:${WEAVE_PREVIOUS_VERSION}
-# crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-kube:${WEAVE_PREVIOUS_VERSION}
-# crictl pull ${DOCKER_IMAGE_REGISTRY}/nfvpe/multus:${MULTUS_PREVIOUS_VERSION}
-#
-crictl pull k8s.gcr.io/coredns:${COREDNS_PREVIOUS_VERSION}
-crictl pull k8s.gcr.io/kube-apiserver:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-crictl pull k8s.gcr.io/kube-controller-manager:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-crictl pull k8s.gcr.io/kube-scheduler:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-crictl pull k8s.gcr.io/kube-proxy:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
-crictl pull k8s.gcr.io/pause:"${PAUSE_VERSION}"
-crictl pull docker.io/weaveworks/weave-npc:${WEAVE_PREVIOUS_VERSION}
-crictl pull docker.io/weaveworks/weave-kube:${WEAVE_PREVIOUS_VERSION}
-crictl pull docker.io/nfvpe/multus:${MULTUS_PREVIOUS_VERSION}
+crictl pull ${K8S_IMAGE_REGISTRY}/coredns:${COREDNS_PREVIOUS_VERSION}
+crictl pull ${K8S_IMAGE_REGISTRY}/kube-apiserver:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+crictl pull ${K8S_IMAGE_REGISTRY}/kube-controller-manager:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+crictl pull ${K8S_IMAGE_REGISTRY}/kube-scheduler:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+crictl pull ${K8S_IMAGE_REGISTRY}/kube-proxy:"v${KUBERNETES_PULL_PREVIOUS_VERSION}"
+crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-npc:${WEAVE_PREVIOUS_VERSION}
+crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-kube:${WEAVE_PREVIOUS_VERSION}
+crictl pull ${DOCKER_IMAGE_REGISTRY}/nfvpe/multus:${MULTUS_PREVIOUS_VERSION}
 
 echo "Pre-pulling images for current version of K8S from artifactory"
 crictl pull ${DOCKER_IMAGE_REGISTRY}/weaveworks/weave-kube:${WEAVE_VERSION}

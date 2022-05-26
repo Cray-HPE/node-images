@@ -384,7 +384,7 @@ if [[ "$(hostname)" == $FIRST_MASTER_HOSTNAME ]] || [[ "$(hostname)" =~ ^$FIRST_
   export MAX_PODS_PER_NODE=$(craysys metadata get kubernetes-max-pods-per-node)
   export WEAVE_MTU=$(craysys metadata get kubernetes-weave-mtu)
   configure-external-etcd
-  kubeadm alpha certs certificate-key > /etc/cray/kubernetes/certificate-key
+  kubeadm certs certificate-key > /etc/cray/kubernetes/certificate-key
   chmod 0600 /etc/cray/kubernetes/certificate-key
   export CERTIFICATE_KEY=$(cat /etc/cray/kubernetes/certificate-key)
 

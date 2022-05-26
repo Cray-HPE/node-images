@@ -66,6 +66,7 @@ regional = true
 multizone = true
 EOF
   echo "Copying /etc/ssl/ca-bundle.pem to /etc/kubernetes/pki/oidc.pem for kube-apiserver"
+  mkdir -pv /etc/kubernetes/pki
   cp /etc/ssl/ca-bundle.pem /etc/kubernetes/pki/oidc.pem
 }
 
