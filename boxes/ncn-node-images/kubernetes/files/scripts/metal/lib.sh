@@ -67,7 +67,7 @@ function pre-configure-node() {
   echo "In pre-configure-node()"
 
   echo "Copying /etc/ssl/ca-bundle.pem to /etc/kubernetes/pki/oidc.pem for kube-apiserver"
-  mkdir -p /etc/kubernetes/pki
+  mkdir -pv /etc/kubernetes/pki
   cp /etc/ssl/ca-bundle.pem /etc/kubernetes/pki/oidc.pem
 
   return 0

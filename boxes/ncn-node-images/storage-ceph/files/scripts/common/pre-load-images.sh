@@ -1,7 +1,7 @@
 #!/bin/bash
 podman rmi --all
 
-podman image load -i /srv/cray/resources/common/images/registry_latest.tar
+podman image load -i /srv/cray/resources/common/images/registry_2.8.1.tar
 
 mkdir -p /var/lib/registry
 
@@ -16,6 +16,7 @@ image_path="/srv/cray/resources/common/images/"
 echo "Pre-loading local images"
 
 podman image load -i /srv/cray/resources/common/images/ceph_v16.2.7.tar
+podman image load -i /srv/cray/resources/common/images/ceph_v16.2.9.tar
 podman image load -i /srv/cray/resources/common/images/ceph_v15.2.15.tar
 podman image load -i /srv/cray/resources/common/images/ceph_v15.2.16.tar
 podman tag  registry.local/ceph/ceph:v15.2.16 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16
@@ -23,9 +24,11 @@ podman tag  registry.local/ceph/ceph:v15.2.16 registry.local/artifactory.algol60
 podman tag  registry.local/ceph/ceph:v15.2.15 artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
 podman tag  registry.local/ceph/ceph:v15.2.16 artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.16
 podman tag  registry.local/ceph/ceph:v16.2.7 artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7
+podman tag  registry.local/ceph/ceph:v16.2.9 artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.9
 podman tag  registry.local/ceph/ceph:v15.2.16 localhost:5000/ceph/ceph:v15.2.16
 podman tag  registry.local/ceph/ceph:v15.2.15 localhost:5000/ceph/ceph:v15.2.15
 podman tag  registry.local/ceph/ceph:v16.2.7 localhost:5000/ceph/ceph:v16.2.7
+podman tag  registry.local/ceph/ceph:v16.2.9 localhost:5000/ceph/ceph:v16.2.9
 
 podman image load -i /srv/cray/resources/common/images/ceph-grafana_8.3.5.tar
 podman tag registry.local/ceph/ceph-grafana:8.3.5 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph-grafana:8.3.5
@@ -61,6 +64,7 @@ podman push localhost:5000/ceph/ceph:v15.2.15
 podman push localhost:5000/ceph/ceph:v15.2.16
 podman push localhost:5000/ceph/ceph-grafana:8.3.5
 podman push localhost:5000/ceph/ceph:v16.2.7
+podman push localhost:5000/ceph/ceph:v16.2.9
 podman push localhost:5000/prometheus/node-exporter:v1.2.2
 podman push localhost:5000/quay.io/prometheus/node-exporter:v1.2.2
 podman push localhost:5000/prometheus/alertmanager:v0.21.0

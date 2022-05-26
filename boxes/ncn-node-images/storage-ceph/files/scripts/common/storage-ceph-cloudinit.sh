@@ -12,7 +12,7 @@ else
   registry="${1:-localhost}"
 fi
 CSM_RELEASE="${2:-1.5}"
-CEPH_VERS="${3:-16.2.7}"
+CEPH_VERS="${3:-16.2.9}"
 
 . /srv/cray/scripts/${CRAYSYS_TYPE}/lib.sh
 . /srv/cray/scripts/common/wait-for-k8s-worker.sh

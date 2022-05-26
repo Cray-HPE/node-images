@@ -41,7 +41,7 @@ TimeoutStartSec=120
 TimeoutStopSec=120
 StartLimitInterval=30min
 StartLimitBurst=5
-ExecStartPre=/usr/bin/podman create --replace --privileged  --name registry -p 5000:5000 -v /var/lib/registry:/var/lib/registry --restart=always registry:latest
+ExecStartPre=/usr/bin/podman create --replace --privileged  --name registry -p 5000:5000 -v /var/lib/registry:/var/lib/registry --restart=always registry:2.8.1
 
 [Install]
 WantedBy=default.target
@@ -164,8 +164,8 @@ podman pull artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1
 podman tag  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1 registry.local/prometheus/prometheus:v2.18.1
 podman tag  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1 
 podman rmi  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1
-podman pull docker.io/registry:latest
-podman tag  docker.io/registry:latest localhost/registry:latest
+podman pull artifactory.algol60.net/csm-docker/stable/docker.io/registry:2.8.1
+podman tag  artifactory.algol60.net/csm-docker/stable/docker.io/registry:2.8.1 localhost/registry:2.8.1
 
 echo "Image pull complete"
 
@@ -189,7 +189,7 @@ podman save registry.local/prometheus/node-exporter:v1.2.2 -o /srv/cray/resource
 podman save registry.local/ceph/ceph-grafana:8.3.5 -o /srv/cray/resources/common/images/ceph-grafana_8.3.5.tar
 podman save registry.local/ceph/ceph-grafana:6.7.4 -o /srv/cray/resources/common/images/ceph-grafana_6.7.4.tar
 podman save registry.local/prometheus/prometheus:v2.18.1 -o /srv/cray/resources/common/images/prometheus_v2.18.1.tar
-podman save localhost/registry:latest -o /srv/cray/resources/common/images/registry_latest.tar
+podman save localhost/registry:2.8.1 -o /srv/cray/resources/common/images/registry_2.8.1.tar
 
 podman rmi --all
 # We may want to put a check in here for the files.
