@@ -32,6 +32,7 @@ systemctl enable --now lldpad.service
 systemctl disable postfix.service && systemctl stop postfix.service
 systemctl enable chronyd.service
 systemctl enable spire-agent.service
+systemctl enable --now goss-servers
 
 pip3 install --upgrade pip
 pip3 install requests
