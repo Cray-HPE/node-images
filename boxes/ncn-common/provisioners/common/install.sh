@@ -68,6 +68,7 @@ systemctl enable --now lldpad.service
 systemctl disable postfix.service && systemctl stop postfix.service
 systemctl enable chronyd.service
 systemctl enable spire-agent.service
+systemctl enable --now goss-servers
 
 
 # Make virtualenv available to all contexts and teams.
