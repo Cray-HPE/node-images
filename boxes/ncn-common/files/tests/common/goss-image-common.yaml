@@ -35,6 +35,9 @@ service:
   cloud-final:
     enabled: true
     running: false
+  goss-servers:
+    enabled: true
+    running: true
   issue-generator:
     enabled: true
     running: false
