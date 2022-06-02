@@ -174,7 +174,7 @@ build {
   ]
 
   provisioner "file" {
-    source = "${path.root}k8s/files"
+    source = "${path.root}/kubernetes/files"
     destination = "/tmp/"
     only = [
       "virtualbox-ovf.kubernetes",
@@ -183,7 +183,7 @@ build {
   }
 
   provisioner "file" {
-    source = "${path.root}storage-ceph/files"
+    source = "${path.root}/storage-ceph/files"
     destination = "/tmp/"
     only = [
       "virtualbox-ovf.storage-ceph",
@@ -207,18 +207,20 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/common/setup.sh"
+    script = "${path.root}/provisioners/common/setup.sh"
   }
 
-  provisioner "shell" {
-    script = "${path.root}k8s/provisioners/common/setup.sh"
-    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "googlecompute.kubernetes"]
-  }
+# Placeholder: if/when Google needs a setup.sh (e.g. actions before RPMs are installed).
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/google/setup.sh"
+#    only = ["googlecompute.kubernetes", "googlecompute.storage-ceph"]
+#  }
 
-  provisioner "shell" {
-    script = "${path.root}storage-ceph/provisioners/common/setup.sh"
-    only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph", "googlecompute.storage-ceph"]
-  }
+# Placeholder: if/when Metal needs a setup.sh (e.g. actions before RPMs are installed).
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/metal/setup.sh"
+#    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "virtualbox-ovf.storage-ceph", "qemu.storage-ceph"]
+#  }
 
   provisioner "shell" {
     environment_vars = [
@@ -266,43 +268,55 @@ build {
     only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph"]
   }
 
+# Placeholder: if/when common needs an install.sh (e.g. actions before RPMs are installed).
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/common/install.sh"
+#  }
+
+# Placeholder: if/when Google needs an install.sh (e.g. actions before RPMs are installed).
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/google/install.sh"
+#    only = ["googlecompute.kubernetes", "googlecompute.storage-ceph"]
+#  }
+
+# Placeholder: if/when Metal needs an install.sh (e.g. actions before RPMs are installed).
+#  provisioner "shell" {
+#    script = "${path.root}/provisioners/metal/install.sh"
+#    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "virtualbox-ovf.storage-ceph", "qemu.storage-ceph"]
+#  }
+
   provisioner "shell" {
     environment_vars = [
       "DOCKER_IMAGE_REGISTRY=${var.docker_image_registry}",
       "K8S_IMAGE_REGISTRY=${var.k8s_image_registry}",
       "QUAY_IMAGE_REGISTRY=${var.quay_image_registry}"
     ]
-    script = "${path.root}k8s/provisioners/common/install.sh"
+    script = "${path.root}/kubernetes/provisioners/common/install.sh"
     only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "googlecompute.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}k8s/provisioners/google/install.sh"
+    script = "${path.root}/kubernetes/provisioners/google/install.sh"
     only = ["googlecompute.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}k8s/provisioners/metal/install.sh"
+    script = "${path.root}/kubernetes/provisioners/metal/install.sh"
     only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes"]
   }
 
   provisioner "shell" {
-    script = "${path.root}k8s/provisioners/common/sdu/install.sh"
-    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes", "googlecompute.kubernetes"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}storage-ceph/provisioners/common/install.sh"
+    script = "${path.root}/storage-ceph/provisioners/common/install.sh"
     only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph", "googlecompute.storage-ceph"]
   }
 
   provisioner "shell" {
-    script = "${path.root}storage-ceph/provisioners/google/install.sh"
+    script = "${path.root}/storage-ceph/provisioners/google/install.sh"
     only = ["googlecompute.storage-ceph"]
   }
 
   provisioner "shell" {
-    script = "${path.root}storage-ceph/provisioners/metal/install.sh"
+    script = "${path.root}/storage-ceph/provisioners/metal/install.sh"
     only = ["virtualbox-ovf.storage-ceph", "qemu.storage-ceph"]
   }
 
@@ -358,11 +372,11 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/common/cleanup.sh"
+    script = "${path.root}/provisioners/common/cleanup.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/google/cleanup.sh"
+    script = "${path.root}/provisioners/google/cleanup.sh"
     only = [
       "googlecompute.kubernetes",
       "googlecompute.storage-ceph"
@@ -370,7 +384,7 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/metal/cleanup.sh"
+    script = "${path.root}/provisioners/metal/cleanup.sh"
     only = [
       "virtualbox-ovf.kubernetes",
       "qemu.kubernetes",
@@ -446,15 +460,6 @@ build {
       "qemu.kubernetes",
       "qemu.storage-ceph"
     ]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/common/zeros.sh"
-    only = [
-      "virtualbox-ovf.kubernetes",
-      "qemu.kubernetes",
-      "virtualbox-ovf.storage-ceph",
-      "qemu.storage-ceph"]
   }
 
   post-processors {
