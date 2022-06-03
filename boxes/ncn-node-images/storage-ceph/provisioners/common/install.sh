@@ -8,11 +8,6 @@ ansible_version='2.9.21'
 mkdir -p /etc/kubernetes
 echo "export KUBECONFIG=\"/etc/kubernetes/admin.conf\"" >> /etc/profile.d/cray.sh
 
-zypper addrepo https://download.opensuse.org/repositories/filesystems:ceph/openSUSE_Leap_15.3/filesystems:ceph.repo
-zypper --gpg-auto-import-keys refresh
-zypper install -y --recommends --force-resolution cephadm=16.2.7.654+gd5a90ff46f0-lp153.3852.1
-zypper -n removerepo filesystems_ceph
-
 echo "Moving ceph operations files into place"
 mkdir -p /srv/cray/tmp
 mkdir -p /srv/cray/tmp/storage_classes
@@ -32,15 +27,6 @@ pip3 install boto3
 pip3 install netaddr
 deactivate
 popd
-
-#echo "Installing ceph"
-#zypper install -y --auto-agree-with-licenses \
-#       python3-boto3 \
-#       python3-xml \
-#       python3-six \
-#       python3-netaddr \
-#       netcat \
-#       jq \
 
 sed  '/pull_policy/s/^# //' -i /usr/share/containers/containers.conf 
 
