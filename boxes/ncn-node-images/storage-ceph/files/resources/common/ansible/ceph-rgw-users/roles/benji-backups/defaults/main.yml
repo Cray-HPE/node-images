@@ -1,7 +1,0 @@
-# Copyright 2018, 2019, Cray Inc. All Rights Reserved.
----
-
-ceph_rbd_enabled: "{{ external_ceph_enabled | default(true) | bool }}"
-benji_backup_namespace: backups
-ceph_rbd_admin_user: admin
-benji_admin_secret: ceph-client-admin-keyring
