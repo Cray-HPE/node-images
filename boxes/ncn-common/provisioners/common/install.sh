@@ -113,16 +113,5 @@ zypper refresh google-kubernetes
 zypper install -y kubectl-${kubernetes_version}
 zypper -n removerepo google-kubernetes || true
 
-zypper addrepo https://download.opensuse.org/repositories/openSUSE:Backports:SLE-15-SP3/standard/openSUSE:Backports:SLE-15-SP3.repo
-zypper --gpg-auto-import-keys refresh
-zypper install -y libfmt7
-
-zypper addrepo https://download.opensuse.org/repositories/filesystems:ceph/openSUSE_Leap_15.3/filesystems:ceph.repo
-zypper --gpg-auto-import-keys refresh
-zypper install -y --recommends --force-resolution ceph-common=16.2.7.654+gd5a90ff46f0-lp153.3852.1
-#zypper install python3-ceph-common=16.2.7.654+gd5a90ff46f0-lp153.3852.1
-zypper -n removerepo filesystems_ceph
-zypper -n removerepo openSUSE_Backports_SLE-15-SP3
-
 pip3 install --upgrade pip
 pip3 install requests
