@@ -4,7 +4,7 @@
 # build and runtime scripts.
 #
 export KUBERNETES_PULL_PREVIOUS_VERSION="1.19.9"
-export KUBERNETES_PULL_VERSION="1.20.13"
+export KUBERNETES_PULL_VERSION="$(rpm -q --queryformat '%{VERSION}' kubeadm | awk -F '.' '{print $1"."$2"."$3}')"
 export WEAVE_VERSION="2.8.1"
 export WEAVE_PREVIOUS_VERSION="2.8.0"
 export MULTUS_VERSION="v3.7"

@@ -26,14 +26,12 @@
 set -e
 
 . /srv/cray/resources/common/vars.sh
-kubernetes_version="${KUBERNETES_PULL_VERSION}-0"
 
 echo "export KUBECONFIG=\"/etc/kubernetes/admin.conf\"" >> /etc/profile.d/cray.sh
 mkdir -p /etc/kubernetes
 
 echo "Initializing k8s directories and resources"
 mkdir -p /etc/cray/kubernetes
-echo "$kubernetes_version" | awk -F'-' '{print $1}' > /etc/cray/kubernetes/version
 mkdir -p /etc/cray/kubernetes/flexvolume
 # below are related to hostPath usage that should exist before k8s resources attempt to use them
 mkdir -p /opt/cray/tbd
@@ -67,50 +65,6 @@ mkdir -p /srv/cray/tmp
 wget -q "https://github.com/vmware-tanzu/velero/releases/download/v1.6.3/velero-v1.6.3-linux-amd64.tar.gz" -O /srv/cray/tmp/velero-v1.6.3-linux-amd64.tar.gz
 wget -q "https://github.com/vmware-tanzu/velero/releases/download/v1.7.2/velero-v1.7.2-linux-amd64.tar.gz" -O /srv/cray/tmp/velero-v1.7.2-linux-amd64.tar.gz
 chmod 750 /usr/bin/velero
-
-echo "Ensuring that the kubernetes package repo exists in zypper"
-if ! zypper repos | grep google-kubernetes; then
-  zypper addrepo --gpgcheck-strict --refresh https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64 google-kubernetes
-fi
-echo "Ensuring that we have the necessary gpg keys from google-kubernetes repo"
-rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-rpm --import https://packages.cloud.google.com/yum/doc/yum-key.gpg
-curl -o /tmp/apt-key.gpg.asc https://packages.cloud.google.com/yum/doc/apt-key.gpg.asc
-echo "" >> /tmp/apt-key.gpg.asc
-rpm --import /tmp/apt-key.gpg.asc
-zypper refresh google-kubernetes
-
-# The k8s rpm packages see "conntrack" as a required dependency, the sles/zypper repo that contains the actual required
-# utils is not named that, so we're just making a dummy one of the expected name to ensure k8s rpm installs will work.
-# Zypper doesn't seem to have a good automated way for us to ignore the missing dependency which would be the ideal way
-# to handle this
-echo "Building a custom local repository for conntrack dependency, just a mocked version of the named zypper package"
-rm -rf /var/local-repos/conntrack/x86_64 || true
-mkdir -p /tmp/conntrack
-cat > /tmp/conntrack/conntrack.spec <<EOF
-Name:     conntrack
-Summary:  Dummy conntrack rpm for ensuring requirements in other packages
-Version:  1
-Release:  1
-License:  none
-%description
-%prep
-%build
-%install
-%files
-EOF
-rpmbuild -ba --define "_rpmdir /tmp/conntrack" /tmp/conntrack/conntrack.spec
-mkdir -p /var/local-repos/conntrack/noarch
-rm /tmp/conntrack/conntrack.spec
-mv /tmp/conntrack/* /var/local-repos/conntrack/
-createrepo /var/local-repos/conntrack
-zypper -n removerepo local-conntrack || true
-zypper -n addrepo --refresh --no-gpgcheck /var/local-repos/conntrack local-conntrack
-
-zypper -n install --force -y conntrack-tools
-zypper -n install --force -y \
-  kubelet-${kubernetes_version} \
-  kubeadm-${kubernetes_version}
 
 echo "Ensuring ipvs-required modules are loaded and will reload on reboot"
 cat > /usr/lib/modules-load.d/01-ipvs.conf <<EOF
