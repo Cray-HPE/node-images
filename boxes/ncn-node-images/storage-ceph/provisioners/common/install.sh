@@ -2,8 +2,6 @@
 
 set -ex
 
-kubernetes_version="1.20.13-0"
-ceph_version='16.2.7.654+gd5a90ff46f0-lp153.3852.1'
 ansible_version='2.9.21'
 mkdir -p /etc/kubernetes
 echo "export KUBECONFIG=\"/etc/kubernetes/admin.conf\"" >> /etc/profile.d/cray.sh
@@ -128,15 +126,15 @@ echo "Pulling the ceph container image"
 systemctl start podman
 
 # Note to clean this up.  CASMINST-2148
-
+ceph_current="$(rpm -q --queryformat '%{VERSION}' cephadm | awk -F '.' '{print $1"."$2"."$3}')"
+podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v${ceph_current}
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v${ceph_current} registry.local/ceph/ceph:v${ceph_current}
+podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v${ceph_current} registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v${ceph_current}
+podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v${ceph_current}
 podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7 registry.local/ceph/ceph:v16.2.7
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7
 podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.7
-podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.9
-podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.9 registry.local/ceph/ceph:v16.2.9
-podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.9 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.9
-podman rmi  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v16.2.9
 podman pull artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/ceph/ceph:v15.2.15
 podman tag  artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15 registry.local/artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v15.2.15
@@ -181,8 +179,8 @@ echo "Saving ceph image to tar file as backup"
 #  podman save $name":"$vers -o "$image_dir$image_name"_$vers".tar"
 # done
 
+podman save registry.local/ceph/ceph:v${ceph_current} -o /srv/cray/resources/common/images/ceph_v${ceph_current}.tar
 podman save registry.local/ceph/ceph:v16.2.7 -o /srv/cray/resources/common/images/ceph_v16.2.7.tar
-podman save registry.local/ceph/ceph:v16.2.9 -o /srv/cray/resources/common/images/ceph_v16.2.9.tar
 podman save registry.local/ceph/ceph:v15.2.15 -o /srv/cray/resources/common/images/ceph_v15.2.15.tar
 podman save registry.local/ceph/ceph:v15.2.16 -o /srv/cray/resources/common/images/ceph_v15.2.16.tar
 podman save registry.local/prometheus/alertmanager:v0.20.0 -o /srv/cray/resources/common/images/alertmanager_v0.20.0.tar
