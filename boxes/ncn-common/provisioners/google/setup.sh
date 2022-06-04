@@ -9,9 +9,7 @@ echo "activate public cloud module"
 product=$(SUSEConnect --list-extensions | grep -o "sle-module-public-cloud.*")
 [[ -n "$product" ]] && SUSEConnect -p "$product"
 
-echo "install guest environment packages"
-zypper refresh
-zypper install -y google-guest-{agent,configs,oslogin} google-osconfig-agent
+echo "Enable guest environment services"
 systemctl enable /usr/lib/systemd/system/google-*
 
 echo "Modifying DNS to use Cray DNS servers..."
