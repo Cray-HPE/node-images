@@ -152,6 +152,13 @@ build {
 
   provisioner "shell" {
     inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/google.packages'"]
+    valid_exit_codes = [0, 123]
+    only = ["googlecompute.ncn-common"]
+  }
+
+  provisioner "shell" {
+    inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
     valid_exit_codes = [0, 123]
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]

@@ -96,22 +96,6 @@ systemctl enable --now goss-servers
 
 
 # Make virtualenv available to all contexts and teams.
-pip3 install virtualenv
-
-kubernetes_version="1.20.13-0"
-echo "Ensuring that the kubernetes package repo exists in zypper"
-if ! zypper repos | grep google-kubernetes; then
-  zypper addrepo --gpgcheck-strict --refresh https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64 google-kubernetes
-fi
-echo "Ensuring that we have the necessary gpg keys from google-kubernetes repo"
-rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-rpm --import https://packages.cloud.google.com/yum/doc/yum-key.gpg
-curl -o /tmp/apt-key.gpg.asc https://packages.cloud.google.com/yum/doc/apt-key.gpg.asc
-echo "" >> /tmp/apt-key.gpg.asc
-rpm --import /tmp/apt-key.gpg.asc
-zypper refresh google-kubernetes
-zypper install -y kubectl-${kubernetes_version}
-zypper -n removerepo google-kubernetes || true
-
 pip3 install --upgrade pip
+pip3 install virtualenv
 pip3 install requests

@@ -148,6 +148,13 @@ build {
 
   provisioner "shell" {
     inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/google.packages'"]
+    valid_exit_codes = [0, 123]
+    only = ["googlecompute.pit-common"]
+  }
+
+  provisioner "shell" {
+    inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/cray-pre-install-toolkit/firmware.packages'"]
     valid_exit_codes = [0, 123]
     only = ["qemu.pit-common", "virtualbox-ovf.pit-common"]
