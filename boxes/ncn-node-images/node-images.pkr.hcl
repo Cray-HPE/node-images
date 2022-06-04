@@ -223,20 +223,32 @@ build {
 #  }
 
   provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
+    ]
+    except = ["googlecompute.kubernetes", "googlecompute.storage-ceph"]
+  }
+
+  // Install packages by context (e.g. base (a.k.a. common), google, or metal)
+  provisioner "shell" {
+    environment_vars = [
+      "CUSTOM_REPOS_FILE=${var.custom_repos_file}",
+      "ARTIFACTORY_USER=${var.artifactory_user}",
+      "ARTIFACTORY_TOKEN=${var.artifactory_token}"
+    ]
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; setup-package-repos'"]
+    valid_exit_codes = [0, 123]
+  }
+
+  provisioner "shell" {
     environment_vars = [
       "CUSTOM_REPOS_FILE=${var.custom_repos_file}",
       "ARTIFACTORY_USER=${var.artifactory_user}",
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
     inline = ["bash -c /srv/cray/custom/repos.sh"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
-    ]
-    except = ["googlecompute.kubernetes", "googlecompute.storage-ceph"]
   }
 
   provisioner "shell" {

@@ -29,7 +29,6 @@ function zypper-add-repos() {
 if [ -z "$CUSTOM_REPOS_FILE" ]; then
   echo "Not using a custom repo."
   source /srv/cray/csm-rpms/scripts/rpm-functions.sh
-  setup-package-repos
 else
   echo "Using custom repos file: '${CUSTOM_REPOS_FILE}'."
   list-custom-repos-file | xargs -r cat | zypper-add-repos
