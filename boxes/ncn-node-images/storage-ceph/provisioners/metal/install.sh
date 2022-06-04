@@ -8,7 +8,6 @@ mv /srv/cray/resources/metal/ansible/* /etc/ansible/
 # Adding sysctl vars for metal.
 echo "Configuring sysctl to allow non-local vip binding"
 cp /srv/cray/sysctl/metal/* /etc/sysctl.d/
-zypper -n install -y golang-github-prometheus-node_exporter
 sysctl -p
 
 # enable this to run on first boot during deployment, and then the kdump script disables it
