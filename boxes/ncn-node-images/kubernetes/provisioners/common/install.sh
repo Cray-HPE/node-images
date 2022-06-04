@@ -36,7 +36,7 @@ mkdir -p /etc/cray/kubernetes/flexvolume
 # below are related to hostPath usage that should exist before k8s resources attempt to use them
 mkdir -p /opt/cray/tbd
 mkdir -p /var/run/sds
-
+echo "${KUBERNETES_PULL_VERSION}" > /etc/cray/kubernetes/version
 
 echo "Installing etcd binaries"
 mkdir -p /tmp/etcd
