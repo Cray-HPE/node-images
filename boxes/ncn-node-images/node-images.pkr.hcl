@@ -259,14 +259,14 @@ build {
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/metal.packages'"]
-    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes"]
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/google.packages'"]
+    only = ["googlecompute.kubernetes"]
   }
 
   provisioner "shell" {
     inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/google.packages'"]
-    only = ["googlecompute.kubernetes"]
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-kubernetes/metal.packages'"]
+    only = ["virtualbox-ovf.kubernetes", "qemu.kubernetes"]
   }
 
   provisioner "shell" {
