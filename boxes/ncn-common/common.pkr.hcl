@@ -164,12 +164,6 @@ build {
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/cms.packages'"]
-    valid_exit_codes = [0, 123]
-  }
-
   // Install all generic installers first by context (e.g. common, google, and metal).
   provisioner "shell" {
     script = "${path.root}provisioners/common/install.sh"
