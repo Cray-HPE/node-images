@@ -14,9 +14,10 @@ class Metal:
 
     def get_metadata(self, key, level='system'):
         try:
+            # cloud-init <22.0 converts dashes, so we'll do the same
             #
-            # cloud-init converts dashes, so we'll do the same
-            #
+            # NOTE: When using cloud-init 22 or higher this replacement should
+            #       be removed.
             key = key.replace('-', '_')
             resp = self.execute("cloud-init query -a")
             if level == 'node':

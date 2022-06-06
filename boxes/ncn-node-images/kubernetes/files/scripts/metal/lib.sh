@@ -40,14 +40,14 @@ done
 export NETWORK_DAEMONS=""
 export RGW_VIRTUAL_IP="http://$(craysys metadata get rgw-virtual-ip)"
 export CONTROLLER_MANAGER_EXTRA_ARGS="{'flex-volume-plugin-dir': '/etc/cray/kubernetes/flexvolume'}"
-export CONTROL_PLANE_HOSTNAME="$(craysys metadata get k8s_virtual_ip)"
+export CONTROL_PLANE_HOSTNAME="$(craysys metadata get k8s-virtual-ip)"
 echo "CONTROL_PLANE_HOSTNAME has been set to $CONTROL_PLANE_HOSTNAME"
 export CONTROL_PLANE_ENDPOINT="${CONTROL_PLANE_HOSTNAME}:6442"
 echo "CONTROL_PLANE_ENDPOINT has been set to $CONTROL_PLANE_ENDPOINT"
 export K8S_NODE_IP="$(dig +short $(hostname).nmn)"
 echo "Setting K8S_NODE_IP to ${K8S_NODE_IP} for KUBELET_EXTRA_ARGS and kubeadm config"
 export KUBELET_EXTRA_ARGS="--node-ip ${K8S_NODE_IP}"
-export FIRST_MASTER_HOSTNAME=$(craysys metadata get first_master_hostname)
+export FIRST_MASTER_HOSTNAME=$(craysys metadata get first-master-hostname)
 echo "FIRST_MASTER_HOSTNAME has been set to $FIRST_MASTER_HOSTNAME"
 export IMAGE_REGISTRY="docker.io"
 echo "IMAGE_REGISTRY has been set to $IMAGE_REGISTRY"

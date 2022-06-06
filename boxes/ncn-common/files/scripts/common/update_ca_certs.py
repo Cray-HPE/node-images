@@ -24,7 +24,7 @@ from cryptography.hazmat.backends import default_backend
 # }
 
 UPDATE_CA_CMD = ["update-ca-certificates"]
-CRAYSYS_META_CMD = ["craysys", "metadata", "get", "ca-certs"]
+CRAYSYS_META_CMD = ["craysys", "metadata", "get", "ca_certs"]
 
 # SLES CA Path
 # https://www.suse.com/support/kb/doc/?id=000019003
