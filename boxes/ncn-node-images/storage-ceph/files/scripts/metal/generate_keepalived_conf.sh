@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-rgw_vip_ip=$(craysys metadata get rgw_virtual_ip)
+rgw_vip_ip=$(craysys metadata get rgw-virtual-ip)
 
 echo "# Please do not change this file directly since it is managed by Ansible and will be overwritten
 ! Configuration File for keepalived

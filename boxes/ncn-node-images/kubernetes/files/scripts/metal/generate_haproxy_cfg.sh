@@ -30,7 +30,7 @@ function get_ip_from_metadata() {
 }
 
 me=$(get_ip_from_metadata $(hostname).nmn)
-vip=$(craysys metadata get k8s_virtual_ip)
+vip=$(craysys metadata get k8s-virtual-ip)
 
 echo "global
   log /dev/log daemon
