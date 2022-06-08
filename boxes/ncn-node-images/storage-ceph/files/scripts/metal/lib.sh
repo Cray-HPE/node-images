@@ -23,7 +23,7 @@ function wait_for_health_ok() {
 }
 
 function prepare_hosts() {
-  num_storage_nodes=$(craysys metadata get num_storage_nodes)
+  num_storage_nodes=$(craysys metadata get num-storage-nodes)
   for node in $(seq 1 $num_storage_nodes); do
     nodename=$(printf "ncn-s%03d" $node)
     echo "Calling cephadm prepare-host for $nodename..."
@@ -32,7 +32,7 @@ function prepare_hosts() {
 }
 
 function wait_for_osds() {
-  num_storage_nodes=$(craysys metadata get num_storage_nodes)
+  num_storage_nodes=$(craysys metadata get num-storage-nodes)
   cnt=0
   while true; do
     if [[ "$cnt" -eq 60 ]]; then
@@ -114,7 +114,7 @@ function init() {
 
   if [[ -f /root/zero.file ]]; then rm /root/zero.file; fi
 
-  export num_storage_nodes=$(craysys metadata get num_storage_nodes)
+  export num_storage_nodes=$(craysys metadata get num-storage-nodes)
   echo "number of storage nodes: $num_storage_nodes"
 
   for node in $(seq 1 $num_storage_nodes); do

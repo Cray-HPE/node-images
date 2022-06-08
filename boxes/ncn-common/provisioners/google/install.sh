@@ -22,20 +22,18 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-set -e
+set -ex
 
 # TODO: MTL-1513 - convert to ansible configuration
 REQUIREMENTS=( requests )
 
 echo "Installing GCP Python Environment"
 mkdir -pv /etc/ansible
-pushd /etc/ansible
-virtualenv gcp
-. gcp/bin/activate
+python3 -m venv /etc/ansible/gcp
+. /etc/ansible/gcp/bin/activate
 
 echo "Installing requirements: ${REQUIREMENTS[@]}"
 for requirement in "${REQUIREMENTS[@]}"; do
     pip3 install "$requirement"
 done
 deactivate
-popd

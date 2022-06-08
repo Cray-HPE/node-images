@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 #
 # MIT License
 #
@@ -23,29 +24,31 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# This script does not use bind mounts and thus executes correctly in a container
-set -e
-set -x
+set -ex
 
-echo "Generating initrd..."
+echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
+rm -rf /var/adm/autoinstall/cache
 
-version_full=$(rpm -q --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" kernel-default)
-version_base=${version_full%%-*}
-version_suse=${version_full##*-}
-version_suse=${version_suse%.*.*}
-version="$version_base-$version_suse-default"
+echo "cleanup all the downloaded RPMs"
+zypper clean --all
 
-dracut \
---force \
---omit 'cifs ntfs-3g btrfs nfs fcoe iscsi modsign fcoe-uefi nbd dmraid multipath dmsquash-live-ntfs' \
---omit-drivers 'ecb md5 hmac' \
---add 'mdraid' \
---force-add 'dmsquash-live livenet mdraid' \
---kver ${version} \
---no-hostonly \
---no-hostonly-cmdline \
---printsize \
---xz \
-/boot/initrd-${version}
+echo "clean up network interface persistence"
+rm -f /etc/udev/rules.d/70-persistent-net.rules;
+touch /etc/udev/rules.d/75-persistent-net-generator.rules;
 
-exit 0
+echo "truncate any logs that have built up during the install"
+find /var/log/ -type f -name "*.log.*" -exec rm -rf {} \;
+find /var/log -type f -exec truncate --size=0 {} \;
+
+echo "remove the contents of /tmp and /var/tmp"
+rm -rf /tmp/* /var/tmp/*
+
+echo "blank netplan machine-id (DUID) so machines get unique ID generated on boot"
+truncate -s 0 /etc/machine-id
+
+echo "force a new random seed to be generated"
+rm -f /var/lib/systemd/random-seed
+
+echo "clear the history so our install isn't there"
+rm -f /root/.wget-hsts
+export HISTSIZE=0

@@ -417,7 +417,7 @@ if [[ "$(hostname)" == $FIRST_MASTER_HOSTNAME ]] || [[ "$(hostname)" =~ ^$FIRST_
   post-join first-master
 
   # Wait for a quorum of nodes to join before applying the network manifests
-  exp_node_count=$(craysys metadata get host_records | jq '.[] | .aliases | .[]' | grep "ncn-[mw].*nmn" | wc -l)
+  exp_node_count=$(craysys metadata get host-records | jq '.[] | .aliases | .[]' | grep "ncn-[mw].*nmn" | wc -l)
 
   if [ $exp_node_count -le 0 ]; then
     echo "ERROR: Failed to find expected number of nodes"
