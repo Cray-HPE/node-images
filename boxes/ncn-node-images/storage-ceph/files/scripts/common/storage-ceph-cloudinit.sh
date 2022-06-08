@@ -30,7 +30,7 @@ if [[ "$CRAYSYS_TYPE" == "google" ]]
 then
   /srv/cray/scripts/common/pre-load-images.sh
 else
-  export num_storage_nodes=$(craysys metadata get num_storage_nodes)
+  export num_storage_nodes=$(craysys metadata get num-storage-nodes)
   echo "number of storage nodes: $num_storage_nodes"
   
   for node in $(seq 1 $num_storage_nodes); do

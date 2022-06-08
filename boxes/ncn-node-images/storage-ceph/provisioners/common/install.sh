@@ -17,16 +17,15 @@ mkdir -p $image_dir
 mv /srv/cray/resources/common/ansible/* /etc/ansible/
 
 echo "Installing New Ansible Env"
-pushd /etc/ansible
-virtualenv boto3_ansible
-. boto3_ansible/bin/activate
+python3 -m venv /etc/ansible/boto3_ansible
+. /etc/ansible/boto3_ansible/bin/activate
+pip3 install --upgrade pip
 pip3 install ansible
 pip3 install boto3
 pip3 install netaddr
 deactivate
-popd
 
-sed  '/pull_policy/s/^# //' -i /usr/share/containers/containers.conf 
+sed  '/pull_policy/s/^# //' -i /usr/share/containers/containers.conf
 
 cat > /etc/systemd/system/registry.container.service <<'EOF'
 [Unit]
@@ -162,7 +161,7 @@ podman tag  artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.7.4 re
 podman rmi  artifactory.algol60.net/csm-docker/stable/ceph/ceph-grafana:6.7.4
 podman pull artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1
 podman tag  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1 registry.local/prometheus/prometheus:v2.18.1
-podman tag  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1 
+podman tag  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1 registry.local/quay.io/prometheus/prometheus:v2.18.1
 podman rmi  artifactory.algol60.net/csm-docker/stable/prometheus:v2.18.1
 podman pull artifactory.algol60.net/csm-docker/stable/docker.io/registry:2.8.1
 podman tag  artifactory.algol60.net/csm-docker/stable/docker.io/registry:2.8.1 localhost/registry:2.8.1

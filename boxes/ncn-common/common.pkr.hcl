@@ -77,53 +77,49 @@ build {
     "source.qemu.ncn-common",
     "source.googlecompute.ncn-common"]
 
-  provisioner "file" {
-    source = "${path.root}files"
-    destination = "/tmp/"
-  }
-
-  provisioner "file" {
-    source = "vendor/github.com/Cray-HPE/csm-rpms"
-    destination = "/tmp/files/"
-  }
-
-  provisioner "file" {
-    source = "custom"
-    destination = "/tmp/files/"
-  }
 
   // Setup each context (e.g. common, google, and metal)
+  // common/setup.sh expands disk and preps ansible environment
   provisioner "shell" {
-    script = "${path.root}provisioners/common/setup.sh"
+    script = "${path.root}/provisioners/common/setup.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/google/setup.sh"
+    script = "${path.root}/provisioners/google/setup.sh"
     only = ["googlecompute.ncn-common"]
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/metal/setup.sh"
+    script = "${path.root}/provisioners/metal/setup.sh"
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
-  provisioner "shell" {
-    inline = [
-      "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
-      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
-    ]
+  // Run ansible for common and metal
+  provisioner "ansible-local" {
+    inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
+    playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
+    playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_setup.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,metal"
     only = [
       "qemu.ncn-common",
       "virtualbox-ovf.ncn-common"
     ]
   }
 
-  // Install packages by context (e.g. base (a.k.a. common), google, or metal)
+  // Run ansible for common and gcp
+  provisioner "ansible-local" {
+    inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
+    playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
+    playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_setup.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,gcp"
+    only = ["googlecompute.ncn-common"]
+  }
+
+  provisioner "file" {
+    source = "vendor/github.com/Cray-HPE/csm-rpms"
+    destination = "/srv/cray/"
+  }
+
   provisioner "shell" {
     environment_vars = [
       "CUSTOM_REPOS_FILE=${var.custom_repos_file}",
@@ -141,15 +137,29 @@ build {
       "ARTIFACTORY_USER=${var.artifactory_user}",
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
-    inline = ["bash -c /srv/cray/custom/repos.sh"]
+    inline = ["bash -c /srv/cray/scripts/repos.sh"]
   }
 
+  provisioner "shell" {
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.packages explicit'",
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; get-current-package-list /tmp/initial.deps.packages deps'"
+    ]
+    only = [
+      "qemu.ncn-common",
+      "virtualbox-ovf.ncn-common"
+    ]
+  }
+
+  // Install packages by context (e.g. base (a.k.a. common), google, or metal)
+  # TODO: MTL-1513: Convert to ansible
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages'"]
     valid_exit_codes = [0, 123]
   }
 
+  # TODO: MTL-1513: Convert to ansible
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/google.packages'"]
@@ -157,6 +167,7 @@ build {
     only = ["googlecompute.ncn-common"]
   }
 
+  # TODO: MTL-1513: Convert to ansible
   provisioner "shell" {
     inline = [
       "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; install-packages /srv/cray/csm-rpms/packages/node-image-non-compute-common/metal.packages'"]
@@ -164,37 +175,57 @@ build {
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
-  // Install all generic installers first by context (e.g. common, google, and metal).
-  provisioner "shell" {
-    script = "${path.root}provisioners/common/install.sh"
+  // Run ansible for common and metal
+  provisioner "ansible-local" {
+    inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
+    playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
+    playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_install.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,metal"
+    only = [
+      "qemu.ncn-common",
+      "virtualbox-ovf.ncn-common"
+    ]
   }
 
-  provisioner "shell" {
-    script = "${path.root}provisioners/google/install.sh"
+  // Run ansible for common and gcp
+  provisioner "ansible-local" {
+    inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
+    playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
+    playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_install.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,gcp"
     only = ["googlecompute.ncn-common"]
   }
 
+  // Install all generic installers first by context (e.g. common, google, and metal).
+  // Installs kernel and kernel modules
   provisioner "shell" {
-    script = "${path.root}provisioners/metal/install.sh"
+    script = "${path.root}/provisioners/common/install.sh"
+  }
+
+  // Creates a virtualenv for GCP
+  provisioner "shell" {
+    script = "${path.root}/provisioners/google/install.sh"
+    only = ["googlecompute.ncn-common"]
+
+  }
+
+  // Installs a package that needs to unlock the kernel
+  provisioner "shell" {
+    script = "${path.root}/provisioners/metal/install.sh"
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
-  // Install all team installers last, grouped by context (e.g. common, google metal).
-  provisioner "shell" {
-    script = "${path.root}provisioners/common/csm/install.sh"
+  // Run ansible for common and metal for team installers
+  provisioner "ansible-local" {
+    inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
+    playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
+    playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_team.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common"
   }
 
+  # TODO: MTL-1513 Add another ansible playbook for csm/install.sh
   provisioner "shell" {
-    script = "${path.root}provisioners/common/cms/install.sh"
-  }
-
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/common/cos/install.sh"
-  }
-
-  provisioner "shell" {
-    script = "${path.root}provisioners/metal/csm/install.sh"
+    script = "${path.root}/provisioners/metal/csm/install.sh"
     only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
   }
 
@@ -246,7 +277,7 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}files/scripts/common/cleanup.sh"
+    script = "${path.root}/scripts/cleanup.sh"
   }
 
   provisioner "shell" {

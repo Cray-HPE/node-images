@@ -196,11 +196,6 @@ build {
     destination = "/tmp/files/"
   }
 
-  provisioner "file" {
-    source = "custom"
-    destination = "/tmp/files/"
-  }
-
   provisioner "shell" {
     inline = [
       "bash -c 'if [ -f /root/zero.file ]; then rm /root/zero.file; fi'"]
@@ -248,7 +243,7 @@ build {
       "ARTIFACTORY_USER=${var.artifactory_user}",
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
-    inline = ["bash -c /srv/cray/custom/repos.sh"]
+    inline = ["bash -c /srv/cray/scripts/repos.sh"]
   }
 
   provisioner "shell" {
