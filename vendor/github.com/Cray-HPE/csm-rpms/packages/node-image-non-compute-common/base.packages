@@ -1,11 +1,10 @@
 #CSM
 acpid=2.0.31-1.1
-canu=1.6.1-1
 cray-heartbeat=1.2.2-2.1_6.16__gf6fd0bd.shasta
 cray-power-button=1.2.2-2.1_20210930095544__g3d80145
 craycli=0.46.0
 csm-node-identity=1.0.18-1
-hpe-csm-scripts=0.0.33-1
+hpe-csm-scripts=0.0.34-1
 
 # CSM Testing Utils
 goss-servers=1.12.36-1
@@ -21,9 +20,9 @@ bc=1.07.1-11.37
 bind-utils=9.16.6-22.10.1
 bsdtar=3.4.2-2.24
 ceph-common=15.2.14.84+gb6e5642e260-3.31.1
-cloud-init-config-suse=21.4+41.ga94f0035-1
-cloud-init-doc=21.4+41.ga94f0035-1
-cloud-init=21.4+41.ga94f0035-1
+cloud-init-config-suse=21.4-1
+cloud-init-doc=21.4-1
+cloud-init=21.4-1
 conman=0.3.0-1.42
 cpupower=5.10-3.3.1
 crash=7.2.9-23.5.3
