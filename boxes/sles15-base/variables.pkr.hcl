@@ -48,7 +48,7 @@ variable "source_iso_checksum" {
 
 variable "source_iso_uri" {
   type = string
-  default = "iso/SLE-15-SP3-Online-x86_64-GM-Media1.iso"
+  default = "iso/SLE-15-SP4-Online-x86_64-PublicRC-202204-Media1.iso"
 }
 
 variable "ssh_password" {
