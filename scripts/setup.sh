@@ -25,8 +25,8 @@ fi
 # does catch-up, so the values above and below for SLES15_SP_VERSION _do_ and _don't_
 # match ... from time-to-time.
 
-export SLES15_SP_VERSION="15.3"
+export SLES15_SP_VERSION="15.4"
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst.xml
 
-export SLES15_SP_VERSION="15.2"
+export SLES15_SP_VERSION="15.3"
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst-google.xml
