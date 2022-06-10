@@ -463,25 +463,40 @@ function paginate() {
 }
 
 function install_csm_rpms() {
+    local repos="csm-sle-15sp2 csm-sle-15sp3"
+    local canu_url
+    local goss_servers_url
+    local csm_testing_url
+    local platform_utils_url
 
-    # Verify nexus is available.  It's expected to *not* be available during initial install of the NCNs.
-    if ! curl -sSf https://packages.local/service/rest/v1/components?repository=csm-sle-15sp2 >& /dev/null; then
-        echo "***"
-        echo "WARNING: Unable to contact Nexus. This is expected if Nexus is unhealthy or not deployed"
-        echo "         (e.g. during initial NCN deployment). One or more of the following RPMs may not be"
-        echo "         up to date and/or not installed: goss-servers, csm-testing, platform-utils"
-        echo "***"
-        return 0
-    fi
+    for repo in $repos; do
 
-    # Retreive the packages from nexus
-    canu_url=$(paginate "https://packages.local/service/rest/v1/components?repository=csm-sle-15sp2" \
-        | jq -r  '.items[] | .assets[] | .downloadUrl' | grep canu | sort -V | tail -1)
-    goss_servers_url=$(paginate "https://packages.local/service/rest/v1/components?repository=csm-sle-15sp2" \
-        | jq -r  '.items[] | .assets[] | .downloadUrl' | grep goss-servers | sort -V | tail -1)
-    csm_testing_url=$(paginate "https://packages.local/service/rest/v1/components?repository=csm-sle-15sp2" \
-        | jq -r  '.items[] | .assets[] | .downloadUrl' | grep csm-testing | sort -V | tail -1)
-    platform_utils_url=$(paginate "https://packages.local/service/rest/v1/components?repository=csm-sle-15sp2" \
-        | jq -r  '.items[] | .assets[] | .downloadUrl' | grep platform-utils | sort -V | tail -1)
+        # Verify nexus is available.  It's expected to *not* be available during initial install of the NCNs.
+        if ! curl -sSf https://packages.local/service/rest/v1/components?repository=$repo>& /dev/null; then
+            echo "***"
+            echo "WARNING: Unable to contact Nexus. This is expected if Nexus is unhealthy or not deployed"
+            echo "         (e.g. during initial NCN deployment). One or more of the following RPMs may not be"
+            echo "         up to date and/or not installed: canu, goss-servers, csm-testing, platform-utils"
+            echo "***"
+            exit 1
+        fi
+
+        # Retreive the packages from nexus
+        test -n "$canu_url" || canu_url=$(paginate "https://packages.local/service/rest/v1/components?repository=$repo" \
+            | jq -r  '.items[] | .assets[] | .downloadUrl' | grep canu | sort -V | tail -1)
+        test -n "$goss_servers_url" || goss_servers_url=$(paginate "https://packages.local/service/rest/v1/components?repository=$repo" \
+            | jq -r  '.items[] | .assets[] | .downloadUrl' | grep goss-servers | sort -V | tail -1)
+        test -n "$csm_testing_url" || csm_testing_url=$(paginate "https://packages.local/service/rest/v1/components?repository=$repo" \
+            | jq -r  '.items[] | .assets[] | .downloadUrl' | grep csm-testing | sort -V | tail -1)
+        test -n "$platform_utils_url" || platform_utils_url=$(paginate "https://packages.local/service/rest/v1/components?repository=$repo" \
+            | jq -r  '.items[] | .assets[] | .downloadUrl' | grep platform-utils | sort -V | tail -1)
+
+    done
+
+    test -z "$canu_url" && echo WARNING: unable to install canu
+    test -z "$goss_servers_url" && echo WARNING: unable to install goss-servers
+    test -z "$csm_testing_url" && echo WARNING: unable to install csm-testing
+    test -z "$platform_utils_url" && echo WARNING: unable to install platform-utils
+
     zypper install -y $canu_url $goss_servers_url $csm_testing_url $platform_utils_url && systemctl enable goss-servers && systemctl restart goss-servers
 }
