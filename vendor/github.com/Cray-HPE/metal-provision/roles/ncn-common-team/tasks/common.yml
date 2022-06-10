@@ -1,0 +1,26 @@
+---
+
+- name: enable HPE CSM CMS Services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+  with_items:
+    - cfs-state-reporter.service
+
+- name: enable HPE Cray OS services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+  with_items:
+    - cray-heartbeat.service
+    - csm-node-identity.service
+
+- name: rsyslog config to ensure the NCN OS logs are routed to SMF
+  copy:
+    src: etc/rsyslog.d/01-cray-rsyslog.conf
+    dest: /etc/rsyslog.d/01-cray-rsyslog.conf
+    mode: '0600'
+    owner: root
+    group: root

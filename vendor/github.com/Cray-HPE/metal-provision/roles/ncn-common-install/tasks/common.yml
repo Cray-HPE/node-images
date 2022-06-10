@@ -1,0 +1,114 @@
+---
+
+- name: symlink python3
+  file:
+    src: /usr/bin/python3
+    dest: /usr/bin/python
+    state: link
+
+- name: ensure /srv/cray/utilities locations are available for use system-wide
+  file:
+    src: /srv/cray/utilities/common/craysys/craysys
+    dest: /bin/craysys
+    state: link
+
+- name: ensure craysys is executable
+  file:
+    path: /srv/cray/utilities/common/craysys/craysys
+    state: file
+    mode: a+x
+
+- name: create cray.sh profile
+  file:
+    path: /etc/profile.d/cray.sh
+    state: touch
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: export cray path
+  lineinfile:
+    path: /etc/profile.d/cray.sh
+    regexp: '^export PYTHONPATH='
+    line: 'export PYTHONPATH="/srv/cray/utilities/common"'
+
+- name: create /etc/containers
+  file:
+    path: /etc/containers
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: create storage.conf
+  file:
+    path: /etc/containers/storage.conf
+    state: touch
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: configure podman so it will run with fuse-overlayfs
+  lineinfile:
+    path: /etc/containers/storage.conf
+    regexp: '^#?mount_program ='
+    line: 'mount_program = "/usr/bin/fuse-overlayfs"'
+
+- name: enable multi-user target
+  systemd:
+    name: multi-user.target
+    enabled: yes
+    masked: no
+
+- name: get current systemd default
+  command: "systemctl get-default"
+  changed_when: false
+  register: systemdefault
+
+- name: set default to multi-user target
+  command: "systemctl set-default multi-user.target"
+  when: "'multi-user' not in systemdefault.stdout"
+
+- name: enable services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+  with_items:
+    - ca-certificates.service
+    - chronyd.service
+    - getty@tty1.service
+    - goss-servers
+    - issue-generator.service
+    - kdump-early.service
+    - kdump.service
+    - lldpad.service
+    - purge-kernels.service
+    - rasdaemon.service
+    - rc-local.service
+    - rollback.service
+    - serial-getty@ttyS0.service
+    - spire-agent.service
+    - sshd.service
+    - wicked.service
+    - wickedd-auto4.service
+    - wickedd-dhcp4.service
+    - wickedd-dhcp6.service
+    - wickedd-nanny.service
+
+# goss tests must be updated every time this list is altered
+- name: start services
+  systemd:
+    name: "{{ item }}"
+    state: started
+  with_items:
+    - goss-servers
+    - lldpad.service
+
+- name: disable postfix service
+  systemd:
+    name: "{{ item }}"
+    enabled: no
+    state: stopped
+  with_items:
+    - postfix.service
