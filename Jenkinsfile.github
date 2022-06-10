@@ -27,7 +27,6 @@ pipeline {
     environment {
         NAME = "cray-node-image-build"
         DESCRIPTION = "Cray Management System Node Image Builder"
-        IS_STABLE = getBuildIsStable()
         VERSION = setImageVersion(commitHashShort: GIT_COMMIT[0..6])
         ARTIFACTS_DIRECTORY_BASE = "output-sles15-base"
         ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common"
@@ -67,7 +66,7 @@ pipeline {
                     withCredentials([
                         usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                     ]) {
-                        sh "curl -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O ${ISO_URL}"
+                        sh "curl -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O ${ISO_URL}"
                     }
                 }
             }
@@ -144,9 +143,12 @@ pipeline {
 							usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
 						]) {
 							script {
-								// If we didn't rebuild in this build, then always grab latest stable base.
-								def source = params.rebuildBaseImage ? "${ARTIFACTS_DIRECTORY_BASE}/sles15-base-${VERSION}.qcow2" : "${STABLE_BASE}/sles15-base/[RELEASE]/sles15-base-[RELEASE].qcow2"
-								def arguments = "-only=qemu.ncn-common -var 'source_iso_uri='${source} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                def qcow = "sles15-base-${VERSION}.qcow2"
+                                def source = params.rebuildBaseImage ? "${ARTIFACTS_DIRECTORY_BASE}/sles15-base-${VERSION}.qcow2" : "${STABLE_BASE}/sles15-base/[RELEASE]/sles15-base-[RELEASE].qcow2"
+                                dir('iso') {
+                                    sh "curl -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} \"${source}\" --output ${qcow}"
+                                }
+								def arguments = "-only=qemu.ncn-common -var 'source_iso_uri='iso/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
 								publishCsmImages.build(arguments, 'boxes/ncn-common/')
 								publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_COMMON, VERSION)
 								def props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
@@ -260,8 +262,12 @@ pipeline {
                             usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             script {
+                                def qcow = "ncn-common-${VERSION}.qcow2"
                                 def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/[RELEASE]/ncn-common-[RELEASE].qcow2"
-                                def arguments = "-only=qemu.kubernetes -var 'source_iso_uri='${source} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                dir('iso') {
+                                    sh "curl -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} \"${source}\" --output ${qcow}"
+                                }
+                                def arguments = "-only=qemu.kubernetes -var 'source_iso_uri='iso/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
                                 publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
                                 publishCsmImages.prepareArtifacts("${ARTIFACTS_DIRECTORY_K8S}", env.VERSION)
                                 def props = "build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
@@ -311,8 +317,12 @@ pipeline {
                             usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                         ]) {
                             script {
+                                def qcow = "ncn-common-${VERSION}.qcow2"
                                 def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/[RELEASE]/ncn-common-[RELEASE].qcow2"
-                                def arguments = "-only=qemu.storage-ceph -var 'source_iso_uri='${source} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                dir('iso') {
+                                    sh "curl -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} \"${source}\" --output ${qcow}"
+                                }
+                                def arguments = "-only=qemu.storage-ceph -var 'source_iso_uri='iso/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
                                 publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
                                 sh "ls -lhR ${ARTIFACTS_DIRECTORY_CEPH}"
                                 publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_CEPH, VERSION)
