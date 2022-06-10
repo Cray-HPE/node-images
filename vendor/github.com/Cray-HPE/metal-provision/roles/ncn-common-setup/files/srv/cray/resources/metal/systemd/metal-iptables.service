@@ -1,0 +1,12 @@
+[Unit]
+Description=Loads Metal iptables config
+After=local-fs.target network.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/iptables-restore /etc/iptables/metal.conf
+Restart=no
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
