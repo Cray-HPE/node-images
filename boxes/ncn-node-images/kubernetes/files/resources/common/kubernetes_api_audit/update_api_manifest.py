@@ -27,6 +27,14 @@ except IndexError:
     pass  # Didn't find --audit-policy-file parameter
 command.append('--audit-policy-file=/etc/kubernetes/audit/audit-policy.yaml')
 
+# add/set the --audit-log-maxbackup parameter
+try:
+    audit_log_maxbackup_entry = [x for x in command if x.startswith('--audit-log-maxbackup=')][0]
+    command.remove(audit_log_maxbackup_entry)
+except IndexError:
+    pass  # Didn't find --audit-log-maxbackup parameter
+command.append('--audit-log-maxbackup=100')
+
 # add/set the volume for the audit config file
 volumes = api_server_manifest['spec']['volumes']
 try:
