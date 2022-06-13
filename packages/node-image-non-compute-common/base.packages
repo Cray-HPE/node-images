@@ -12,7 +12,7 @@ csm-node-identity=1.0.18-1
 hpe-csm-scripts=0.0.34-1
 
 # CSM Testing Utils
-goss-servers=1.14.24-1
+goss-servers=1.14.25-1
 hpe-csm-goss-package=0.3.13-20210615152800_aae8d77
 hpe-csm-yq-package=3.4.1-20210615153837_40f15a6
 
@@ -24,7 +24,7 @@ at=3.1.20-11.3
 bc=1.07.1-11.37
 bind-utils=9.16.6-150300.22.16.1
 bsdtar=3.4.2-2.24
-ceph-common=16.2.9.58+ge2e5cb80063-lp153.3854.1
+ceph-common=16.2.9.158+gd93952c7eea-lp153.3856.1
 cloud-init-config-suse=21.4-1
 cloud-init-doc=21.4-1
 cloud-init=21.4-1
