@@ -74,7 +74,7 @@ pipeline {
                     withCredentials([
                         usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                     ]) {
-                        sh "curl -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O ${ISO_URL}"
+                        sh "curl -f -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O ${ISO_URL}"
                     }
                 }
             }
