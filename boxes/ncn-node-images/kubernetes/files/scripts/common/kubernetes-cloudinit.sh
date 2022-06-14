@@ -157,6 +157,9 @@ EOF
     echo "Setting up a job to re-distribute any updated resources to other nodes every 2 minutes"
     echo "*/2 * * * * root /srv/cray/scripts/common/distribute.sh >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-k8s-distribute
 
+    echo "Setting up a job to ensure oidc.pem file is kept up-to-date"
+    echo "*/2 * * * * root /srv/cray/scripts/common/verify-oidc-pem.sh >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-verify-oidc-pem
+
     echo "Setting up job for kicking k8s cronjobs when they stop getting scheduled."
     cp /srv/cray/resources/common/cronjob_kicker.py /usr/bin/cronjob_kicker.py
     chmod 0755 /usr/bin/cronjob_kicker.py

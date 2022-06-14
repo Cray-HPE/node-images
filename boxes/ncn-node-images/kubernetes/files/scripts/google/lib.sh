@@ -26,6 +26,7 @@
 export PROJECT_ID=$(craysys metadata get /project-id)
 export NETWORK=$(craysys metadata get /network-interfaces/0/network --level node | awk -F'/' '{print $NF}')
 export REGION=$(craysys metadata get region)
+export DOMAIN=$(craysys metadata get domain)
 export SUBNETWORK="${NETWORK}-${REGION}"
 export SERVICE_ACCOUNT_KEY=$(craysys metadata get key | tr -d "\n\r")
 export KUBELET_CLOUD_CONFIG_PATH="/etc/cray/kubernetes/cloud-config"
