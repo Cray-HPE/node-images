@@ -89,11 +89,6 @@ build {
     only = ["googlecompute.ncn-common"]
   }
 
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/setup.sh"
-    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
-  }
-
   // Run ansible for common and metal
   provisioner "ansible-local" {
     inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
