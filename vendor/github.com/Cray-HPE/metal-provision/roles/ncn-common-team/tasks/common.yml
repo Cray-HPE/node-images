@@ -1,21 +1,11 @@
 ---
 
-- name: enable HPE CSM CMS Services
+- name: Setup Daemons
   systemd:
-    name: "{{ item }}"
-    enabled: yes
-    masked: no
-  with_items:
-    - cfs-state-reporter.service
-
-- name: enable HPE Cray OS services
-  systemd:
-    name: "{{ item }}"
-    enabled: yes
-    masked: no
-  with_items:
-    - cray-heartbeat.service
-    - csm-node-identity.service
+    name: "{{ item.name }}"
+    enabled: "{{ item.enabled }}"
+    masked: "{{ item.masked | default(false) }}"
+  with_items: "{{ services_common }}"
 
 - name: rsyslog config to ensure the NCN OS logs are routed to SMF
   copy:
