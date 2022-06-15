@@ -1,1 +1,8 @@
 ---
+- name: Setup Daemons
+  systemd:
+    enabled: "{{ item.enabled }}"
+    name: "{{ item.name }}"
+    masked: "{{ item.masked | default(false) }}"
+    state: "{{ item.state }}"
+  with_items: "{{ services_google }}"

@@ -26,10 +26,22 @@ file:
   /var/adm/autoinstall/cache:
     exists: false
 service:
+  ca-certificates:
+    enabled: true
+    running: false
+  ca-certificates:
+    enabled: true
+    running: false
+  chronyd:
+    enabled: true
+    running: false
   cloud-config:
     enabled: true
     running: false
-  cloud-init:
+  cloud-config:
+    enabled: true
+    running: false
+  cloud-final:
     enabled: true
     running: false
   cloud-final:
@@ -38,32 +50,32 @@ service:
   cloud-init-local:
     enabled: true
     running: false
-  ca-certificates:
-    enabled: true
-    running: false
-  issue-generator:
-    enabled: true
-    running: false
-  ca-certificates:
-    enabled: true
-    running: false
-  cloud-config:
+  cloud-init-local:
     enabled: true
     running: false
   cloud-init:
     enabled: true
     running: false
-  cloud-init-local:
+  cloud-init:
     enabled: true
     running: false
-  cloud-final:
+  getty@tty1:
     enabled: true
-    running: false
+    running: true
   goss-servers:
     enabled: true
     running: true
   issue-generator:
     enabled: true
+    running: false
+  issue-generator:
+    enabled: true
+    running: false
+  lldpad:
+    enabled: true
+    running: true
+  postfix:
+    enabled: false
     running: false
   purge-kernels:
     enabled: true
@@ -72,6 +84,9 @@ service:
     enabled: true
     running: false
   rollback:
+    enabled: true
+    running: false
+  spire-agent:
     enabled: true
     running: false
   sshd:
@@ -92,18 +107,3 @@ service:
   wickedd-nanny:
     enabled: true
     running: true
-  getty@tty1:
-    enabled: true
-    running: true
-  lldpad:
-    enabled: true
-    running: true
-  postfix:
-    enabled: false
-    running: false
-  chronyd:
-    enabled: true
-    running: false
-  spire-agent:
-    enabled: true
-    running: false
