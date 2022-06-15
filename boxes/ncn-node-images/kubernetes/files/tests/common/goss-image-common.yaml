@@ -16,7 +16,7 @@ command:
     exit-status: 0
     exec: "grep root /etc/shadow"
     stdout:
-    - root:*:18969::::::
+    - "/^root:\\*:\\d*::::::$/"
     stderr: []
     timeout: 2000 # in milliseconds
     skip: false
