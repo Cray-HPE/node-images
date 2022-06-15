@@ -11,34 +11,19 @@
   command: "/usr/lib64/sa/sa1 -S DISK 1 1"
   when: copy_sysstat_service.changed
 
-- name: enable sysstat service
-  systemd:
-    name: "{{ item }}"
-    enabled: yes
-    masked: no
-  with_items:
-    - sysstat.service
-
 - name: copy mdadm.conf into place
   copy:
     remote_src: yes
     src: /srv/cray/resources/metal/mdadm.conf
     dest: /etc/mdadm.conf
 
-# Agentless Management Service only works on servers with iLO4/5.
-# Disable by default, enable during runtime.
-- name: disable Agentless Management Daemon
+- name: Daemons
   systemd:
-    name: "{{ item }}"
-    enabled: no
-    state: stopped
-  with_items:
-    - ahslog
-    - amsd
-    - cpqFca
-    - cpqIde
-    - cpqScsi
-    - smad
+    name: "{{ item.name }}"
+    enabled: "{{ item.enabled }}"
+    masked: "{{ item.masked | default(false) }}"
+    state: "{{ item.state }}"
+  with_items: "{{ services_metal }}"
 
 - name: configure dhcp settings
   lineinfile:
