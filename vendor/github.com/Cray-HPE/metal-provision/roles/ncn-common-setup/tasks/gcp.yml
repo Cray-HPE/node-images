@@ -19,18 +19,12 @@
     - google-guest-oslogin
     - google-osconfig-agent
 
-- name: enable google services and ensure they are not masked
+- name: Setup Daemons
   systemd:
-    name: "{{ item }}"
-    enabled: yes
-    masked: no
-  with_items:
-    - google-guest-agent.service
-    - google-osconfig-agent.service
-    - google-oslogin-cache.service
-    - google-oslogin-cache.timer
-    - google-shutdown-scripts.service
-    - google-startup-scripts.service
+    name: "{{ item.name }}"
+    enabled: "{{ item.enabled }}"
+    masked: "{{ item.masked | default(false) }}"
+  with_items: "{{ services_google }}"
 
 - name: stub out network interface configuration files
   copy:
