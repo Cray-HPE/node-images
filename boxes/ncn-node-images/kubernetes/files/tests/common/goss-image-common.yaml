@@ -23,7 +23,7 @@ command:
 service:
   chronyd:
     enabled: true
-    running: false
+    running: true
   ca-certificates:
     enabled: true
     running: false
