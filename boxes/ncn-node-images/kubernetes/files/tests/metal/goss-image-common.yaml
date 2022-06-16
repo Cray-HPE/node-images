@@ -24,6 +24,7 @@
 service:
   metalfs:
     enabled: true
+    enabled: false
   cloud-config:
     enabled: true
     running: false
