@@ -87,7 +87,8 @@ pipeline {
             steps {
                 withCredentials([
                     string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                    string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE')
+                    string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE'),
+                    string(credentialsId: 'sles15-beta-registration-code', variable: 'SLES15_BETA_REGISTRATION_CODE'),
                 ]) {
                     sh '''
                         ./scripts/setup.sh
