@@ -28,10 +28,10 @@ ln -s $GOSS_BASE/automated/ncn-storage-checks /usr/bin/ncn-storage-checks
 # Make packer directories
 #--------------------------------------
 echo "Initializing directories and resources"
-mkdir -p /srv/cray
-cp -r /tmp/files/* /srv/cray/
-chmod +x -R /srv/cray/scripts
-rm -rf /tmp/files
+mkdir -pv /srv/cray
+cp -prv /tmp/files/* /srv/cray/ && rm -rf /tmp/files
+find /srv/cray/scripts -type f -name *.sh -exec chmod +x {} \+
+
 
 #======================================
 # Copy resources

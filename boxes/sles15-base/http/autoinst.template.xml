@@ -110,18 +110,18 @@
       <product>SLE_HPC</product>
     </products>
     <packages config:type='list'>
-      <!--  git-core is required for csm-rpms   -->
-      <package>git-core</package>
-      <!--  jq is required for csm-rpms install functions   -->
+<!-- START: CSM-RPMs dependencies -->
       <package>jq</package>
-      <!--   Python 3 is needed for csm-rpms and many other tasks   -->
-      <package>python3</package>
-      <!--   squashfs is needed for kis artifacts   -->
+<!-- END: CSM-RPMs dependencies -->
       <package>squashfs</package>
+      <package>wicked</package>
     </packages>
     <patterns config:type='list'>
       <pattern>base</pattern>
     </patterns>
+    <remove-packages config:type="list">
+      <package>btrfsmaintenance</package>
+    </remove-packages>
   </software>
 
   <services-manager>
@@ -135,9 +135,9 @@
   </services-manager>
 
   <network>
+    <backend>wicked</backend>
     <keep_install_network config:type='boolean'>true</keep_install_network>
     <setup_before_proposal config:type='boolean'>true</setup_before_proposal>
-    <managed config:type='boolean'>false</managed>
     <ipv4 config:type='boolean'>true</ipv4>
     <ipv6 config:type='boolean'>true</ipv6>
     <dns>

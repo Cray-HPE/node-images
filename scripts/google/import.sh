@@ -12,13 +12,13 @@ this_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 source $this_dir/.variables
 
-image_name_version="${image_name}-${version}"
+image_name_version="${image_name}-google-${version}"
 if gcloud --project $google_destination_project_id compute images list --filter="name=${image_name_version}" | grep ${image_name_version} &>/dev/null; then
   echo "Google Cloud image $image_name_version already exists in $google_destination_project_id, not attempting an import"
   exit 0
 fi
 source_image="${image_name_version}.${qemu_format}"
-destination_image="vshasta-${image_name_version}"
+destination_image="vshasta-$(printf ${image_name_version} | sed 's/-google//g')"
 echo "Importing image ${source_image} into Google Cloud at ${google_destination_project_id}/${google_destination_image_family}/${destination_image}"
 gcloud beta --project $google_destination_project_id compute images import \
   --source-file ${output_directory}/${source_image} \

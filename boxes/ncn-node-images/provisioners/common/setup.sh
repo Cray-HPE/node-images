@@ -17,7 +17,6 @@ if read DEV_DISK DEV_PARTITION_NR && [ -n "$DEV_PARTITION_NR" ]; then
 fi
 
 echo "Initializing directories and resources"
-mkdir -p /srv/cray
-cp -r /tmp/files/* /srv/cray/
-chmod +x -R /srv/cray/scripts
-rm -rf /tmp/files
+mkdir -pv /srv/cray
+cp -prv /tmp/files/* /srv/cray/ && rm -rf /tmp/files
+find /srv/cray/scripts -type f -name *.sh -exec chmod +x {} \+
