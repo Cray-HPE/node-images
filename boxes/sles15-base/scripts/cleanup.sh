@@ -5,6 +5,7 @@ set -ex
 echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
 rm -rf /var/adm/autoinstall/cache
 
+SUSEConnect --cleanup
 zypper clean --all
 
 echo "clean up network interface persistence"
