@@ -200,6 +200,9 @@ function init() {
 
   ceph cephadm generate-key
   ceph cephadm get-pub-key > /etc/ceph/ceph.pub
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(hostname)
+  ssh-keyscan -t rsa -H $(hostname) >> ~/.ssh/known_hosts
+
   
 # Create pools and set the applications
   ceph osd pool create kube 1 1
