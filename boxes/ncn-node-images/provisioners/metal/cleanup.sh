@@ -9,12 +9,15 @@ for repo in $(zypper ls | awk '{print $3}' | grep -E $SLES_VERSION); do
 done
 
 
+echo "remove /etc/shadow entry for root"
 seconds_per_day=$(( 60*60*24 ))
 days_since_1970=$(( $(date +%s) / seconds_per_day ))
 sed -i "/^root:/c\root:\*:$days_since_1970::::::" /etc/shadow
-rm -rf /root/.ssh
+
+echo "remove root's .ssh directory"
+rm -rvf /root/.ssh
 
 echo "remove credential files"
-rm -f /root/.zypp/credentials.cat
-rm -f /etc/zypp/credentials.cat
-rm -f /etc/zypp/credentials.d/*
+rm -vf /root/.zypp/credentials.cat
+rm -vf /etc/zypp/credentials.cat
+rm -vf /etc/zypp/credentials.d/*
