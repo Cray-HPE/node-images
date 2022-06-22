@@ -17,6 +17,9 @@ sed -i "/^root:/c\root:\*:$days_since_1970::::::" /etc/shadow
 echo "remove root's .ssh directory"
 rm -rvf /root/.ssh
 
+echo "remove ssh host keys"
+rm -fv /etc/ssh/ssh_host*
+
 echo "remove credential files"
 rm -vf /root/.zypp/credentials.cat
 rm -vf /etc/zypp/credentials.cat
