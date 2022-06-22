@@ -91,6 +91,12 @@ EOF
 modprobe overlay
 modprobe br_netfilter
 
+echo "Grabing Kata-Containers"
+wget -q -O /srv/cray/tmp/kata-static-2.4.2-x86_64.tar.xz https://github.com/kata-containers/kata-containers/releases/download/2.4.2/kata-static-2.4.2-x86_64.tar.xz
+wget -q -O /srv/cray/tmp/libseccomp-2.5.1.tar.gz https://github.com/kata-containers/kata-containers/releases/download/2.4.2/libseccomp-2.5.1.tar.gz
+
+zypper install -yf qemu
+
 echo "Installing kubernetes python client"
 pip3 install --ignore-installed PyYAML
 pip3 install kubernetes
