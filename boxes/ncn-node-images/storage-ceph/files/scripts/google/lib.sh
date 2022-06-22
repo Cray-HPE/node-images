@@ -194,7 +194,12 @@ function init() {
 
   enable_sts
 
-# Create pools and set the applications
+  ceph cephadm generate-key
+  ceph cephadm get-pub-key > /etc/ceph/ceph.pub
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(hostname)
+  ssh-keyscan -t rsa -H $(hostname) >> ~/.ssh/known_hosts
+
+  # Create pools and set the applications
   ceph osd pool create kube 1 1
   ceph osd pool create cephfs.cephfs.data 1 1
   ceph osd pool create cephfs.cephfs.meta 1 1
