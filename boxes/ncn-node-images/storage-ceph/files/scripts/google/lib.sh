@@ -200,8 +200,11 @@ function init() {
 
   ceph cephadm generate-key
   ceph cephadm get-pub-key > /etc/ceph/ceph.pub
-  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(hostname)
   ssh-keyscan -t rsa -H $(hostname) >> ~/.ssh/known_hosts
+  ssh-keyscan -t rsa -H ncn-s001 >> ~/.ssh/known_hosts
+  ssh-keyscan -t rsa -H  $(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')>> ~/.ssh/known_hosts
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(hostname)
+  
 
   
 # Create pools and set the applications
