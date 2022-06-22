@@ -20,6 +20,14 @@ command:
     stderr: []
     timeout: 2000 # in milliseconds
     skip: false
+command:
+  no_host_keys:
+    # due to pipe, exit status will be zero
+    exit-status: 0
+    exec: "ls /etc/ssh/ssh_host* | wc -l"
+    stdout:
+    - 0
+    skip: false
 service:
   chronyd:
     enabled: true
