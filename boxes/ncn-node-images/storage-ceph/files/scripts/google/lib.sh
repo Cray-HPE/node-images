@@ -213,6 +213,7 @@ function init() {
   rbd pool init kube
   ceph health mute POOL_NO_REDUNDANCY --sticky
   ceph osd pool set device_health_metrics size 1
+  ceph config set mgr mon_max_pg_per_osd 300
 
   wait_for_health_ok
 
