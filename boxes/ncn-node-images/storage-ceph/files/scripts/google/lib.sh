@@ -153,6 +153,7 @@ function init() {
   ceph config set osd rbd_default_features 3
   ceph config set global mon_max_pg_per_osd 700
 
+
   # Deploy mgr and create your OSD
   while [[ $avail != "true" ]] && [[ $backend != "cephadm" ]]
   do
@@ -200,9 +201,8 @@ function init() {
   ssh-keyscan -t rsa -H ncn-s001 >> ~/.ssh/known_hosts
   ssh-keyscan -t rsa -H  $(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')>> ~/.ssh/known_hosts
   ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(hostname)
-  
 
-  # Create pools and set the applications
+# Create pools and set the applications
   ceph osd pool create kube 1 1
   ceph osd pool create cephfs.cephfs.data 1 1
   ceph osd pool create cephfs.cephfs.meta 1 1
@@ -283,6 +283,7 @@ Host ncn-w*
   UserKnownHostsFile /dev/null
 EOF
   python3 /srv/cray/scripts/google/push-ceph-config.py
+  #rm ~/.ssh/config
 
   echo "Setting a job to detect a new k8s cluster so that we can re-apply resources when necessary"
   echo "*/2 * * * * root . /etc/profile.d/cray.sh; /srv/cray/scripts/google/detect-new-k8s-cluster.sh >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-k8s-detect-new-cluster
