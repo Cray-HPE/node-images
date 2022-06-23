@@ -121,6 +121,10 @@ function init() {
     sleep 5
   done
 
+  ssh-keyscan -t rsa -H $(hostname) >> ~/.ssh/known_hosts
+  ssh-keyscan -t rsa -H ncn-s001 >> ~/.ssh/known_hosts
+  ssh-keyscan -t rsa -H  $(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')>> ~/.ssh/known_hosts
+
   #
   # Enable CEPH repos as described at http://ceph.com/docs/master/install/get-packages/#rpm
   # Install ceph-deploy package
@@ -135,6 +139,9 @@ function init() {
   # Create your initial files for cluster creation
   cephadm --retry 60 --image artifactory.algol60.net/csm-docker/stable/quay.io/ceph/ceph:v$CEPH_VERS bootstrap --single-host-defaults --skip-monitoring-stack --skip-mon-network --skip-pull --skip-dashboard --mon-ip $(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')
 
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(hostname)
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@ncn-s001
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')
 
   # Add in the options that allow this to run as a single node cluster
   # Add default image features to allow volume mapping
@@ -144,19 +151,6 @@ function init() {
   ceph config set global osd_pool_default_size 1
   ceph config set osd osd_crush_chooseleaf_type 0
   ceph config set osd rbd_default_features 3
-  ceph config set global mon_max_pg_per_osd 700
-
-  # Bootstrap your mon and sleep to allow it to start up fully
-  # ceph-deploy mon create-initial
-  # sleep 5
-
-  # Copy keys into the right places
-
-  #cp ceph.client.admin.keyring /etc/ceph
-  #cp ceph.bootstrap-mgr.keyring /var/lib/ceph/bootstrap-mgr/ceph.keyring
-  #cp ceph.bootstrap-osd.keyring /var/lib/ceph/bootstrap-osd/ceph.keyring
-  #cp ceph.bootstrap-rgw.keyring /var/lib/ceph/bootstrap-rgw/ceph.keyring
-  #cp ceph.bootstrap-mds.keyring /var/lib/ceph/bootstrap-mds/ceph.keyring
 
   # Deploy mgr and create your OSD
   while [[ $avail != "true" ]] && [[ $backend != "cephadm" ]]
@@ -172,6 +166,7 @@ function init() {
       ceph orch set backend cephadm
     fi
   done
+  ceph orch host label add $(hostname) _admin
   ceph orch apply mgr --placement=1
 
   echo "Running ceph orch apply osd"
@@ -198,19 +193,10 @@ function init() {
 
   enable_sts
 
-  ceph cephadm generate-key
-  ceph cephadm get-pub-key > /etc/ceph/ceph.pub
-  ssh-keyscan -t rsa -H $(hostname) >> ~/.ssh/known_hosts
-  ssh-keyscan -t rsa -H ncn-s001 >> ~/.ssh/known_hosts
-  ssh-keyscan -t rsa -H  $(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')>> ~/.ssh/known_hosts
-  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(hostname)
-  
-
-  
 # Create pools and set the applications
   ceph osd pool create kube 1 1
-  ceph osd pool create cephfs_data 1 1
-  ceph osd pool create cephfs_metadata 1 1
+  ceph osd pool create cephfs.cephfs.data 1 1
+  ceph osd pool create cephfs.cephfs.meta 1 1
   ceph osd pool create default.rgw.buckets.data 1 1
   ceph osd pool create default.rgw.control 1 1
   ceph osd pool create default.rgw.buckets.index 1 1
@@ -222,13 +208,22 @@ function init() {
   ceph osd pool application enable default.rgw.buckets.index rgw
   ceph osd pool application enable default.rgw.meta rgw
   ceph osd pool application enable default.rgw.log rgw
-  ceph osd pool application enable cephfs_data cephfs
-  ceph osd pool application enable cephfs_metadata cephfs
+  ceph osd pool application enable cephfs.cephfs.data cephfs
+  ceph osd pool application enable cephfs.cephfs.metadata cephfs
   rbd pool init kube
   ceph health mute POOL_NO_REDUNDANCY --sticky
   ceph osd pool set device_health_metrics size 1
 
   wait_for_health_ok
+
+  cp /etc/ceph/ceph.pub ~/.ssh/ceph.pub
+  ceph cephadm get-ssh-config > ~/.ssh/ssh_config
+  ceph config-key get mgr/cephadm/ssh_identity_key > ~/.ssh/cephadm_private_key
+  chmod 0600 ~/.ssh/cephadm_private_key
+  cp /etc/ceph/ceph.pub ~/ceph.pub
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(hostname)
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@ncn-s001
+  ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')
 
   # Deploy ceph mds and create base cephfs share
   echo "Creating placement group for cephfs"
@@ -254,11 +249,11 @@ function init() {
    wait_for_health_ok
 
   . /etc/ansible/boto3_ansible/bin/activate
-  cd /etc/ansible/ceph-ansible
+  cd /etc/ansible/ceph-ansible || exit
   sed -i "s/LASTNODE/001/g" /etc/ansible/hosts
   ansible-playbook /etc/ansible/ceph-rgw-users/pre-install-certs.yml
   deactivate
- 
+
   ceph orch apply rgw site1 zone1 --placement="1 $(ceph node ls osd|jq -r '.|keys|join(" ")')" --port=8080
 
   echo "Waiting for Kubernetes config to be available..."
@@ -281,7 +276,7 @@ Host ncn-w*
   UserKnownHostsFile /dev/null
 EOF
   python3 /srv/cray/scripts/google/push-ceph-config.py
-  rm ~/.ssh/config
+  #rm ~/.ssh/config
 
   echo "Setting a job to detect a new k8s cluster so that we can re-apply resources when necessary"
   echo "*/2 * * * * root . /etc/profile.d/cray.sh; /srv/cray/scripts/google/detect-new-k8s-cluster.sh >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-k8s-detect-new-cluster
