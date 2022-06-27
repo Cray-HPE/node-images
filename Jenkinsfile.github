@@ -17,7 +17,7 @@ def buildPIT = false // TODO: Toggle to True once we have ISOs working (MTL-1476
 def rebuildBaseImage = false
 def rebuildCommonImage = env.TAG_NAME == null ? true : false
 def sourceBuildVersion = '[RELEASE]' // Pulls the latest release
-def disableGoogle = true    // FIXME: Once SLES15SP4 is supported in Google, set this to false.
+def disableGoogle = false   // FIXME: Once SLES15SP4 is supported in Google, set this to false.
 
 // Global vars to be set within stages.
 def qcow
@@ -52,8 +52,7 @@ pipeline {
         ARTIFACTS_DIRECTORY_CEPH = "output-ncn-node-images/storage-ceph"
         ARTIFACTS_DIRECTORY_K8S = "output-ncn-node-images/kubernetes"
         ARTIFACTS_DIRECTORY_PIT = "output-pit-common"
-        ISO_SP3 = "SLE-15-SP3-Online-x86_64-GM-Media1.iso"
-        ISO = "SLE-15-SP4-Online-x86_64-GM-Media1.iso"
+        ISO = "SLE-15-SP3-Online-x86_64-GM-Media1.iso"
         ISO_URL = "https://artifactory.algol60.net/artifactory/os-images"
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
