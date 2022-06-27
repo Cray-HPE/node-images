@@ -53,7 +53,7 @@ pipeline {
         ARTIFACTS_DIRECTORY_K8S = "output-ncn-node-images/kubernetes"
         ARTIFACTS_DIRECTORY_PIT = "output-pit-common"
         ISO_SP3 = "SLE-15-SP3-Online-x86_64-GM-Media1.iso"
-        ISO = "SLE-15-SP4-Online-x86_64-PublicRC-202204-Media1.iso"
+        ISO = "SLE-15-SP4-Online-x86_64-GM-Media1.iso"
         ISO_URL = "https://artifactory.algol60.net/artifactory/os-images"
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
@@ -95,7 +95,6 @@ pipeline {
                                 withCredentials([
                                         string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
                                         string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE'),
-                                        string(credentialsId: 'sles15-beta-registration-code', variable: 'SLES15_BETA_REGISTRATION_CODE'),
                                 ]) {
                                     sh './scripts/setup.sh'
                                 }
