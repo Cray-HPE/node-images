@@ -117,40 +117,46 @@ build {
   ]
   
   provisioner "shell" {
-    script = "${path.root}/scripts/wait-for-autoyast-completion.sh"
-  }
-  
-  provisioner "shell" {
-    script = "${path.root}/scripts/virtualbox.sh"
-    only = ["virtualbox-iso.sles15-base"]
-  }
-  
-  provisioner "shell" {
-    script = "${path.root}/scripts/google-grub.sh"
-    only = ["qemu.sles15-google"]
-  }
-  
-  provisioner "shell" {
-    script = "${path.root}/scripts/qemu.sh"
-    only = ["qemu.sles15-base"]
+    script = "${path.root}/provisioners/common/setup.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}/scripts/cleanup.sh"
+    script = "${path.root}/provisioners/common/install.sh"
   }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/google/install.sh"
+    only = ["qemu.sles15-google"]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/virtualbox/install.sh"
+    only = ["virtualbox-iso.sles15-base"]
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/common/cleanup.sh"
+  }
+
+  provisioner "shell" {
+    script = "${path.root}/provisioners/metal/cleanup.sh"
+    only = ["qemu.sles15-base"]
+  }
+
   post-processors {
     post-processor "shell-local" {
       inline = [
         "echo 'Saving variable file for use in google import'",
         "echo google_destination_project_id=\"${var.google_destination_project_id}\" > ./scripts/google/.variables",
-        "echo output_directory=\"${var.output_directory}\" >> ./scripts/google/.variables",
-        "echo image_name=\"${var.image_name}\" >> ./scripts/google/.variables",
+        "echo output_directory=\"${var.output_directory}-google\" >> ./scripts/google/.variables",
+        "echo image_name=\"${var.image_name}-google\" >> ./scripts/google/.variables",
         "echo version=\"${var.artifact_version}\" >> ./scripts/google/.variables",
         "echo qemu_format=\"${var.qemu_format}\" >> ./scripts/google/.variables",
         "echo google_destination_image_family=\"${var.google_destination_image_family}\" >> ./scripts/google/.variables",
         "echo google_network=\"${var.google_destination_project_network}\" >> ./scripts/google/.variables",
         "echo google_subnetwork=\"${var.google_subnetwork}\" >> ./scripts/google/.variables",
-        "echo google_zone=\"${var.google_zone}\" >> ./scripts/google/.variables"
+        "echo google_zone=\"${var.google_zone}\" >> ./scripts/google/.variables",
+        "cat ./scripts/google/.variables"
       ]
       only = ["qemu.sles15-google"]
     }
