@@ -23,29 +23,28 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# This script does not use bind mounts and thus executes correctly in a container
+# This script does not use bind mounts and thus executes correctly in a container.
 set -e
 set -x
 
-echo "Generating initrd..."
 
-version_full=$(rpm -q --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" kernel-default)
-version_base=${version_full%%-*}
-version_suse=${version_full##*-}
-version_suse=${version_suse%.*.*}
-version="$version_base-$version_suse-default"
+# Source common dracut parameters.
+. "$(dirname $0)/dracut-lib.sh"
+
+echo "Generating initrd..."
 
 dracut \
 --force \
---omit 'cifs ntfs-3g btrfs nfs fcoe iscsi modsign fcoe-uefi nbd dmraid multipath dmsquash-live-ntfs' \
---omit-drivers 'ecb md5 hmac' \
---add 'mdraid' \
---force-add 'dmsquash-live livenet mdraid' \
---kver ${version} \
+--omit "$(printf '%s' "${OMIT[*]}")" \
+--omit-drivers "$(printf '%s' "${OMIT_DRIVERS[*]}")" \
+--add "$(printf '%s' "${ADD[*]}")" \
+--force-add "$(printf '%s' "${FORCE_ADD[*]}")" \
+--install "$(printf '%s' "${INSTALL[*]}")" \
+--kver "${KVER}" \
 --no-hostonly \
 --no-hostonly-cmdline \
 --printsize \
 --xz \
-/boot/initrd-${version}
+"/boot/initrd-${KVER}"
 
 exit 0
