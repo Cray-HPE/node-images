@@ -29,6 +29,9 @@ set -euf -o pipefail
 # Run cleanup on exit
 trap cleanup EXIT
 
+# Source common dracut parameters.
+. "$(dirname $0)/dracut-lib.sh"
+
 # Optional debug flag
 if [[ "${DEBUG:=false}" == "true" ]]; then
     set -x
@@ -58,7 +61,7 @@ function normalize_fstab() {
   #   - fields are separated by a single TAB
   sed -e 's/[ \t][ \t]*/\t/g;s/^\t//;/^$/d;/^#/d' \
       "${fstab}"
-}		
+}
 
 # get_mp() gets a mountpoint given a device
 function get_mp() {
@@ -84,35 +87,39 @@ function get_initrd_vers() {
     | awk -F"'" '{print $2}'
 }
 
-# check_wipe_status() checks the status of the wipe and fails if set to 0
-function check_wipe_status() {
-  # get the current kernel parameters
-  local cmdline=""
-  cmdline=$(cat /proc/cmdline)
-
-  for param in $cmdline; do
-      # check the only wipe status
-      if [[ "${param}" =~ ^metal\.no-wipe.* ]]; then
-        if [[ "${param}" == "metal.no-wipe=0" ]]; then
-          >&2 echo "${param} found.  Setting 'metal.no-wipe=1 to override"
-          # bind mount a temporary file to /proc/cmdline to override the wipe setting
-          APPEND_NO_WIPE1="true"
-          wipe_hack
-          break
-        fi
-      fi
-  done
-}
-
 # wipe_hack() toggles metal.no-wipe=0 to 1 by mounting a temp file over /proc/cmdline with the desired value
 function wipe_hack() {
   local psuedo_cmdline="/tmp/cmdline"
   if [[ "${APPEND_NO_WIPE1}" == "true" ]]; then
     # copy the current cmdline to a temp file
     cp -p /proc/cmdline "${psuedo_cmdline}"
-    # replace metal.no-wipe=0 with metal.no-wipe=1
-    sed -i 's/metal.no-wipe=0/metal.no-wipe=1/g' "${psuedo_cmdline}"
-    # mount the modified cmdline over the proc file
+
+    # Get the kernel command we used to boot.
+    init_cmdline=$(cat /proc/cmdline)
+    kexec_cmdline=()
+    for cmd in $init_cmdline; do
+
+        # cleans up first argument when running this script on a disk-booted system
+        if [[ $cmd =~ kernel$ ]]; then
+            cmd=$(basename "$(echo $cmd  | awk '{print $1}')")
+        fi
+
+        # cleans up any nefarious arguments
+        if [[ $cmd =~ ^rd.live.overlay.reset ]] ; then :
+        elif [[ $cmd =~ ^rd.debug ]] ; then :
+        # removes all metal vars, and escapes anything that iPXE was escaping
+        # metal vars are used for customizing nodes on deployment, they don't need
+        # to stick around for runtime.
+        # (i.e. ds=nocloud-net;s=http://$url will get the ; escaped)
+        # removes netboot vars
+        elif [[ ! $cmd =~ ^metal. ]] && [[ ! $cmd =~ ^ip=.*:dhcp ]] && [[ ! $cmd =~ ^bootdev= ]]; then
+            kexec_cmdline+=( "${cmd//;/\\;}" )
+        fi
+    done
+
+    # ensure no-wipe is now set for disk-boots.
+    kexec_cmdline+=( "metal.no-wipe=1" )
+    echo "${kexec_cmdline[*]}" >${psuedo_cmdline}
     mount --bind "${psuedo_cmdline}" /proc/cmdline
   fi
 }
@@ -162,58 +169,24 @@ function update_bootraid_artifacts() {
   replace_initrd_in_bootraid
 }
 
+# todo: add function for uploading artifacts to S3
+# todo: need to also create the kernel
+# todo: could possibly invoke create-kis-artifacts after running this kexec script.
+
 # create_new_initrd() creates a new initrd with the new kernel version
 function create_new_initrd() {
   local kver="${1}"
   local initrd_path="${2}"
 
-  # args for dracut
-  omit+="btrfs "
-  omit+="cifs "
-  omit+="dmraid "
-  omit+="dmsquash-live-ntfs "
-  omit+="fcoe "
-  omit+="fcoe-uefi "
-  omit+="iscsi "
-  omit+="modsign "
-  omit+="multipath "
-  omit+="nbd "
-  omit+="ntfs-3g "
-  omit+="nfs "
-  omit+="rdma "
-  echo ">> omit=\"$omit\"" >/dev/null
-
-  omit_drivers+="ecb "
-  omit_drivers+="hmac "
-  omit_drivers+="md5 "
-  echo ">> omit_drivers=\"$omit_drivers\"" >/dev/null
-
-  dracut_add+="dmsquash-live "
-  dracut_add+="livenet "
-  dracut_add+="mdraid"
-  echo ">> dracut_add=\"$dracut_add\"" >/dev/null
-
-  dracut_install+="less "
-  dracut_install+="rmdir "
-  dracut_install+="sgdisk "
-  dracut_install+="systemd-analyze "
-  dracut_install+="vgremove "
-  dracut_install+="wipefs "
-  echo ">> dracut_install=\"$dracut_install\"" >/dev/null
-
-  dracut_drivers+="raid1 "
-  echo ">> dracut_drivers=\"$dracut_drivers\"" >/dev/null
-
-  # create the initrd
   dracut \
     -L "${DRACUT_DEBUG:=3}" \
     --xz \
     --force \
-    --omit "${omit}" \
-    --omit-drivers "${omit_drivers}" \
-    --add "${dracut_add}" \
-    --add-drivers "${dracut_drivers}" \
-    --install "${dracut_install}" \
+    --omit "$(printf '%s' "${OMIT[*]}")" \
+    --omit-drivers "$(printf '%s' "${OMIT_DRIVERS[*]}")" \
+    --add "$(printf '%s' "${ADD[*]}")" \
+    --force-add "$(printf '%s' "${FORCE_ADD[*]}")" \
+    --install "$(printf '%s' "${INSTALL[*]}")" \
     --nohardlink \
     --no-hostonly-cmdline \
     --persistent-policy by-label \
@@ -302,7 +275,7 @@ while getopts "hk:" opt; do
       echo "Copying new kernel and initrd to bootraid..."
       # Backup the existing artifacts and replace them with the newly created ones
       update_bootraid_artifacts
-      
+
       # check the wipe status before continuing, modifying it if necessary
       echo "Checking wipe status..."
       check_wipe_status 
@@ -318,7 +291,7 @@ while getopts "hk:" opt; do
         "${NEW_KERNEL_PATH}"
 
       echo "Run 'kexec -e' to use the new kernel."
-      
+
       shift
       ;;
     \?)

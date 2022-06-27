@@ -38,3 +38,5 @@ jobs:
     
     - name: run shellcheck
       uses: ludeeus/action-shellcheck@1.1.0
+      with:
+        severity: warning

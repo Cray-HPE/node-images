@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #
 # MIT License
 #
@@ -24,36 +23,16 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-set -e
+# Dracut Arguments
+export OMIT=( "btrfs" "cifs" "dmraid" "dmsquash-live-ntfs" "fcoe" "fcoe-uefi" "iscsi" "modsign" "multipath" "nbd" "nfs" "ntfs-3g" )
+export OMIT_DRIVERS=( "ecb" "hmac" "md5" )
+export ADD=( "mdraid" )
+export FORCE_ADD=( "dmsquash-live" "livenet" "mdraid" )
+export INSTALL=( "less" "rmdir" "sgdisk" "vgremove" "wipefs" )
 
-CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd )"
-echo "$CURRENT_DIR"
-
-function list-custom-repos-file() {
-  cat <<EOF
-${CURRENT_DIR}/${CUSTOM_REPOS_FILE}
-EOF
-}
-
-function remove-comments-and-empty-lines() {
-  sed -e 's/#.*$//' -e '/^[[:space:]]*$/d'
-}
-
-function zypper-add-repos() {
-  remove-comments-and-empty-lines \
-  | awk '{ NF-=1; print }' \
-  | while read url name flags; do
-    local alias="buildonly-${name}"
-    echo "Adding repo ${alias} at ${url}"
-    zypper -n addrepo $flags "${url}" "${alias}"
-    zypper -n --gpg-auto-import-keys refresh "${alias}"
-  done
-}
-
-if [ -z "$CUSTOM_REPOS_FILE" ]; then
-  echo "Not using a custom repo."
-  source /srv/cray/csm-rpms/scripts/rpm-functions.sh
-else
-  echo "Using custom repos file: '${CUSTOM_REPOS_FILE}'."
-  list-custom-repos-file | xargs -r cat | zypper-add-repos
-fi
+# Kernel Version
+version_full=$(rpm -q --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" kernel-default)
+version_base=${version_full%%-*}
+version_suse=${version_full##*-}
+version_suse=${version_suse%.*.*}
+export KVER="${version_base}-${version_suse}-default"

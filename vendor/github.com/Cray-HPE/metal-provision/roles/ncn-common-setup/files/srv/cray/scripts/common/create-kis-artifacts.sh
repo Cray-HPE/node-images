@@ -22,46 +22,59 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
-# NOTE: it might seem like these KIS scripts belong in a metal subdir instead of common
-# but the idea is that other environments, cloud ones even may soon IPXE boot squashfs
-# NCNs for the sake of parity.
-
 set -ex
+trap cleanup EXIT
 
-mkdir -p /mnt/squashfs /squashfs
-mount -o bind / /mnt/squashfs
+function cleanup {
+    if ! umount -v /mnt/squashfs ; then
+        echo 'no mount to cleanup'
+    fi
+    rm -rf /mnt/squashfs
+}
 
-# NOTE: These may be ran on a system; on a PIT or NCN node. Locking the kernel will assist
-#       in chroot envs with newer kernels.
-version_full=$(rpm -q --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" kernel-default)
-version_base=${version_full%%-*}
-version_suse=${version_full##*-}
-version_suse=${version_suse%.*.*}
-version="$version_base-$version_suse-default"
+# Source common dracut parameters.
+. "$(dirname $0)/dracut-lib.sh"
+
+# This facilitates creating the artifacts in the NCN pipeline.
+mkdir -pv /mnt/squashfs /squashfs
+mount -v -o bind / /mnt/squashfs
 
 if [[ "$1" != "squashfs-only" ]]; then
-  echo "Creating initrd/kernel artifacts"
-  mkdir -p /mnt/squashfs/proc /mnt/squashfs/run /mnt/squashfs/dev /mnt/squashfs/sys /mnt/squashfs/var
-  mount --bind /proc /mnt/squashfs/proc
-  mount --bind /tmp /mnt/squashfs/run
-  mount --bind /dev /mnt/squashfs/dev
-  mount --bind /sys /mnt/squashfs/sys
-  mount --bind /var /mnt/squashfs/var
-  [ -f /var/adm/autoinstall/cache ] && rm -rf /var/adm/autoinstall/cache || echo >&2 'Could not remove autoinstall/cache!'
-  chroot /mnt/squashfs /bin/bash -c "dracut --xz --force \
-    --omit 'cifs ntfs-3g btrfs nfs fcoe iscsi modsign fcoe-uefi nbd dmraid multipath dmsquash-live-ntfs' \
-    --omit-drivers 'ecb md5 hmac' \
-    --add 'mdraid' \
-    --force-add 'dmsquash-live livenet mdraid' \
-    --install 'rmdir wipefs sgdisk vgremove less' \
-    --persistent-policy by-label --show-modules --ro-mnt --no-hostonly --no-hostonly-cmdline \
-    --kver ${version} \
-    --printsize \
-    /tmp/initrd.img.xz"
-  cp -v /mnt/squashfs/boot/vmlinuz-${version} /squashfs/${version}.kernel
-  cp -v /mnt/squashfs/tmp/initrd.img.xz /squashfs/initrd.img.xz
-  umount /mnt/squashfs/proc /mnt/squashfs/dev /mnt/squashfs/run /mnt/squashfs/sys /mnt/squashfs/var
+    echo "Creating initrd/kernel artifacts"
+    
+    # NOTE: These mounts help create metal artifacts when running inside of the NCN pipeline, they are not necessary when this script runs
+    #       on a physical server. These are harmless enough that they're always mounted, regardless of context.
+    mkdir -pv /mnt/squashfs/proc /mnt/squashfs/run /mnt/squashfs/dev /mnt/squashfs/sys /mnt/squashfs/var
+    mount --bind /proc /mnt/squashfs/proc
+    mount --bind /tmp /mnt/squashfs/run
+    mount --bind /dev /mnt/squashfs/dev
+    mount --bind /sys /mnt/squashfs/sys
+    mount --bind /var /mnt/squashfs/var
+    
+    # This has been here since we first made images, more or less as a last/final check that we have no cache left-over from the auto-install.  
+    [ -f /var/adm/autoinstall/cache ] && rm -rf /var/adm/autoinstall/cache
+    
+    unshare -R /mnt/squashfs bash -c "dracut \
+        --omit \"$(printf '%s' "${OMIT[*]}")\" \
+        --omit-drivers \"$(printf '%s' "${OMIT_DRIVERS[*]}")\" \
+        --add \"$(printf '%s' "${ADD[*]}")\" \
+        --force-add \"$(printf '%s' "${FORCE_ADD[*]}")\" \
+        --install \"$(printf '%s' "${INSTALL[*]}")\" \
+        --persistent-policy by-label \
+        --show-modules \
+        --ro-mnt \
+        --no-hostonly \
+        --no-hostonly-cmdline \
+        --kver ${KVER} \
+        --printsize \
+        --force \
+        --xz \
+        /tmp/initrd.img.xz"
+    
+    cp -v /mnt/squashfs/boot/vmlinuz-${KVER} /squashfs/${KVER}.kernel
+    cp -v /mnt/squashfs/tmp/initrd.img.xz /squashfs/initrd.img.xz
+    chmod 644 /squashfs/initrd.img.xz
+    umount -v /mnt/squashfs/proc /mnt/squashfs/dev /mnt/squashfs/run /mnt/squashfs/sys /mnt/squashfs/var
 fi
 
 if [[ "$1" != "kernel-initrd-only" ]]; then
