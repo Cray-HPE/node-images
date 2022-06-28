@@ -9,7 +9,7 @@ oom_score = -999
   address = "0.0.0.0:1338"
 
 [plugins."io.containerd.grpc.v1.cri"]
-  sandbox_image = "k8s.gcr.io/pause:3.2"
+  sandbox_image = "${K8S_IMAGE_REGISTRY}/pause:${PAUSE_VERSION}"
   [plugins."io.containerd.grpc.v1.cri".containerd]
     snapshotter = "native"
 
