@@ -1,90 +1,11 @@
 ---
 services_common:
-  - name: ca-certificates.service
-    enabled: yes
-    state: stopped
-  - name: chronyd.service
-    enabled: yes
-    state: stopped
-  - name: getty@tty1.service
-    enabled: yes
-    state: stopped
-  - name: goss-servers
+  - name: cfs-state-reporter.service
     enabled: yes
     state: started
-  - name: issue-generator.service
-    enabled: yes
-    state: stopped
-  - name: kdump-early.service
-    enabled: yes
-    state: stopped
-  - name: kdump.service
-    enabled: yes
-    state: stopped
-  - name: lldpad.service
+  - name: cray-heartbeat.service
     enabled: yes
     state: started
-  - name: multi-user.target
-    enabled: yes
-    state: started
-  - name: postfix.service
-    enabled: no
-    state: stopped
-  - name: purge-kernels.service
-    enabled: yes
-    state: stopped
-  - name: rasdaemon.service
-    enabled: yes
-    state: stopped
-  - name: rc-local.service
-    enabled: yes
-    state: stopped
-  - name: rollback.service
-    enabled: yes
-    state: stopped
-  - name: serial-getty@ttyS0.service
-    enabled: yes
-    state: stopped
-  - name: spire-agent.service
-    enabled: yes
-    state: stopped
-  - name: sshd.service
-    enabled: yes
-    state: stopped
-  - name: wicked.service
-    enabled: yes
-    state: stopped
-  - name: wickedd-auto4.service
-    enabled: yes
-    state: stopped
-  - name: wickedd-dhcp4.service
-    enabled: yes
-    state: stopped
-  - name: wickedd-dhcp6.service
-    enabled: yes
-    state: stopped
-  - name: wickedd-nanny.service
-    enabled: yes
-    state: stopped
-services_metal:
-  - name: ahslog
-    enabled: no
-    state: stopped
-  - name: amsd
-    enabled: no
-    state: stopped
-  - name: cpqFca
-    enabled: no
-    state: stopped
-  - name: cpqIde
-    enabled: no
-    state: stopped
-  - name: cpqScsi
-    enabled: no
-    state: stopped
-  - name: smad
-    enabled: no
-    state: stopped
-  - name: sysstat.service
+  - name: csm-node-identity.service
     enabled: yes
     state: started
