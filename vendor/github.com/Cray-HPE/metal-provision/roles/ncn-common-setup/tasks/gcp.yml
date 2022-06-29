@@ -41,8 +41,8 @@
     src: /srv/cray/sysctl/google/
     dest: /etc/sysctl.d/
 
-- name: schedule job to ensure /root/.ssh/authorized_keys file is our /root/.ssh/id_rsa.pub only every 1 minute
-  cron:
-    name: "gcp authorized keys"
-    minute: "*/1"
-    job: "cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys >> /var/log/cray/cron.log 2>&1"
+#- name: schedule job to ensure /root/.ssh/authorized_keys file is our /root/.ssh/id_rsa.pub only every 1 minute
+#  cron:
+#    name: "gcp authorized keys"
+#    minute: "*/1"
+#    job: "cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys >> /var/log/cray/cron.log 2>&1"
