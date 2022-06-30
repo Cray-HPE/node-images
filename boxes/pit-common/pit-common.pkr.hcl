@@ -89,12 +89,6 @@ build {
     destination = "/tmp/files/"
   }
 
-  # Probably want to keep this
-  provisioner "file" {
-    source = "custom"
-    destination = "/tmp/files/"
-  }
-
   // Setup each context (e.g. common, google, and metal)
   provisioner "shell" {
     environment_vars = [
@@ -115,17 +109,19 @@ build {
 #  }
 
   provisioner "shell" {
-    inline = [
-      "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
-  }
-
-  provisioner "shell" {
     environment_vars = [
       "CUSTOM_REPOS_FILE=${var.custom_repos_file}",
       "ARTIFACTORY_USER=${var.artifactory_user}",
       "ARTIFACTORY_TOKEN=${var.artifactory_token}"
     ]
-    inline = ["bash -c /srv/cray/custom/repos.sh"]
+    inline = [
+      "bash -c '. /srv/cray/csm-rpms/scripts/rpm-functions.sh; setup-package-repos'"]
+    valid_exit_codes = [0, 123]
+  }
+
+  provisioner "shell" {
+    inline = [
+      "bash -c 'rpm --import https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc'"]
   }
 
   provisioner "shell" {
