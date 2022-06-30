@@ -224,8 +224,6 @@ function init() {
   ceph osd pool set device_health_metrics size 1
   ceph config set mgr mon_max_pg_per_osd 300
 
-  wait_for_health_ok
-
   cp /etc/ceph/ceph.pub ~/.ssh/ceph.pub
   ceph cephadm get-ssh-config > ~/.ssh/ssh_config
   ceph config-key get mgr/cephadm/ssh_identity_key > ~/.ssh/cephadm_private_key
@@ -235,6 +233,8 @@ function init() {
   ssh-copy-id -f -i /etc/ceph/ceph.pub root@ncn-s001
   ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(ip -4 -br  address show dev eth0 |awk '{split($3,ip,"/"); print ip[1]}')
 
+  wait_for_health_ok
+  
   # Deploy ceph mds and create base cephfs share
   echo "Creating placement group for cephfs"
    ceph fs volume create cephfs --placement="1 $HOSTNAME"
