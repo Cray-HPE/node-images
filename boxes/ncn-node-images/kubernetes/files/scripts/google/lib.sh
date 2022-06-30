@@ -26,6 +26,12 @@
 # authorized_keys goes missing.  adding this to get
 # past a race condition
 
+while grep "root" /etc/passwd  > /dev/null;
+do
+    sleep 1
+    echo "waiting for root to disappear""
+done
+
 cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 
 export PROJECT_ID=$(craysys metadata get /project-id)
