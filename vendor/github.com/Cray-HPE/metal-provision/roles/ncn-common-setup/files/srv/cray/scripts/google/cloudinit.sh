@@ -21,4 +21,4 @@ systemctl restart cron
 # TODO: something is wiping out the authorized_keys file, at least on Virtual Shasta, figure it out
 #       traced it to something in either the update-dns.py above: restarting network services?
 #       or the cron restart above?
-#cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
