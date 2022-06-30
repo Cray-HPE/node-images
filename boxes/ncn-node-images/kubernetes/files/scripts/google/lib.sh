@@ -23,6 +23,11 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+# authorized_keys goes missing.  adding this to get
+# past a race condition
+
+cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+
 export PROJECT_ID=$(craysys metadata get /project-id)
 export NETWORK=$(craysys metadata get /network-interfaces/0/network --level node | awk -F'/' '{print $NF}')
 export REGION=$(craysys metadata get region)

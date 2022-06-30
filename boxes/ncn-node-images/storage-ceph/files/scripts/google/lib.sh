@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# the authorized_keys goes missing right after boot so putting here
+# to fix a race condition
+
+cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+
 function wait_for_health_ok() {
   cnt=0
   while true; do
