@@ -84,11 +84,6 @@ build {
     script = "${path.root}/provisioners/common/setup.sh"
   }
 
-  provisioner "shell" {
-    script = "${path.root}/provisioners/google/setup.sh"
-    only = ["googlecompute.ncn-common"]
-  }
-
   // Run ansible for common and metal
   provisioner "ansible-local" {
     inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
