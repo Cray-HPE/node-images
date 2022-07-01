@@ -17,3 +17,14 @@
     remote_src: yes
     src: /srv/cray/resources/metal/sshd_config
     dest: /etc/ssh/sshd_config
+
+- name: Setup dracut to use fstab.metal
+  lineinfile:
+    path: /etc/dracut.conf.d/05-metal.conf
+    create: yes
+    state: present
+    regexp: '^add_fstab\+\=/etc/fstab\.metal$'
+    line: 'add_fstab+=/etc/fstab.metal'
+
+- name: Execute dracut
+  command: dracut --force

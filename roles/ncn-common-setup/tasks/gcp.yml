@@ -8,6 +8,22 @@
     owner: root
     group: root
 
+- name: backup /etc/sysconfig/network/config
+  copy:
+    src: /etc/sysconfig/network/config
+    dest: /etc/sysconfig/network/config.backup
+
+- name: use Cray DNS servers at buld-time
+  replace:
+    path: /etc/sysconfig/network/config
+    regexp: '^(NETCONFIG_DNS_STATIC_SERVERS=).*'
+    replace: '\1"172.31.84.40 172.30.84.40"'
+
+- name: Restart network
+  systemd:
+    name: network
+    state: restarted
+
 - name: install google guest environment packages
   zypper:
     update_cache: yes
@@ -46,3 +62,13 @@
     name: "gcp authorized keys"
     minute: "*/1"
     job: "cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys >> /var/log/cray/cron.log 2>&1"
+
+- name: get available suse extensions
+  command: /usr/sbin/SUSEConnect --list-extensions
+  register: suse_extensions
+  changed_when: False
+
+- name: activate suse public cloud module
+  command: /usr/sbin/SUSEConnect -p {{ suse_extensions.stdout | regex_search ('sle-module-public-cloud.*') }}
+  register: module_activation
+  failed_when: module_activation.rc != 0
