@@ -1,0 +1,19 @@
+---
+
+- name: add sysctl vars for metal
+  copy:
+    remote_src: yes
+    src: /srv/cray/sysctl/metal/
+    dest: /etc/sysctl.d/
+
+- name: copy custom systemd files into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/systemd/
+    dest: /usr/lib/systemd/system/
+
+- name: add sshd_config for metal
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/sshd_config
+    dest: /etc/ssh/sshd_config
