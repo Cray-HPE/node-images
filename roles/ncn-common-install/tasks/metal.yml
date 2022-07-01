@@ -1,0 +1,36 @@
+---
+
+- name: copy sysstat service into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/sysstat.cron
+    dest: /etc/sysstat/sysstat.cron
+  register: copy_sysstat_service
+
+- name: disk system activity accounting
+  command: "/usr/lib64/sa/sa1 -S DISK 1 1"
+  when: copy_sysstat_service.changed
+
+- name: copy mdadm.conf into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/mdadm.conf
+    dest: /etc/mdadm.conf
+
+- name: Daemons
+  systemd:
+    name: "{{ item.name }}"
+    enabled: "{{ item.enabled }}"
+    masked: "{{ item.masked | default(false) }}"
+    state: "{{ item.state }}"
+  with_items: "{{ services_metal }}"
+
+- name: configure dhcp settings
+  lineinfile:
+    path: /etc/sysconfig/network/dhcp
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - {regexp: '^DHCLIENT_FQDN_ENABLED=', line: 'DHCLIENT_FQDN_ENABLED="enabled"'}
+    - {regexp: '^DHCLIENT_FQDN_UPDATE=', line: 'DHCLIENT_FQDN_UPDATE="both"'}
+    - {regexp: '^DHCLIENT_SET_HOSTNAME=', line: 'DHCLIENT_SET_HOSTNAME="no"'}
