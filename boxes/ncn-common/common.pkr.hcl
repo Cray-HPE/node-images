@@ -86,11 +86,10 @@ build {
 
   // Run ansible for common and metal
   provisioner "ansible-local" {
-    inventory_file   = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
-    playbook_dir     = "vendor/github.com/Cray-HPE/metal-provision"
-    playbook_file    = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_setup.yml"
-    ansible_env_vars = [ "ANSIBLE_FORCE_COLOR=1", "PYTHONUNBUFFERED=1", "ANSIBLE_STDOUT_CALLBACK=debug" ]
-    command          = "source /etc/ansible/csm_ansible/bin/activate &&  /etc/ansible/csm_ansible/bin/ansible-playbook -vv --tags common,metal"
+    inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
+    playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
+    playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_setup.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ANSIBLE_STDOUT_CALLBACK=debug /etc/ansible/csm_ansible/bin/ansible-playbook -vv --tags common,metal"
     only = [
       "qemu.ncn-common",
       "virtualbox-ovf.ncn-common"
@@ -99,10 +98,10 @@ build {
 
   // Run ansible for common and gcp
   provisioner "ansible-local" {
-    inventory_file   = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
-    playbook_dir     = "vendor/github.com/Cray-HPE/metal-provision"
-    ansible_env_vars = [ "ANSIBLE_FORCE_COLOR=1", "PYTHONUNBUFFERED=1", "ANSIBLE_STDOUT_CALLBACK=debug" ]
-    command          = "source /etc/ansible/csm_ansible/bin/activate && /etc/ansible/csm_ansible/bin/ansible-playbook -vv --tags common,gcp"
+    inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
+    playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
+    playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_setup.yml"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ANSIBLE_STDOUT_CALLBACK=debug /etc/ansible/csm_ansible/bin/ansible-playbook -vv --tags common,gcp"
     only = ["googlecompute.ncn-common"]
   }
 

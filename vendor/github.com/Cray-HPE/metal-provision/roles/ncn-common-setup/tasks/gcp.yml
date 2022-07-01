@@ -8,12 +8,17 @@
     owner: root
     group: root
     
+- name: backup /etc/sysconfig/network/config
+  copy:
+    src: /etc/sysconfig/network/config
+    dest: /etc/sysconfig/network/config.backup
+    
 - name: use Cray DNS servers at buld-time
   replace:
     path: /etc/sysconfig/network/config
     regexp: '^(NETCONFIG_DNS_STATIC_SERVERS=).*'
     replace: '\1"172.31.84.40 172.30.84.40"'
-  
+
 - name: Restart network
   systemd:
     name: network
