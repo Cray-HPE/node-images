@@ -15,6 +15,7 @@ def promotionToken = ~"(master|main|develop|lts\\/.*)"
 def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
 def buildPIT = false // TODO: Toggle to True once we have ISOs working (MTL-1476)
 def rebuildBaseImage = false
+def prune = false
 def rebuildCommonImage = env.TAG_NAME == null ? true : false
 def sourceBuildVersion = '[RELEASE]' // Pulls the latest release
 def disableGoogle = false   // FIXME: Once SLES15SP4 is supported in Google, set this to false.
@@ -68,7 +69,15 @@ pipeline {
         booleanParam(name: 'buildPIT', defaultValue: buildPIT, description: 'Build the PIT Image (disabled until MTL-1476).')
         booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: 'Whether or not to build the base image; unchecked will pull latest STABLE base. FOR GIT TAGS if a base image was built and needs to be promoted then this MUST be checked (This overrides rebuildCommonImage; if this is true, rebuildCommonImage is bypassed.)')
         booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildCommonImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the common image; unchecked will pull latest STABLE ncn-common.')
+        booleanParam(name: 'prune', defaultValue: prune, description: 'Whether or not to prune all images older than the latest release timestamp.')
         string(name: 'googleSourceImageProjectId', defaultValue: "artifactory-202004", description: 'The source Project ID for pulling Google images.')
+    }
+
+    triggers {
+        parameterizedCron(env.BRANCH_NAME == 'main' ? '''
+            # 6am UTC / midnight CT
+            0 6 * * * %prune=true
+        ''' : '')
     }
 
     stages {
@@ -559,6 +568,19 @@ pipeline {
                         publishCsmImages.release('ncn-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
                         publishCsmImages.release('storage-ceph', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
                         publishCsmImages.release('kubernetes', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                    }
+                }
+            }
+        }
+        stage('Prune') {
+            when { expression { params.prune } }
+            steps {
+                withCredentials([
+                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
+                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
+                ]) {
+                    script {
+                        prune(googleCloudSaKey: GOOGLE_CLOUD_SA_KEY)
                     }
                 }
             }
