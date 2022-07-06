@@ -1,5 +1,0 @@
-/var/log/cray/*.log {
-  size 1M
-  create 744 root root
-  rotate 4
-}
