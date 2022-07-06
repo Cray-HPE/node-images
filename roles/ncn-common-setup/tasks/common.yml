@@ -1,0 +1,69 @@
+---
+
+- name: initialize cray directories
+  file:
+    path: /srv/cray
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  register: create_cray_dir
+
+- name: copy /srv/cray files
+  copy:
+    src: files/srv/cray/
+    dest: /srv/cray/
+    owner: root
+    group: root
+
+- name: initialize log directory
+  file:
+    path: /var/log/cray
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: initialize log file
+  file:
+    path: /var/log/cray/no.log
+    state: touch
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: copy logrotate file
+  copy:
+    src: files/etc/logrotate.d/cray
+    dest: /etc/logrotate.d/cray
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: set Cray scripts executable
+  file:
+    path: /srv/cray/scripts
+    state: directory
+    recurse: yes
+    mode: a+x
+
+- name: move sysctl files into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/sysctl/common/
+    dest: /etc/sysctl.d/
+
+- name: move cray-limits file into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/limits/98-cray-limits.conf
+    dest: /etc/security/limits.d/98-cray-limits.conf
+
+- name: set a hostname
+  hostname:
+    name: ncn
+
+- name: import Shasta RPM key
+  rpm_key:
+    state: present
+    key: https://arti.dev.cray.com/artifactory/dst-misc-stable-local/SigningKeys/HPE-SHASTA-RPM-PROD.asc
