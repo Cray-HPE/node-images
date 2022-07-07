@@ -84,22 +84,12 @@ build {
     script = "${path.root}/provisioners/common/setup.sh"
   }
 
-  provisioner "shell" {
-    script = "${path.root}/provisioners/google/setup.sh"
-    only = ["googlecompute.ncn-common"]
-  }
-
-  provisioner "shell" {
-    script = "${path.root}/provisioners/metal/setup.sh"
-    only = ["qemu.ncn-common", "virtualbox-ovf.ncn-common"]
-  }
-
   // Run ansible for common and metal
   provisioner "ansible-local" {
     inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
     playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
     playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_setup.yml"
-    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,metal"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ANSIBLE_STDOUT_CALLBACK=debug /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,metal"
     only = [
       "qemu.ncn-common",
       "virtualbox-ovf.ncn-common"
@@ -111,7 +101,7 @@ build {
     inventory_file  = "vendor/github.com/Cray-HPE/metal-provision/packer.yml"
     playbook_dir    = "vendor/github.com/Cray-HPE/metal-provision"
     playbook_file   = "vendor/github.com/Cray-HPE/metal-provision/pb_ncn_common_setup.yml"
-    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,gcp"
+    command         = "source /etc/ansible/csm_ansible/bin/activate && ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ANSIBLE_STDOUT_CALLBACK=debug /etc/ansible/csm_ansible/bin/ansible-playbook --tags common,gcp"
     only = ["googlecompute.ncn-common"]
   }
 
