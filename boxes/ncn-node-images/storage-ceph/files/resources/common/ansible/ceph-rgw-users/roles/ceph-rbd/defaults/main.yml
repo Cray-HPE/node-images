@@ -19,7 +19,7 @@ ceph_heavily_used_pools:
   - cephfs.cephfs.data
   - zone1.rgw.buckets.data
 ceph_metadata_index_pools:
-  - zone1.rgw.buckets.index
+  - default.rgw.buckets.index
   - cephfs.cephfs.meta
 ceph_meta_target_size_ratio: ".5"
 kube_block_pools:
