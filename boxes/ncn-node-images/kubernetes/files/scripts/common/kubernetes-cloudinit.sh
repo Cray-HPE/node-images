@@ -56,6 +56,11 @@ function mark-initialized() {
   touch $initialized_file
 }
 
+function add-oidc-cronjob() {
+  echo "Setting up a job to ensure oidc.pem file is kept up-to-date"
+  echo "*/2 * * * * root /srv/cray/scripts/common/verify-oidc-pem.sh >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-verify-oidc-pem
+}
+
 function restart-daemons() {
   if [ ! -z "$NETWORK_DAEMONS" ]; then
     echo "Restarting network daemons..."
@@ -104,6 +109,11 @@ function join() {
   echo "$(cat $join_script_local)..."
   while ! $join_script_local; do
     kubeadm reset -f || true
+    #
+    # Reset clobbers /etc/kubernetes/pki, make sure
+    # stuff managed there is reset as well.
+    #
+    pre-configure-node
     sleep 10
     if [[ "$(hostname)" =~ ^ncn-m ]]; then
       configure-external-etcd
@@ -127,6 +137,8 @@ function post-join() {
     reconfigure-kube-scheduler
     reconfigure-kube-controller
     populate-tenant-admin-conf
+    add-oidc-cronjob
+
     complete-initialization
     /srv/cray/scripts/common/prep-for-etcd-backup.sh ${ETCDCTL_BACKUP_ENDPOINTS} ${RGW_VIRTUAL_IP}
   elif [[ "$node_type" == "first-master" ]]; then
@@ -157,8 +169,7 @@ EOF
     echo "Setting up a job to re-distribute any updated resources to other nodes every 2 minutes"
     echo "*/2 * * * * root /srv/cray/scripts/common/distribute.sh >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-k8s-distribute
 
-    echo "Setting up a job to ensure oidc.pem file is kept up-to-date"
-    echo "*/2 * * * * root /srv/cray/scripts/common/verify-oidc-pem.sh >> /var/log/cray/cron.log 2>&1" > /etc/cron.d/cray-verify-oidc-pem
+    add-oidc-cronjob
 
     echo "Setting up job for kicking k8s cronjobs when they stop getting scheduled."
     cp /srv/cray/resources/common/cronjob_kicker.py /usr/bin/cronjob_kicker.py
