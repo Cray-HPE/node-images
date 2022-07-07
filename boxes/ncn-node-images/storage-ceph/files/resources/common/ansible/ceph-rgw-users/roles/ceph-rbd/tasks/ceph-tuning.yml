@@ -49,7 +49,7 @@
   delegate_to: "{{ groups['mons'][0] }}"
   command: "ceph osd pool application enable {{ item }} rgw"
   loop:
-    - zone1.rgw.buckets.index
+    - default.rgw.buckets.index
     - zone1.rgw.buckets.data
     - .rgw.root
 
