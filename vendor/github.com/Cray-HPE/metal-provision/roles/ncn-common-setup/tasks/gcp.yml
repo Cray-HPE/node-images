@@ -1,0 +1,73 @@
+---
+
+- name: ensure it is known this is a google system
+  file:
+    path: /etc/google_system
+    state: touch
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: backup /etc/sysconfig/network/config
+  copy:
+    src: /etc/sysconfig/network/config
+    dest: /etc/sysconfig/network/config.backup
+
+- name: use Cray DNS servers at buld-time
+  replace:
+    path: /etc/sysconfig/network/config
+    regexp: '^(NETCONFIG_DNS_STATIC_SERVERS=).*'
+    replace: '\1"{{ cray_dns_servers[0] }} {{ cray_dns_servers[1] }}"'
+
+- name: Restart network
+  systemd:
+    name: network
+    state: restarted
+
+- name: install google guest environment packages
+  zypper:
+    update_cache: yes
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - google-guest-agent
+    - google-guest-configs
+    - google-guest-oslogin
+    - google-osconfig-agent
+
+- name: Setup Daemons
+  systemd:
+    name: "{{ item.name }}"
+    enabled: "{{ item.enabled }}"
+    masked: "{{ item.masked | default(false) }}"
+  with_items: "{{ services_google }}"
+
+- name: stub out network interface configuration files
+  copy:
+    src: files/etc/sysconfig/network/ifcfg-eth
+    dest: "/etc/sysconfig/network/ifcfg-eth{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ range(0, 10 + 1, 1)|list }}"
+
+- name: move gcp sysctl files into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/sysctl/google/
+    dest: /etc/sysctl.d/
+
+- name: schedule job to ensure /root/.ssh/authorized_keys file is our /root/.ssh/id_rsa.pub only every 1 minute
+  cron:
+    name: "gcp authorized keys"
+    minute: "*/1"
+    job: "cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys >> /var/log/cray/cron.log 2>&1"
+
+- name: get available suse extensions
+  command: /usr/sbin/SUSEConnect --list-extensions
+  register: available_suse_extensions
+
+- name: activate wanted suse extensions
+  command: /usr/sbin/SUSEConnect -p {{ available_suse_extensions.stdout | regex_search(item + '/.*/.*') }}
+  with_items: "{{ required_suse_extensions }}"
+

@@ -1,0 +1,11 @@
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+{% for name, network in ds.meta_data.ipam.items() %}
+{% if name == 'chn' or name == 'can' %}
+{% set ip_list = network.ip.split('/') %}
+-A INPUT -d {{ ip_list[0] }} -p tcp -m tcp --dport 22 -j DROP
+{% endif -%}
+{% endfor %}
+COMMIT
