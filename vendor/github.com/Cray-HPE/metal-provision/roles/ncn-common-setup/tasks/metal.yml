@@ -1,0 +1,30 @@
+---
+
+- name: add sysctl vars for metal
+  copy:
+    remote_src: yes
+    src: /srv/cray/sysctl/metal/
+    dest: /etc/sysctl.d/
+
+- name: copy custom systemd files into place
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/systemd/
+    dest: /usr/lib/systemd/system/
+
+- name: add sshd_config for metal
+  copy:
+    remote_src: yes
+    src: /srv/cray/resources/metal/sshd_config
+    dest: /etc/ssh/sshd_config
+
+- name: Update Dracut to include dynamically created partitions from deployments
+  lineinfile:
+    path: /etc/dracut.conf.d/05-metal.conf
+    create: yes
+    state: present
+    regexp: '^add_fstab\+\=/etc/fstab\.metal$'
+    line: 'add_fstab+=/etc/fstab.metal'
+
+- name: Execute dracut
+  command: dracut --force

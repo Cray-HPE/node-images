@@ -1,0 +1,5 @@
+---
+- hosts: packer
+  remote_user: root
+  roles:
+    - ncn-common-setup

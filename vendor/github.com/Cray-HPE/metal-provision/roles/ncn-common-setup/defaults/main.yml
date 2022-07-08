@@ -1,0 +1,35 @@
+---
+services_google:
+  - name: google-guest-agent.service
+    enabled: yes
+    state: started
+  - name: google-osconfig-agent.service
+    enabled: yes
+    state: started
+  - name: google-oslogin-cache.service
+    enabled: yes
+    state: started
+  - name: google-oslogin-cache.timer
+    enabled: yes
+    state: started
+  - name: google-shutdown-scripts.service
+    enabled: yes
+    state: started
+  - name: google-startup-scripts.service
+    enabled: yes
+    state: started
+services_metal:
+  - name: cloud-init-oneshot
+    enabled: yes
+    state: stopped
+  - name: kdump-cray
+    enabled: yes
+    state: stopped 
+  - name: metal-iptables
+    enabled: no
+    state: stopped
+cray_dns_servers:
+  - 172.31.84.40
+  - 172.30.84.40
+required_suse_extensions:
+  - sle-module-public-cloud
