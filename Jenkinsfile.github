@@ -324,11 +324,30 @@ pipeline {
                         usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
                 ]) {
                     script {
-                        publishCsmImages.release('sles15-base', GIT_COMMIT[0..6], env.TAG_NAME)
-                        publishCsmImages.release('ncn-common', GIT_COMMIT[0..6], env.TAG_NAME)
-//                         publishCsmImages.release('pit-common', GIT_COMMIT[0..6], env.TAG_NAME)
-                        publishCsmImages.release('storage-ceph', GIT_COMMIT[0..6], env.TAG_NAME)
-                        publishCsmImages.release('kubernetes', GIT_COMMIT[0..6], env.TAG_NAME)
+                        /*
+                            Use a try/catch block to prevent sles15-base and pit-common from requiring an administrator to manually build a git-tag. This
+                            manual process is tedious, and prone to mistakes, this way the Jenkins pipeline will always try to publish these layers.
+                        */
+                        try {
+                            publishCsmImages.release('sles15-base', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                        } catch (err) {
+                            echo err.getMessage()
+                            echo 'The build attempted to publish a sles15-base image but none was found, this may or may not be expected.'
+                        }
+                        try {
+                            publishCsmImages.release('pit-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                        } catch (err) {
+                            echo err.getMessage()
+                            echo 'The build attempted to publish a pit-common image but none was found, this may or may not be expected.'
+                        }
+
+                        /*
+                            These three layers are always built and required for publishing.
+                            In the near future we'll cease always requiring the common layer to build.
+                        */
+                        publishCsmImages.release('ncn-common', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                        publishCsmImages.release('storage-ceph', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
+                        publishCsmImages.release('kubernetes', GIT_COMMIT[0..6], env.TAG_NAME, GOOGLE_CLOUD_SA_KEY)
                     }
                 }
             }
