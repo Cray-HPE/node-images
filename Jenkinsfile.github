@@ -33,7 +33,8 @@ pipeline {
         ARTIFACTS_DIRECTORY_CEPH = "output-ncn-node-images/storage-ceph"
         ARTIFACTS_DIRECTORY_K8S = "output-ncn-node-images/kubernetes"
         ARTIFACTS_DIRECTORY_PIT = "output-pit-common"
-        ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/SLE-15-SP3-Online-x86_64-GM-Media1.iso"
+        ISO = "SLE-15-SP3-Online-x86_64-GM-Media1.iso"
+        ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/"
         STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
         NRAM = '4096'
@@ -63,11 +64,7 @@ pipeline {
             }
             steps {
                 dir('iso') {
-                    withCredentials([
-                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
-                    ]) {
-                        sh "curl -f -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} -O ${ISO_URL}"
-                    }
+                    httpRequest(authentication: 'artifactory-algol60', outputFile: "${ISO}", responseHandle: 'NONE', url: "${env.ISO_URL}/${env.ISO}")
                 }
             }
         }
@@ -144,10 +141,10 @@ pipeline {
 						]) {
 							script {
                                 def qcow = "sles15-base-${VERSION}.qcow2"
-                                def source = params.rebuildBaseImage ? "${ARTIFACTS_DIRECTORY_BASE}/sles15-base-${VERSION}.qcow2" : "${STABLE_BASE}/sles15-base/[RELEASE]/sles15-base-[RELEASE].qcow2"
+                                def source = params.rebuildBaseImage ? "${ARTIFACTS_DIRECTORY_BASE}/sles15-base-${VERSION}.qcow2" : "${STABLE_BASE}/sles15-base/${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}/sles15-base-${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}.qcow2"
                                 if (params.rebuildBaseImage == false) {
                                     dir("${env.ARTIFACTS_DIRECTORY_BASE}") {
-                                        sh "curl -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} \"${source}\" --output ${qcow}"
+                                        httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
                                     }
                                 }
 								def arguments = "-only=qemu.ncn-common -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_BASE}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
@@ -212,10 +209,10 @@ pipeline {
                         ]) {
                             script {
                                 def qcow = "ncn-common-${VERSION}.qcow2"
-                                def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/[RELEASE]/ncn-common-[RELEASE].qcow2"
+                                def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}/ncn-common-${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}.qcow2"
                                 if (params.rebuildCommonImage == false) {
                                     dir("${env.ARTIFACTS_DIRECTORY_COMMON}") {
-                                        sh "curl -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} \"${source}\" --output ${qcow}"
+                                        httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
                                     }
                                 }
                                 def arguments = "-only=qemu.kubernetes -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_COMMON}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
@@ -269,10 +266,10 @@ pipeline {
                         ]) {
                             script {
                                 def qcow = "ncn-common-${VERSION}.qcow2"
-                                def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/[RELEASE]/ncn-common-[RELEASE].qcow2"
+                                def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}/ncn-common-${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}.qcow2"
                                 if (params.rebuildCommonImage == false) {
                                     dir("${env.ARTIFACTS_DIRECTORY_COMMON}") {
-                                    sh "curl -u ${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} \"${source}\" --output ${qcow}"
+                                        httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
                                     }
                                 }
                                 def arguments = "-only=qemu.storage-ceph -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_COMMON}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
