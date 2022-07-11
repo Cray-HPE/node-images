@@ -152,10 +152,10 @@ function iptables_config() {
     fi
 
     # Render the template
-    printf 'net-init: [ % -20s ]\n' 'running: iptables_config'
+    printf 'net-init: [ % -20s ]\n' 'running: iptables'
     cloud-init query --format="$(cat /etc/cloud/templates/metal-iptables.conf.tmpl)" >/etc/iptables/metal.conf || fail_and_die "cloud-init query failed to render metal-iptables.conf.tmpl"
 
-    printf 'net-init: [ % -20s ]\n' 'running: metal-iptables restart'
+    printf 'net-init: [ % -20s ]\n' 'loading: iptables'
     systemctl enable metal-iptables
     systemctl restart metal-iptables
 }

@@ -23,15 +23,18 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # shellcheck disable=SC2086,SC2046,SC2010
-
-fslabel=BOOTRAID
+rootfallback=$(grep -Po 'rootfallback=([\w\.=]+)' /proc/cmdline)
+[ -z "$rootfallback" ] && rootfallback='rootfallback=LABEL=BOOTRAID'
+rootfallback=${rootfallback#*=}
+boot_scheme=${rootfallback%%=*}
+boot_authority=${rootfallback#*=}
 # shellcheck disable=SC1091
 type mprint >/dev/null 2>&1 || . /srv/cray/scripts/common/lib.sh
 
 set -e
 
 # initrd - fetched from /proc/cmdline ; grab the horse we rode in on, not what the API aliens say.
-INITRD=$(grep -Po 'initrd=([\w\.]+)' /proc/cmdline | cut -d '=' -f2)
+INITRD=$(grep -Po 'initrd=([\w\.]+)' /proc/cmdline | awk -F '=' '{print $NF}')
 export INITRD
 [ -z "$INITRD" ] && INITRD=initrd.img.xz
 
@@ -53,12 +56,13 @@ enable_fs_overwrite() {
 }
 
 install_grub2() {
-    local working_path=${1:-/metal/recovery}
+    local working_path
     local name
     local index
     local init_cmdline
     local disk_cmdline
-    mount -v -L $fslabel $working_path 2>/dev/null || echo 'continuing ...'
+    mount -v -L ${boot_authority} -t /etc/fstab.metal 2>/dev/null || echo 'already mounted continuing ...'
+    working_path="$(lsblk -o MOUNTPOINT -nr /dev/disk/by-${boot_scheme,,}/${boot_authority})"
 
     # Remove all existing entries; anything with CRAY (lower or uppercase). We
     # only want our boot-loader.
@@ -70,7 +74,7 @@ install_grub2() {
     name=$(grep PRETTY_NAME /etc/*release* | cut -d '=' -f2 | tr -d '"')
     index=0
     [ -z "$name" ] && name='CRAY Linux' # Note: if CRAY Linux is observed then the customer has installed a non-SLES distro.
-    for disk in $(mdadm --detail $(blkid -L $fslabel) | grep /dev/sd | awk '{print $NF}'); do
+    for disk in $(mdadm --detail $(blkid -L ${boot_authority}) | grep /dev/sd | awk '{print $NF}'); do
         # Add '--suse-enable-tpm' to grub2-install once we need TPM.
         grub2-install --no-rs-codes --suse-force-signed --root-directory $working_path --removable "$disk"
         efibootmgr -c -D -d "$disk" -p 1 -L "CRAY UEFI OS $index" -l '\efi\boot\bootx64.efi' | grep CRAY
@@ -127,13 +131,13 @@ EOF
 }
 
 function update_auxiliary_fstab {
-    local working_path=${1:-/metal/recovery}
+    local working_path=/metal/recovery
+    mkdir -pv $working_path
 
     # Mount at boot
-    if [ -f /etc/fstab.metal ] && grep -q "${fslabel^^}" /etc/fstab.metal; then :
+    if [ -f /etc/fstab.metal ] && grep -q "${boot_authority}" /etc/fstab.metal; then :
     else
-        mkdir -pv $working_path
-        printf '# \nLABEL=%s\t%s\t%s\t%s\t%d\t%d\n' "${fslabel^^}" $working_path vfat defaults 0 0 >> /etc/fstab.metal
+        printf "# added by cloud-init: \n% -18s\t% -18s\t%s\t%s %d %d\n" "${boot_scheme}=${boot_authority}" $working_path vfat defaults 0 0 >> /etc/fstab.metal
     fi
 }
 
@@ -141,10 +145,11 @@ function get_boot_artifacts {
     local squashfs_storage
     local base_dir
     local live_dir
-    local working_path=${1:-/metal/recovery}
+    local working_path
     local artifact_error=0
 
-    mount -L BOOTRAID -T /etc/fstab.metal && echo 'continuing ...'
+    mount -L ${boot_authority} -T /etc/fstab.metal && echo 'continuing ...'
+    working_path="$(lsblk -o MOUNTPOINT -nr /dev/disk/by-${boot_scheme,,}/${boot_authority})"
     mkdir -pv $working_path/boot
 
     squashfs_storage=$(grep -Po 'root=\w+:?\w+=\w+' /proc/cmdline | cut -d '=' -f3)

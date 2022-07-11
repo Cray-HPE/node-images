@@ -31,6 +31,7 @@ export FORCE_ADD=( "dmsquash-live" "livenet" "mdraid" )
 export INSTALL=( "less" "rmdir" "sgdisk" "vgremove" "wipefs" )
 
 # Kernel Version
+# This won't work well if multiple kernels are installed, this'll return the highest installed which might not what's actually running.
 version_full=$(rpm -q --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" kernel-default)
 version_base=${version_full%%-*}
 version_suse=${version_full##*-}

@@ -23,7 +23,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Author: Russell Bunch <doomslayer@hpe.com>
-trap "printf >&2 'Metal Install: [ % -20s ]' 'failed'" ERR TERM HUP INT
+trap "printf >&2 'Metal Install: [ % -20s ]\n' 'failed'" ERR TERM HUP INT
 trap "echo 'See logfile at: /var/log/cloud-init-metal.log'" EXIT
 BMC_RESET=${BMC_RESET:-'cold'}
 set -e
@@ -45,10 +45,9 @@ breakaway() {
 bootloader() {
     (
         set -x
-        local working_path=/metal/recovery
-        update_auxiliary_fstab $working_path
-        get_boot_artifacts $working_path
-        install_grub2 $working_path
+        update_auxiliary_fstab
+        get_boot_artifacts
+        install_grub2
     ) 2>/var/log/cloud-init-metal-bootloader.error
 }
 
