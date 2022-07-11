@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+
 # Sometimes AutoYaST and dracut are still running some operations after the install has finished. 
 # If the VM image starts saving before either finishes the build will fail.
 

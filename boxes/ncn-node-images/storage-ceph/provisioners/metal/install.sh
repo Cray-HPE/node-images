@@ -10,9 +10,6 @@ echo "Configuring sysctl to allow non-local vip binding"
 cp /srv/cray/sysctl/metal/* /etc/sysctl.d/
 sysctl -p
 
-# enable this to run on first boot during deployment, and then the kdump script disables it
-systemctl enable kdump-cray
-
 echo 'Setting cloud-init config'
 # allow override; if no cloud.cfg file, copy one in from this image; help local-builds.
 [ -f /etc/cloud/cloud.cfg ] || cp -pv /srv/cray/resources/common/cloud.cfg /etc/cloud/

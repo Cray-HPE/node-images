@@ -29,8 +29,16 @@ echo "clear the history so our install isn't there"
 rm -f /root/.wget-hsts
 export HISTSIZE=0
 
-echo "Running defrag -- this will take a while"
-e4defrag / > /dev/null 2>&1
+# Handle ext2/3/4 or xfs.
+echo "Running defrag -- this can take a while ... "
+if ! e4defrag /; then
+    if ! xfs_fsr /; then
+        echo >&2 "Neither e4defrag nor xfs_fsr could defragment the root device. Potential filesystem mismatch on [/]."
+        mount | grep ' / '
+    fi
+fi
+echo 'Defrag completed'
+
 echo "Write zeros..."
 filler="$(($(df -BM --output=avail /|grep -v Avail|cut -d "M" -f1)-1024))"
 dd if=/dev/zero of=/root/zero-file bs=1M count=$filler
