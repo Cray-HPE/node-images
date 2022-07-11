@@ -1,8 +1,0 @@
-[all]
-localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3
-
-[managers]
-localhost ansible_connection=local
-
-[mons]
-localhost ansible_connection=local
