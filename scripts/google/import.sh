@@ -18,7 +18,7 @@ if gcloud --project $google_destination_project_id compute images list --filter=
   exit 0
 fi
 source_image="${image_name_version}.${qemu_format}"
-destination_image="vshasta-${image_name_version}"
+destination_image="vshasta-$(printf ${image_name_version} | sed 's/-google//g')"
 echo "Importing image ${source_image} into Google Cloud at ${google_destination_project_id}/${google_destination_image_family}/${destination_image}"
 gcloud beta --project $google_destination_project_id compute images import \
   --source-file ${output_directory}/${source_image} \

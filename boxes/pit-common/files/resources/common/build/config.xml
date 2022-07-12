@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+WARNING: Please consult the README.md file in the top level directory of
+     this repo for instructions on modifying this file.
+-->
+
+<image schemaversion="6.8" name="cray-pre-install-toolkit-sle15sp3">
+    <profiles>
+        <profile name="PITISO" description="CRAY Pre-install Toolkit ISO"/>
+        <profile name="VMX" description="VMX"/>
+    </profiles>
+    <description type="system">
+        <author>Russell Bunch</author>
+        <contact>rustydb@hpe.com</contact>
+        <specification>
+            CRAY Pre-install Toolkit for facilitating deployments on bare-metal and/or prior
+            deployments into the High-Performance-Computing-as-a-Service stack. This tool can also
+            be used for recovery on any non-compute/service node.
+        </specification>
+    </description>
+    <preferences profiles="PITISO">
+        <type image="iso"
+              primary="true"
+              firmware="uefi"
+              flags="overlay"
+              hybrid="true"
+              hybridpersistent="true"
+              hybridpersistent_filesystem="xfs"
+              devicepersistency="by-label"
+              publisher="CRAY-HPE"
+              volid="CRAYLIVE"
+              kernelcmdline="payload=file://dev/sda3 splash=silent mediacheck=0 biosdevname=1 console=tty0 console=ttyS0,115200 mitigations=auto iommu=pt pcie_ports=native transparent_hugepage=never rd.shell rd.md=0 rd.md.conf=0"
+              mediacheck="true"/>
+        <version>CRAY.VERSION.HERE</version>
+        <packagemanager>zypper</packagemanager>
+        <locale>en_US</locale>
+        <keytable>us</keytable>
+        <timezone>UTC</timezone>
+        <rpm-excludedocs>false</rpm-excludedocs>
+        <rpm-check-signatures>false</rpm-check-signatures>
+    </preferences>
+    <preferences profiles="VMX">
+        <type image="vmx" filesystem="ext4" bootloader="grub2" kernelcmdline="splash" firmware="efi"/>
+        <type image="oem"
+              filesystem="ext4"
+              initrd_system="dracut"
+              installiso="true"
+              bootloader="grub2"
+              kernelcmdline="splash"
+              firmware="efi"
+              installprovidefailsafe="true"
+              gpt_hybrid_mbr="true">
+            <oemconfig>
+                <oem-systemsize>2048</oem-systemsize>
+                <oem-swap>true</oem-swap>
+                <oem-device-filter>/dev/ram</oem-device-filter>
+                <oem-multipath-scan>false</oem-multipath-scan>
+            </oemconfig>
+            <machine guestOS="suse"
+                     HWversion="4"
+                     ncpus="2"
+                     memory="1024">
+                <vmdisk id="0" controller="ide"/>
+                <vmnic driver="e1000" interface="0" mode="bridged"/>
+            </machine>
+        </type>
+    </preferences>
+    <users>
+        <!-- Set root user password to empty string. -->
+        <user pwdformat="plain" password="" home="/root" name="root" groups="root"/>
+    </users>
+
+    <!--SLES REPOS:-->
+    <repository type="rpm-md" alias="SLE-Module-Basesystem15-SP3-Pool" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Products/SLE-Module-Basesystem/15-SP3/x86_64/product/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Module-Basesystem15-SP3-Updates" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates/SLE-Module-Basesystem/15-SP3/x86_64/update/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Module-Containers15-SP3-Pool" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Products/SLE-Module-Containers/15-SP3/x86_64/product/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Module-Containers15-SP3-Updates" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates/SLE-Module-Containers/15-SP3/x86_64/update/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Module-DevTools15-SP3-Pool" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Products/SLE-Module-Development-Tools/15-SP3/x86_64/product/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Module-DevTools15-SP3-Updates" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates/SLE-Module-Development-Tools/15-SP3/x86_64/update/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Module-HPC15-SP3-Pool" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Products/SLE-Module-HPC/15-SP3/x86_64/product/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Module-HPC15-SP3-Updates" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates/SLE-Module-HPC/15-SP3/x86_64/update/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Product-HPC15-SP3-Pool" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Products/SLE-Product-HPC/15-SP3/x86_64/product/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Product-HPC15-SP3-Updates" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates/SLE-Product-HPC/15-SP3/x86_64/update/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Product-SLES15-SP3-Pool" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Products/SLE-Product-SLES/15-SP3/x86_64/product/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="SLE-Product-SLES15-SP3-Updates" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-SUSE/Updates/SLE-Product-SLES/15-SP3/x86_64/update/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="Cray-HPE-SPP" priority="99" imageinclude="true">
+        <source path="https://arti.dev.cray.com/artifactory/mirror-HPE-SPP/SUSE_LINUX/SLES15-SP3/x86_64/current/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="Cray-CSM-temp" priority="99" imageinclude="true">
+        <source path="https://artifactory.algol60.net/artifactory/csm-rpms/hpe/stable"/>
+    </repository>
+    <packages type="iso">
+        <package name="branding-SLE"/>
+        <package name="dracut-kiwi-live"/>
+    </packages>
+    <packages type="oem">
+        <package name="branding-SLE"/>
+        <package name="dracut-kiwi-oem-dump"/>
+        <package name="dracut-kiwi-oem-repart"/>
+    </packages>
+    <packages type="bootstrap">
+        <package name="gawk"/>
+        <package name="ca-certificates"/>
+        <package name="ca-certificates-mozilla"/>
+        <package name="cracklib-dict-full"/>
+        <package name="filesystem"/>
+        <package name="gettext-runtime"/>
+        <package name="glibc-locale"/>
+        <package name="SLE_HPC-release"/>
+        <package name="udev"/>
+        <package name="timezone"/>
+    </packages>
+</image>
+<!--
+vim: et sw=4 ts=4
+-->
