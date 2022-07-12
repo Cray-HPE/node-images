@@ -2,14 +2,8 @@
 
 set -ex
 
-echo "purging buildonly repos"
-for repo in $(zypper repos | awk '{print $3}' | grep -E '^buildonly'); do
-    zypper -n rr $repo
-done
-
 echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
 rm -rf /var/adm/autoinstall/cache
-
 
 zypper clean --all
 

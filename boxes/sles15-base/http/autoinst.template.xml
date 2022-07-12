@@ -110,10 +110,15 @@
       <product>SLE_HPC</product>
     </products>
     <packages config:type='list'>
-      <package>kernel-default-debuginfo</package>
+<!-- START: CSM-RPMs dependencies -->
+      <package>jq</package>
+<!-- END: CSM-RPMs dependencies -->
+<!-- START: Ansible dependencies -->
+      <package>python3</package>
+      <package>python3-pip</package>
+<!-- END: Ansible dependencies -->
       <package>squashfs</package>
-      <package>sudo</package>
-      <package>tar</package>
+      <package>wicked</package>
     </packages>
     <patterns config:type='list'>
       <pattern>base</pattern>
@@ -134,9 +139,9 @@
   </services-manager>
 
   <network>
+    <backend>wicked</backend>
     <keep_install_network config:type='boolean'>true</keep_install_network>
     <setup_before_proposal config:type='boolean'>true</setup_before_proposal>
-    <managed config:type='boolean'>false</managed>
     <ipv4 config:type='boolean'>true</ipv4>
     <ipv6 config:type='boolean'>true</ipv6>
     <dns>

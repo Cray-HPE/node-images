@@ -1,12 +1,36 @@
 @Library('csm-shared-library@lts/csm-1.2') _
 
+/* General Notes
+
+    The general flows of this Jenkinsfiel are as follows:
+    - If not building on a tag, all the images are built except for the base image to save time.
+    - If not building on a tag, the common image and its derivates must build.
+    - If not building on a tag, a google and metal image must be built and published together.
+    - If building on a tag, nothing is built; building on a tag should promote the current HASH of the branch to a pre-release or release (depending on the tag).
+    
+    NOTE: Until the PIT Common layer produces an ISO it is skipped, it takes time to build and isn't used at all in its current form.
+ */
+
+// Release toggles; define stable, and when to rebuild from a stable branch.
 def promotionToken = ~"(master|main|develop|lts\\/.*)"
 def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
-def disableGoogle = false
-def rebuildBaseImage = buildAndPublish ? true : false
+def sourceBuildVersion = '[RELEASE]' // Pulls the latest release
+
+// Rebuild toggles; always build base to prevent pulling a newer stable from another lts or main branch, always rebuild common.
+def rebuildBaseImage = env.TAG_NAME == null ? true : false
+def rebuildCommonImage = env.TAG_NAME == null ? true : false
+
+// Temporary toggles; useful for certain contexts.
+def disablePIT = false
+def disableGoogle = false   // FIXME: Once SLES15SP4 is supported in Google, set this to false.
+
+// Global vars to be set within stages.
+def qcow
+def source
+def props
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
-if ( env.BRANCH_NAME ==~ ~"^PR-\\d+" ) {
+if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
     currentBuild.result = 'SUCCESS'
     echo "Pull-Requests are not built for node-image-build; this is a no-op build."
     return
@@ -25,306 +49,517 @@ pipeline {
     }
 
     environment {
-        NAME = "cray-node-image-build"
-        DESCRIPTION = "Cray Management System Node Image Builder"
-        VERSION = setImageVersion(commitHashShort: GIT_COMMIT[0..6])
         ARTIFACTS_DIRECTORY_BASE = "output-sles15-base"
-        ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common"
         ARTIFACTS_DIRECTORY_CEPH = "output-ncn-node-images/storage-ceph"
+        ARTIFACTS_DIRECTORY_COMMON = "output-ncn-common"
         ARTIFACTS_DIRECTORY_K8S = "output-ncn-node-images/kubernetes"
         ARTIFACTS_DIRECTORY_PIT = "output-pit-common"
         ISO = "SLE-15-SP3-Online-x86_64-GM-Media1.iso"
-        ISO_URL = "https://artifactory.algol60.net/artifactory/os-images/"
-        STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
+        ISO_URL = "https://artifactory.algol60.net/artifactory/os-images"
         NPROC = sh(returnStdout: true, script: "nproc").trim()
         NRAM = '4096'
+        STABLE_BASE = "https://artifactory.algol60.net/artifactory/csm-images/stable"
+        VERSION = setImageVersion(commitHashShort: GIT_COMMIT[0..6])
     }
 
     parameters {
-        booleanParam(name: 'buildAndPublish', defaultValue: buildAndPublish, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to actually rebuild and publish for a stable merge build job.')
-        booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the base image; unchecked will pull latest STABLE base. (This overrides rebuildCommonImage; if this is true, rebuildCommonImage is bypassed.)')
-        booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the common image; unchecked will pull latest STABLE ncn-common.')
-        string(name: 'sourceProjectId', defaultValue: "artifactory-202004", description: 'The source Project ID for pulling Google images.')
-    }
-
-    triggers {
-        parameterizedCron(env.BRANCH_NAME == 'main' ? '''
-            # 6am UTC / midnight CT
-            0 6 * * * %buildAndPublish=true; rebuildBaseImage=true; rebuildCommonImage=true
-        ''' : '')
+        booleanParam(name: 'buildAndPublish', defaultValue: buildAndPublish, description: 'Whether or not main, develop, lts/*, or git-tags should rebuild their current HASH. When unchecked these branches and git-tags will only verify their hash has been promoted.')
+        booleanParam(name: 'disablePIT', defaultValue: disablePIT, description: 'Build the PIT Image (experimental, after MTL-1476 merges this should always build and the parameter will go away.')
+        booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: 'If disabled, the common layer will build on the latest stable base image in Artifactory. If enabled, the base image will be rebuilt fresh. This layer DOES NOT need to build for publishing to succeed after a git-tag.')
+        booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildCommonImage, description: 'If disabled, the child images (Kubernetes & Storage-CEPH) will built atop the latest stable common image in Artifactory. If enabled, the common image will be rebuilt fresh. This layer needs to build for publishing to succeed after a git-tag.')
+        string(name: 'googleSourceImageProjectId', defaultValue: "artifactory-202004", description: 'The source Project ID for pulling Google images.')
     }
 
     stages {
-
-        stage('Fetch SLES ISO') {
+        stage('Base Layer') {
             when {
                 expression { env.TAG_NAME == null && (!(env.BRANCH_NAME ==~ promotionToken) || (env.BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-                expression { params.rebuildBaseImage || (params.rebuildBaseImage && ! params.rebuildCommonImage) }
+                expression { params.rebuildBaseImage }
             }
-            steps {
-                dir('iso') {
-                    httpRequest(authentication: 'artifactory-algol60', outputFile: "${ISO}", responseHandle: 'NONE', url: "${env.ISO_URL}/${env.ISO}")
+            stages {
+                stage('Setup') {
+                    parallel {
+                        stage('Fetch ISO') {
+                            steps {
+                                dir('iso') {
+                                    script {
+                                        httpRequest(authentication: 'artifactory-algol60', outputFile: "${ISO}", responseHandle: 'NONE', url: "${env.ISO_URL}/${env.ISO}")
+                                    }
+                                }
+                            }
+                        }
+                        stage('Template autoinst.xml') {
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE'),
+                                ]) {
+                                    sh './scripts/setup.sh'
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('Build') {
+                    parallel {
+                        stage('Metal') {
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
+                                ]) {
+                                    script {
+                                        def arguments = "-only=qemu.sles15-base -var 'source_iso_uri=iso/${env.ISO}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(arguments, 'boxes/sles15-base/')
+                                    }
+                                }
+                            }
+                        }
+                        stage('Google') {
+                            when {
+                                expression { !disableGoogle }
+                            }
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
+                                ]) {
+                                    script {
+                                        def arguments = "-only=qemu.sles15-google -var 'source_iso_uri=iso/${env.ISO}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(arguments, 'boxes/sles15-base/')
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('Publish') {
+                    parallel {
+                        stage('Metal') {
+                            steps {
+                                script {
+                                    publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_BASE, VERSION)
+
+                                    props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${env.ISO_URL}/${env.ISO}"
+                                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: env.VERSION, props: props)
+                                }
+                            }
+                        }
+                        stage('Google') {
+                            when {
+                                expression { !disableGoogle }
+                            }
+                            steps {
+                                withCredentials([
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
+                                ]) {
+                                    script {
+                                        publishCsmImages.prepareArtifacts("${env.ARTIFACTS_DIRECTORY_BASE}-google", VERSION)
+                                        sh './scripts/google/import.sh'
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        stage('Process template files') {
+        stage('Common Layers') {
+            environment {
+                /*
+                    The following variables are for the pit-common layer:
+                    - BUILD_DATE
+                    - GIT_HASH
+                    - GIT_TAG
+                    - PKG_VAR_pit_slug
+
+                    These have to be the same for every pit-common build between Google and Metal. If these moved into the Google and Metal stages
+                    then they would differ by a few seconds. The only way to make them the same in the Jenkinsfile's current state is to define them
+                    for all four common builds (ncn-common:google, ncn-common:metal, pit-common:google, pit-common:metal).
+                */
+                BUILD_DATE = sh(returnStdout: true, script: "date -u '+%Y%m%d%H%M%S'").trim()
+                GIT_HASH = "${GIT_COMMIT[0..6]}"
+                GIT_TAG = sh(returnStdout: true, script: "git fetch origin --tags && git describe --tags --abbrev=0").trim()
+                PKR_VAR_pit_slug = "${GIT_TAG}/${BUILD_DATE}/g${GIT_HASH}"
+            }
             when {
-                expression { env.TAG_NAME == null && (!(env.BRANCH_NAME ==~ promotionToken) || (env.BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+                expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
             }
-            steps {
-                withCredentials([
-                    string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                    string(credentialsId: 'sles15-registration-code', variable: 'SLES15_REGISTRATION_CODE')
-                ]) {
-                    sh '''
-                        ./scripts/setup.sh
-                    '''
-                }
-            }
-        }
-        stage("Build base") {
-			when {
-				expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-				expression { params.rebuildBaseImage || (params.rebuildBaseImage && ! params.rebuildCommonImage) }
-			}
-			steps {
-				withCredentials([
-					string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD')
-				]) {
-					script {
-						def arguments = "-only=qemu.sles15-base -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
-						publishCsmImages.build(arguments, 'boxes/sles15-base/')
-					}
-				}
-			}
-        }
-		stage('Upload Base to Artifactory') {
-			when {
-				expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-				expression { params.rebuildBaseImage || (params.rebuildBaseImage && ! params.rebuildCommonImage) }
-			}
-			steps {
-				script {
-					def props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${ISO_URL}"
-					publishCsmImages(pattern: ARTIFACTS_DIRECTORY_BASE, imageName: 'sles15-base', version: env.VERSION, props: props)
-				}
-			}
-		}
-        stage("Build Common and upload GCP Base") {
-        	parallel {
-				stage('Upload Base to Google') {
-					when {
-						expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-						expression { params.rebuildBaseImage || (params.rebuildBaseImage && ! params.rebuildCommonImage) }
-						expression { ! disableGoogle }
-					}
-					steps {
-						withCredentials([
-							file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
-						]) {
-							script {
-								sh "./scripts/google/import.sh"
-							}
-						}
-					}
-				}
-        		stage('QEMU Common') {
-					when {
-						expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-						expression { params.rebuildCommonImage }
-					}
-					steps {
-						withCredentials([
-							string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-							usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
-						]) {
-							script {
-                                def qcow = "sles15-base-${VERSION}.qcow2"
-                                def source = params.rebuildBaseImage ? "${ARTIFACTS_DIRECTORY_BASE}/sles15-base-${VERSION}.qcow2" : "${STABLE_BASE}/sles15-base/${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}/sles15-base-${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}.qcow2"
-                                if (params.rebuildBaseImage == false) {
-                                    dir("${env.ARTIFACTS_DIRECTORY_BASE}") {
-                                        httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
+            stages {
+                stage('Build') {
+                    parallel {
+                        stage('Non-Compute Common: Metal') {
+                            when {
+                                expression { params.rebuildCommonImage }
+                            }
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
+                                ]) {
+                                    script {
+
+                                        qcow = "sles15-base-${VERSION}.qcow2"
+                                        source = "${ARTIFACTS_DIRECTORY_BASE}/${qcow}"
+
+                                        if (!params.rebuildBaseImage) {
+
+                                            source = "${STABLE_BASE}/sles15-base/${java.net.URLEncoder.encode("${sourceBuildVersion}", "UTF-8")}/sles15-base-${java.net.URLEncoder.encode("${sourceBuildVersion}", "UTF-8")}.qcow2"
+
+                                            if (sourceBuildVersion != "[RELEASE]") {
+
+                                                source = nodeImageHelpers.getArtifactorySourceArtifactFromId(source, sourceBuildVersion)
+
+                                            }
+
+                                            dir("${env.ARTIFACTS_DIRECTORY_BASE}") {
+                                                httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
+                                            }
+                                        }
+
+                                        def arguments = "-only=qemu.ncn-common -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_BASE}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(arguments, 'boxes/ncn-common/')
                                     }
                                 }
-								def arguments = "-only=qemu.ncn-common -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_BASE}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
-								publishCsmImages.build(arguments, 'boxes/ncn-common/')
-								publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_COMMON, VERSION)
-								def props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
-								publishCsmImages(pattern: ARTIFACTS_DIRECTORY_COMMON, imageName: 'ncn-common', version: env.VERSION, props: props)
-							}
-						}
-					}
-				}
-			}
-		}
-		stage("Build GCP Common and PIT") {
-            parallel {
-        		stage('GCP Common') {
-					when {
-						expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-						expression { params.rebuildCommonImage }
-                        expression { ! disableGoogle }
-					}
-					steps {
-						withCredentials([
-							string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-							usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
-							file(credentialsId: 'google-image-manager', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
-							file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
-						]) {
-							script {
-								// Did we build base? If YES, just use the RC image we built. If NO then use the latest non-RC
-								def googleSourceArtifact = params.rebuildBaseImage ? "vshasta-sles15-base-${VERSION}" : ""
-								if (googleSourceArtifact == "") {
-									googleSourceArtifact = getGoogleCloudSourceArtifact(
-										googleCloudSaKey: env.GOOGLE_CLOUD_SA_KEY,
-										googleCloudProject: params.sourceProjectId,
-										googleCloudFamily: 'vshasta-sles15-base',
-										fullUrl: false
-									)
-								}
+                            }
+                        }
+                        stage('Non-Compute Common: Google') {
+                            when {
+                                expression { params.rebuildCommonImage }
+                                expression { !disableGoogle }
+                            }
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
+                                ]) {
+                                    script {
 
-								def googleArguments = "-only=googlecompute.ncn-common -var 'google_source_image_name=${googleSourceArtifact}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'artifact_version=${VERSION}'"
-								publishCsmImages.build(googleArguments, 'boxes/ncn-common/')
-							}
-						}
-					}
-				}
-            }
-        }
-        // Always build.
-        // TODO: Allow building either or in Jenkins.
-        stage("Build images") {
-            parallel {
-                stage('QEMU Kubernetes Image') {
-                    when {
-                        expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-                    }
+                                        def googleSourceArtifact = "vshasta-sles15-base-${VERSION}"
+                                        def googleSourceImageFamily = "vshasta-sles15-base"
 
-                    steps {
-                        withCredentials([
-                            string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                            usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
-                        ]) {
-                            script {
-                                def qcow = "ncn-common-${VERSION}.qcow2"
-                                def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}/ncn-common-${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}.qcow2"
-                                if (params.rebuildCommonImage == false) {
-                                    dir("${env.ARTIFACTS_DIRECTORY_COMMON}") {
-                                        httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
+                                        if (!params.rebuildBaseImage) {
+
+                                            if (sourceBuildVersion != "[RELEASE]") {
+
+                                                googleSourceArtifact = nodeImageHelpers.getGoogleCloudSourceArtifactFromId(googleSourceImageFamily, sourceBuildVersion)
+
+                                            } else {
+
+                                                googleSourceArtifact = getGoogleCloudSourceArtifact(
+                                                        googleCloudSaKey: GOOGLE_CLOUD_SA_KEY,
+                                                        googleCloudProject: params.googleSourceImageProjectId,
+                                                        googleCloudFamily: googleSourceImageFamily
+                                                )
+
+                                            }
+
+                                        }
+
+                                        def googleArguments = "-only=googlecompute.ncn-common -var 'google_source_image_name=${googleSourceArtifact}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(googleArguments, 'boxes/ncn-common/')
                                     }
                                 }
-                                def arguments = "-only=qemu.kubernetes -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_COMMON}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
-                                publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
-                                publishCsmImages.prepareArtifacts("${ARTIFACTS_DIRECTORY_K8S}", env.VERSION)
-                                def props = "build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
-                                publishCsmImages(pattern: ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
                             }
                         }
-                    }
-                }
-                stage('GCP Kubernetes Image') {
-                    when {
-                        expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-                        expression { params.rebuildCommonImage }
-                        expression { ! disableGoogle }
-                    }
-                    steps {
-                        withCredentials([
-                            string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                            usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
-                            file(credentialsId: 'google-image-manager', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
-                            file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
-                        ]) {
-                            script {
-                                // Did we build common? If YES, just use the RC image we built. If NO then use the latest non-RC
-                                def googleSourceArtifact = params.rebuildBaseImage ? "vshasta-ncn-common-${VERSION}" : ""
-                                if (googleSourceArtifact == "") {
-                                    googleSourceArtifact = getGoogleCloudSourceArtifact(
-                                        googleCloudSaKey: env.GOOGLE_CLOUD_SA_KEY,
-                                        googleCloudProject: params.sourceProjectId,
-                                        googleCloudFamily: 'vshasta-ncn-common',
-                                        fullUrl: false
-                                    )
-                                }
+                        stage('Pre-Install Toolkit: Metal') {
+                            when {
+                                expression { !params.disablePIT }
+                            }
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
+                                ]) {
+                                    script {
 
-                                def googleArguments = "-only=googlecompute.kubernetes -var 'google_source_image_name=${googleSourceArtifact}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'artifact_version=${VERSION}'"
-                                publishCsmImages.build(googleArguments, 'boxes/ncn-node-images/')
-                            }
-                        }
-                    }
-                }
-                stage('QEMU Ceph Image') {
-                    when {
-                        expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-                    }
-                    steps {
-                        withCredentials([
-                            string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                            usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
-                        ]) {
-                            script {
-                                def qcow = "ncn-common-${VERSION}.qcow2"
-                                def source = params.rebuildCommonImage ? "${ARTIFACTS_DIRECTORY_COMMON}/ncn-common-${VERSION}.qcow2" : "${STABLE_BASE}/ncn-common/${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}/ncn-common-${java.net.URLEncoder.encode("[RELEASE]", "UTF-8")}.qcow2"
-                                if (params.rebuildCommonImage == false) {
-                                    dir("${env.ARTIFACTS_DIRECTORY_COMMON}") {
-                                        httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
+                                        qcow = "sles15-base-${VERSION}.qcow2"
+                                        source = "${ARTIFACTS_DIRECTORY_BASE}/${qcow}"
+
+                                        if (!params.rebuildBaseImage) {
+
+                                            source = "${STABLE_BASE}/sles15-base/${java.net.URLEncoder.encode("${sourceBuildVersion}", "UTF-8")}/sles15-base-${java.net.URLEncoder.encode("${sourceBuildVersion}", "UTF-8")}.qcow2"
+
+                                            if (sourceBuildVersion != "[RELEASE]") {
+
+                                                source = nodeImageHelpers.getArtifactorySourceArtifactFromId(source, sourceBuildVersion)
+
+                                            }
+
+                                            dir("${env.ARTIFACTS_DIRECTORY_BASE}") {
+                                                httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
+                                            }
+
+                                        }
+                                        def arguments = "-only=qemu.pit-common -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_BASE}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(arguments, 'boxes/pit-common/')
                                     }
                                 }
-                                def arguments = "-only=qemu.storage-ceph -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_COMMON}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
-                                publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
-                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_CEPH}"
-                                publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_CEPH, VERSION)
-                                sh "ls -lhR ${ARTIFACTS_DIRECTORY_CEPH}"
-                                def props = "csm.repo.url=${params.csmRpmRepo};csm.repo.branch=${params.csmRpmBranch};build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
-                                publishCsmImages(pattern: ARTIFACTS_DIRECTORY_CEPH, imageName: 'storage-ceph', version: VERSION, props: props)
+                            }
+                        }
+                        stage('Pre-Install Toolkit: Google') {
+                            when {
+                                expression { !params.disablePIT }
+                                expression { !disableGoogle }
+                            }
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
+                                ]) {
+                                    script {
+
+                                        def googleSourceArtifact = "vshasta-sles15-base-${VERSION}"
+                                        def googleSourceImageFamily = "vshasta-sles15-base"
+
+                                        if (!params.rebuildBaseImage) {
+
+                                            if (sourceBuildVersion != "[RELEASE]") {
+
+                                                googleSourceArtifact = nodeImageHelpers.getGoogleCloudSourceArtifactFromId(googleSourceImageFamily, sourceBuildVersion)
+
+                                            } else {
+
+                                                googleSourceArtifact = getGoogleCloudSourceArtifact(
+                                                        googleCloudSaKey: GOOGLE_CLOUD_SA_KEY,
+                                                        googleCloudProject: params.googleSourceImageProjectId,
+                                                        googleCloudFamily: googleSourceImageFamily
+                                                )
+
+                                            }
+                                        }
+
+                                        def googleArguments = "-only=googlecompute.pit-common -var 'google_source_image_name=${googleSourceArtifact}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(googleArguments, 'boxes/pit-common/')
+                                    }
+                                }
                             }
                         }
                     }
                 }
-                stage('GCP Ceph Image') {
-                    when {
-                        expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
-                        expression { params.rebuildCommonImage }
-                        expression { ! disableGoogle }
-                    }
-                    steps {
-                        withCredentials([
-                            string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
-                            usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
-                            file(credentialsId: 'google-image-manager', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
-                            file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
-                        ]) {
-                            script {
-                                // Did we build base? If YES, just use the RC image we build. If NO then use the latest non-RC
-                                def googleSourceArtifact = params.rebuildBaseImage ? "vshasta-ncn-common-${VERSION}" : ""
-                                if (googleSourceArtifact == "") {
-                                    googleSourceArtifact = getGoogleCloudSourceArtifact(
-                                        googleCloudSaKey: env.GOOGLE_CLOUD_SA_KEY,
-                                        googleCloudProject: params.sourceProjectId,
-                                        googleCloudFamily: 'vshasta-ncn-common',
-                                        fullUrl: false
-                                    )
-                                }
+                stage('Publish') {
+                    parallel {
+                        stage('Non-Compute Common') {
+                            when {
+                                expression { params.rebuildCommonImage }
+                            }
+                            steps {
+                                script {
+                                    publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_COMMON, VERSION)
 
-                                def googleArguments = "-only=googlecompute.storage-ceph -var 'google_source_image_name=${googleSourceArtifact}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'artifact_version=${VERSION}'"
-                                publishCsmImages.build(googleArguments, 'boxes/ncn-node-images/')
+                                    props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_COMMON, imageName: 'ncn-common', version: env.VERSION, props: props)
+                                }
+                            }
+                        }
+                        stage('Pre-Install Toolkit') {
+                            when {
+                                expression { !params.disablePIT }
+                                expression { !disableGoogle }
+                            }
+                            steps {
+                                script {
+                                    publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_PIT, VERSION)
+
+                                    props = "build.number=${env.VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_PIT, imageName: 'pit-common', version: env.VERSION, props: props)
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        // This should run stand-alone; nothing should build when we release, we're just moving things within artifactory.
+        stage('Kubernetes & Storage-CEPH Layers') {
+            when {
+                expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
+            }
+            stages {
+                stage('Build') {
+                    parallel {
+                        stage('Kubernetes: Metal') {
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
+                                ]) {
+                                    script {
+
+                                        qcow = "ncn-common-${VERSION}.qcow2"
+                                        source = "${ARTIFACTS_DIRECTORY_COMMON}/${qcow}"
+
+                                        if (!params.rebuildCommonImage) {
+
+                                            source = "${STABLE_BASE}/ncn-common/${java.net.URLEncoder.encode("${sourceBuildVersion}", "UTF-8")}/ncn-common-${java.net.URLEncoder.encode("${sourceBuildVersion}", "UTF-8")}.qcow2"
+
+                                            if (sourceBuildVersion != "[RELEASE]") {
+
+                                                source = nodeImageHelpers.getArtifactorySourceArtifactFromId(source, sourceBuildVersion)
+
+                                            }
+
+                                            dir("${env.ARTIFACTS_DIRECTORY_COMMON}") {
+                                                httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
+                                            }
+
+                                        }
+
+                                        def arguments = "-only=qemu.kubernetes -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_COMMON}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
+                                    }
+                                }
+                            }
+                        }
+                        stage('Kubernetes: Google') {
+                            when {
+                                expression { !disableGoogle }
+                            }
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
+                                ]) {
+                                    script {
+
+                                        def googleSourceArtifact = "vshasta-ncn-common-${VERSION}"
+                                        def googleSourceImageFamily = "vshasta-ncn-common"
+
+                                        if (!params.rebuildCommonImage) {
+
+                                            if (sourceBuildVersion != "[RELEASE]") {
+
+                                                googleSourceArtifact = nodeImageHelpers.getGoogleCloudSourceArtifactFromId(googleSourceImageFamily, sourceBuildVersion)
+
+                                            } else {
+
+                                                googleSourceArtifact = getGoogleCloudSourceArtifact(
+                                                        googleCloudSaKey: GOOGLE_CLOUD_SA_KEY,
+                                                        googleCloudProject: params.googleSourceImageProjectId,
+                                                        googleCloudFamily: googleSourceImageFamily
+                                                )
+
+                                            }
+                                        }
+
+                                        def googleArguments = "-only=googlecompute.kubernetes -var 'google_source_image_name=${googleSourceArtifact}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(googleArguments, 'boxes/ncn-node-images/')
+                                    }
+                                }
+                            }
+                        }
+                        stage('Storage-CEPH: Metal') {
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN')
+                                ]) {
+                                    script {
+
+                                        qcow = "ncn-common-${VERSION}.qcow2"
+                                        source = "${ARTIFACTS_DIRECTORY_COMMON}/${qcow}"
+
+                                        if (!params.rebuildCommonImage) {
+
+                                            source = "${STABLE_BASE}/ncn-common/${java.net.URLEncoder.encode("${sourceBuildVersion}", "UTF-8")}/ncn-common-${java.net.URLEncoder.encode("${sourceBuildVersion}", "UTF-8")}.qcow2"
+
+                                            if (sourceBuildVersion != "[RELEASE]") {
+
+                                                source = nodeImageHelpers.getArtifactorySourceArtifactFromId(source, sourceBuildVersion)
+
+                                            }
+
+                                            dir("${env.ARTIFACTS_DIRECTORY_COMMON}") {
+                                                httpRequest(authentication: 'artifactory-algol60', outputFile: "${qcow}", responseHandle: 'NONE', url: "${source}")
+                                            }
+
+                                        }
+
+                                        def arguments = "-only=qemu.storage-ceph -var 'source_iso_uri='${env.ARTIFACTS_DIRECTORY_COMMON}/${qcow} -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'cpus=${NPROC}' -var 'memory=${NRAM}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(arguments, 'boxes/ncn-node-images/')
+                                    }
+                                }
+                            }
+                        }
+                        stage('Storage-CEPH: Google') {
+                            when {
+                                expression { !disableGoogle }
+                            }
+                            steps {
+                                withCredentials([
+                                        string(credentialsId: 'sles15-initial-root-password', variable: 'SLES15_INITIAL_ROOT_PASSWORD'),
+                                        usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
+                                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
+                                ]) {
+                                    script {
+
+                                        def googleSourceArtifact = "vshasta-ncn-common-${VERSION}"
+                                        def googleSourceImageFamily = "vshasta-ncn-common"
+
+                                        if (!params.rebuildCommonImage) {
+
+                                            if (sourceBuildVersion != "[RELEASE]") {
+
+                                                googleSourceArtifact = nodeImageHelpers.getGoogleCloudSourceArtifactFromId(googleSourceImageFamily, sourceBuildVersion)
+
+                                            } else {
+
+                                                googleSourceArtifact = getGoogleCloudSourceArtifact(
+                                                        googleCloudSaKey: GOOGLE_CLOUD_SA_KEY,
+                                                        googleCloudProject: params.googleSourceImageProjectId,
+                                                        googleCloudFamily: googleSourceImageFamily
+                                                )
+
+                                            }
+                                        }
+
+                                        def googleArguments = "-only=googlecompute.storage-ceph -var 'google_source_image_name=${googleSourceArtifact}' -var 'ssh_password=${SLES15_INITIAL_ROOT_PASSWORD}' -var 'artifactory_user=${ARTIFACTORY_USER}' -var 'artifactory_token=${ARTIFACTORY_TOKEN}' -var 'artifact_version=${VERSION}'"
+                                        publishCsmImages.build(googleArguments, 'boxes/ncn-node-images/')
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('Publish') {
+                    parallel {
+                        stage('Kubernetes') {
+                            steps {
+                                script {
+                                    publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_K8S, env.VERSION)
+
+                                    props = "build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_K8S, imageName: 'kubernetes', version: env.VERSION, props: props)
+                                }
+                            }
+                        }
+                        stage('Storage-CEPH') {
+                            steps {
+                                script {
+                                    publishCsmImages.prepareArtifacts(ARTIFACTS_DIRECTORY_CEPH, env.VERSION)
+
+                                    props = "build.number=${VERSION};build.url=${env.BUILD_URL};vcs.revision-short=${GIT_COMMIT[0..6]};build.source-artifact=${source}"
+                                    publishCsmImages(pattern: ARTIFACTS_DIRECTORY_CEPH, imageName: 'storage-ceph', version: env.VERSION, props: props)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         stage('Release') {
             when { tag "*" }
             steps {
                 withCredentials([
                         usernamePassword(credentialsId: 'artifactory-algol60', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_TOKEN'),
-                        file(credentialsId: 'google-image-manager', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
                         file(credentialsId: 'google-image-manager', variable: 'GOOGLE_CLOUD_SA_KEY')
                 ]) {
                     script {
+
                         /*
                             Use a try/catch block to prevent sles15-base and pit-common from requiring an administrator to manually build a git-tag. This
                             manual process is tedious, and prone to mistakes, this way the Jenkins pipeline will always try to publish these layers.
@@ -352,6 +587,23 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            echo 'I hope you have a nice day!'
+        }
+        success {
+            echo 'The build was: success'
+        }
+        unstable {
+            echo 'The build was: unstable'
+        }
+        failure {
+            echo 'The build was: failure'
+        }
+        changed {
+            echo 'The build was: changed'
         }
     }
 }
