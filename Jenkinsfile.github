@@ -2,7 +2,7 @@
 
 def promotionToken = ~"(master|main|develop|lts\\/.*)"
 def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
-def buildGoogle = true
+def disableGoogle = false
 def rebuildBaseImage = buildAndPublish ? true : false
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
@@ -43,7 +43,6 @@ pipeline {
     parameters {
         booleanParam(name: 'buildAndPublish', defaultValue: buildAndPublish, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to actually rebuild and publish for a stable merge build job.')
         booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the base image; unchecked will pull latest STABLE base. (This overrides rebuildCommonImage; if this is true, rebuildCommonImage is bypassed.)')
-        booleanParam(name: 'buildGoogle', defaultValue: buildGoogle, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build Google images for vshasta.)')
         booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildBaseImage, description: '(leave unchecked for; git-tags, main, and develop) Whether or not to build the common image; unchecked will pull latest STABLE ncn-common.')
         string(name: 'sourceProjectId', defaultValue: "artifactory-202004", description: 'The source Project ID for pulling Google images.')
     }
@@ -51,7 +50,7 @@ pipeline {
     triggers {
         parameterizedCron(env.BRANCH_NAME == 'main' ? '''
             # 6am UTC / midnight CT
-            0 6 * * * %buildAndPublish=true; rebuildBaseImage=true; buildGoogle=true; rebuildCommonImage=true
+            0 6 * * * %buildAndPublish=true; rebuildBaseImage=true; rebuildCommonImage=true
         ''' : '')
     }
 
@@ -117,7 +116,7 @@ pipeline {
 					when {
 						expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
 						expression { params.rebuildBaseImage || (params.rebuildBaseImage && ! params.rebuildCommonImage) }
-						expression { params.buildGoogle }
+						expression { ! disableGoogle }
 					}
 					steps {
 						withCredentials([
@@ -164,7 +163,7 @@ pipeline {
 					when {
 						expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
 						expression { params.rebuildCommonImage }
-						expression { params.buildGoogle }
+                        expression { ! disableGoogle }
 					}
 					steps {
 						withCredentials([
@@ -228,7 +227,7 @@ pipeline {
                     when {
                         expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
                         expression { params.rebuildCommonImage }
-                        expression { params.buildGoogle }
+                        expression { ! disableGoogle }
                     }
                     steps {
                         withCredentials([
@@ -287,7 +286,7 @@ pipeline {
                     when {
                         expression { env.TAG_NAME == null && (!(BRANCH_NAME ==~ promotionToken) || (BRANCH_NAME ==~ promotionToken && params.buildAndPublish)) }
                         expression { params.rebuildCommonImage }
-                        expression { params.buildGoogle }
+                        expression { ! disableGoogle }
                     }
                     steps {
                         withCredentials([
