@@ -8,17 +8,17 @@ set -ex
 function kernel {
     local sles15_kernel_version
     sles15_kernel_version=$(rpm -q --queryformat "%{VERSION}-%{RELEASE}\n" kernel-default)
-    
+
     echo "Purging old kernels ... "
     sed -i 's/^multiversion.kernels =.*/multiversion.kernels = '"${SLES15_KERNEL_VERSION}"'/g' /etc/zypp/zypp.conf
     zypper --non-interactive purge-kernels --details
-    
+
     echo "Locking the kernel to $SLES15_KERNEL_VERSION"
     zypper addlock kernel-default
-    
+
     echo 'Listing locks and kernel RPM(s)'
     zypper ll
-    rpm -qa | grep kernel-default   
+    rpm -qa | grep kernel-default
 }
 kernel
 
