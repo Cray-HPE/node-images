@@ -10,7 +10,7 @@ at=3.1.20-11.3
 bc=1.07.1-11.37
 bind-utils=9.16.6-150300.22.16.1
 bsdtar=3.4.2-150200.4.6.1
-ceph-common=16.2.9.536+ga4b2af9947d-lp153.3858.1
+ceph-common=16.2.9.536+g41a9f9a5573-lp153.3860.1
 cloud-init-config-suse=21.4-1
 cloud-init-doc=21.4-1
 cloud-init=21.4-1
@@ -126,10 +126,10 @@ cray-kubectl-hns-plugin=1.0.0-1
 cray-kubectl-kubelogin-plugin=1.25.1-1
 craycli=0.56.0-1
 csm-node-identity=1.0.18-1
-hpe-csm-scripts=0.0.34-1
+hpe-csm-scripts=0.0.35-1
 
 # CSM Testing Utils
-goss-servers=1.14.28-1
+goss-servers=1.14.30-1
 hpe-csm-goss-package=0.3.13-20210615152800_aae8d77
 hpe-csm-yq-package=3.4.1-20210615153837_40f15a6
 
