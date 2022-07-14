@@ -79,7 +79,7 @@ build {
     "source.googlecompute.pit-common"]
 
   provisioner "file" {
-    source = "${path.root}files"
+    source = "${path.root}/files"
     destination = "/tmp/"
   }
 
@@ -94,11 +94,11 @@ build {
     environment_vars = [
       "PIT_SLUG=${var.pit_slug}"
     ]
-    script = "${path.root}provisioners/common/setup.sh"
+    script = "${path.root}/provisioners/common/setup.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/google/setup.sh"
+    script = "${path.root}/provisioners/google/setup.sh"
     only = ["googlecompute.pit-common"]
   }
 
@@ -151,11 +151,11 @@ build {
 
   // Install all generic installers first by context (e.g. common, google, and metal).
   provisioner "shell" {
-    script = "${path.root}provisioners/common/install.sh"
+    script = "${path.root}/provisioners/common/install.sh"
   }
 
   provisioner "shell" {
-    script = "${path.root}provisioners/metal/install.sh"
+    script = "${path.root}/provisioners/metal/install.sh"
     only = [
       "qemu.pit-common",
       "virtualbox-ovf.pit-common"
@@ -210,7 +210,7 @@ build {
   }
 
   provisioner "shell" {
-    script = "${path.root}files/scripts/common/cleanup.sh"
+    script = "${path.root}/files/scripts/common/cleanup.sh"
   }
 
 
