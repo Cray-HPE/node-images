@@ -1,7 +1,8 @@
+#!/bin/bash
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,9 +22,31 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
----
-apiVersion: v1
-appVersion: 1.6.0
-description: GCE Ingress Controller
-name: gce-ingress
-version: 0.0.1
+set -ex
+
+echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
+rm -rf /var/adm/autoinstall/cache
+
+echo "cleanup all the downloaded RPMs"
+zypper clean --all
+
+echo "clean up network interface persistence"
+rm -f /etc/udev/rules.d/70-persistent-net.rules;
+touch /etc/udev/rules.d/75-persistent-net-generator.rules;
+
+echo "truncate any logs that have built up during the install"
+find /var/log/ -type f -name "*.log.*" -exec rm -rf {} \;
+find /var/log -type f -exec truncate --size=0 {} \;
+
+echo "remove the contents of /tmp and /var/tmp"
+rm -rf /tmp/* /var/tmp/*
+
+echo "blank netplan machine-id (DUID) so machines get unique ID generated on boot"
+truncate -s 0 /etc/machine-id
+
+echo "force a new random seed to be generated"
+rm -f /var/lib/systemd/random-seed
+
+echo "clear the history so our install isn't there"
+rm -f /root/.wget-hsts
+export HISTSIZE=0

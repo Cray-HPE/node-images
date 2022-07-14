@@ -1,0 +1,17 @@
+name: Lint
+
+on: [push]
+
+jobs:
+  python:
+    name: Python Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.6' # Use the python-version in the base image.
+      - name: flake8
+        run:
+          flake8 .

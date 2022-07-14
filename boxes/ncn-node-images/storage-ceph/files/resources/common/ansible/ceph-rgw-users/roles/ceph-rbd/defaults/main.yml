@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# Copyright 2018, 2019, Cray Inc. All Rights Reserved.
 ---
 
 ceph_rbd_enabled: "{{ external_ceph_enabled | default(true) | bool }}"

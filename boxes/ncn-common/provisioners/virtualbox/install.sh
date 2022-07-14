@@ -1,9 +1,8 @@
-#!/usr/bin/env bash
-
+#!/bin/bash
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -23,32 +22,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+set -e
 
-set -ex
+# install required packages for virtualbox
+packages=( bzip2 gcc jq make kernel-devel kernel-macros kernel-default-devel )
+zypper --non-interactive install --no-recommends --force-resolution "${packages[@]}"
 
-echo "removing our autoyast cache to ensure no lingering sensitive content remains there from install"
-rm -rf /var/adm/autoinstall/cache
-
-echo "cleanup all the downloaded RPMs"
-zypper clean --all
-
-echo "clean up network interface persistence"
-rm -f /etc/udev/rules.d/70-persistent-net.rules;
-touch /etc/udev/rules.d/75-persistent-net-generator.rules;
-
-echo "truncate any logs that have built up during the install"
-find /var/log/ -type f -name "*.log.*" -exec rm -rf {} \;
-find /var/log -type f -exec truncate --size=0 {} \;
-
-echo "remove the contents of /tmp and /var/tmp"
-rm -rf /tmp/* /var/tmp/*
-
-echo "blank netplan machine-id (DUID) so machines get unique ID generated on boot"
-truncate -s 0 /etc/machine-id
-
-echo "force a new random seed to be generated"
-rm -f /var/lib/systemd/random-seed
-
-echo "clear the history so our install isn't there"
-rm -f /root/.wget-hsts
-export HISTSIZE=0
+# Installing the virtualbox guest additions
+# Allow unsupported modules
+sed -i -e 's#^allow_unsupported_modules 0#allow_unsupported_modules 1#' /etc/modprobe.d/10-unsupported-modules.conf
+# Do the install
+VBOX_VERSION=$(cat /root/.vbox_version)
+cd /tmp
+mount -o loop /root/VBoxGuestAdditions_$VBOX_VERSION.iso /mnt || echo "unable to mount virtual box guest additions iso"
+sh /mnt/VBoxLinuxAdditions.run install --force || echo "unable to install driver"
+umount /mnt || echo "unable to umount iso"
+rm -rf /root/VBoxGuestAdditions_*.iso || echo "unable to rm iso"
+echo "guest additions installed"

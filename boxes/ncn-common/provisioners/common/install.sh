@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #
 # MIT License
 #
@@ -23,7 +22,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 set -ex
 
 # Ensure that only the desired kernel version may be installed.
@@ -34,7 +32,7 @@ function kernel {
 
     # Grab this from csm-rpms, the running kernel may not match the kernel we installed and want until the image is rebooted.
     # This ensures we lock to what we want installed.
-    current_kernel="$(grep kernel-default /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages | awk -F '=' '{print $NF}')"
+    current_kernel="$(awk /kernel-default=/'{print $NF}' /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages)"
 
     echo "Purging old kernels ... "
     sed -i 's/^multiversion.kernels =.*/multiversion.kernels = '"${current_kernel}"'/g' /etc/zypp/zypp.conf
@@ -67,7 +65,6 @@ kernel_modules
 function setup_python {
     local pythons
 
-    local        pip_ver='21.3.1'
     local      build_ver='0.8.0'
     local setuptools_ver='59.6.0'
     local      wheel_ver='0.37.1'
@@ -76,7 +73,7 @@ function setup_python {
     readarray -t pythons < <(find /usr/bin/ -regex '.*python3\.[0-9]+')
     printf 'Discovered [%s] python binaries: %s\n' "${#pythons[@]}" "${pythons[*]}"
     for python in "${pythons[@]}"; do
-        $python -m pip install -U "pip==$pip_ver" || $python -m ensurepip
+        $python -m pip install -U pip || $python -m ensurepip
         $python -m pip install -U \
             "build==$build_ver" \
             "setuptools==$setuptools_ver" \
@@ -85,3 +82,4 @@ function setup_python {
     done
 }
 setup_python
+

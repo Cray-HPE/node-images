@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 ROOTDIR="$(dirname "${BASH_SOURCE[0]}")/.."
 source "${ROOTDIR}/scripts/rpm-functions.sh"

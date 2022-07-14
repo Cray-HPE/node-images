@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 function usage() {
     echo >&2 "usage: ${0##*/} OUTPUT-FILE REPOS-FILE... "
