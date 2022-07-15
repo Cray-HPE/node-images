@@ -27,10 +27,10 @@ ln -s /srv/cray/utilities/common/craysys/craysys /bin/craysys
 echo "export PYTHONPATH=\"/srv/cray/utilities/common\"" >> /etc/profile.d/cray.sh
 
 echo "Enabling/disabling services"
-systemctl disable mdcheck_continue.service
-systemctl disable mdcheck_start.service
-systemctl disable mdmonitor-oneshot.service
-systemctl disable mdmonitor.service
+systemctl disable mdcheck_continue.service || true
+systemctl disable mdcheck_start.service || true
+systemctl disable mdmonitor-oneshot.service || true
+systemctl disable mdmonitor.service || true
 systemctl disable postfix.service && systemctl stop postfix.service
 systemctl enable apache2.service
 systemctl enable basecamp.service
