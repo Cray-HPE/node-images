@@ -72,6 +72,7 @@ ceph_rgw_users:
     policy_name: "{{ cray_sma_rgw_user }}_Policy"
     policy_action: "\"s3:*\""
     policy_resource: "\"arn:aws:s3:::sma\",\"arn:aws:s3:::sma/*\""
+    additional_namespace: sma
 
   - user_name: "{{ cray_etcd_backup_rgw_user }}"
     user_display_name: "Etcd Backup User"
