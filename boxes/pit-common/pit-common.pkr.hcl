@@ -78,11 +78,6 @@ build {
     "source.qemu.pit-common",
     "source.googlecompute.pit-common"]
 
-  provisioner "shell" {
-    inline = ["echo '10.100.9.100 arti.dev.cray.com' >> /etc/hosts"]
-    only = ["qemu.pit-common"]
-  }
-
   provisioner "file" {
     source = "${path.root}/files"
     destination = "/tmp/"
