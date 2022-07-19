@@ -22,37 +22,34 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-set -exu
+set -e
 
-# Find device and partition of /
-cd /
-df . | tail -n 1 | tr -s " " | cut -d " " -f 1 | sed -E -e 's/^([^0-9]+)([0-9]+)$/\1 \2/' |
-if read DEV_DISK DEV_PARTITION_NR && [ -n "$DEV_PARTITION_NR" ]; then
-  echo "Expanding $DEV_DISK partition $DEV_PARTITION_NR";
-  sgdisk --move-second-header
-  sgdisk --delete=${DEV_PARTITION_NR} "$DEV_DISK"
-  sgdisk --new=${DEV_PARTITION_NR}:0:0 --typecode=0:8e00 ${DEV_DISK}
-  partprobe "$DEV_DISK"
+echo "Initializing log location(s)"
+mkdir -p /var/log/cray
+touch /var/log/cray/no.log
+cat << 'EOF' > /etc/logrotate.d/cray
+/var/log/cray/*.log {
+  size 1M
+  create 744 root root
+  rotate 4
+}
+EOF
 
-  resize2fs ${DEV_DISK}${DEV_PARTITION_NR}
-fi
+echo "Initializing directories and resources"
+mkdir -p /srv/cray
+cp -r /tmp/files/* /srv/cray/
+chmod +x -R /srv/cray/scripts
+rm -rf /tmp/files
+cp /srv/cray/sysctl/common/* /etc/sysctl.d/
+cp /srv/cray/limits/98-cray-limits.conf /etc/security/limits.d/98-cray-limits.conf
 
-set +u
+# Change hostname from lower layer to ncn.
+echo 'ncn' > /etc/hostname
 
-ANSIBLE_VERSION=${ANSIBLE_VERSION:-2.11.10}
-REQUIREMENTS=( boto3 netaddr )
+# Lock the kernel before we move onto installing anything []for NCNs
+uname -r
+rpm -qa kernel-default
+zypper addlock kernel-default
 
-echo "Installing CSM Ansible $ANSIBLE_VERSION"
-pip3 install --upgrade virtualenv
-mkdir -pv /etc/ansible
-python3 -m venv /etc/ansible/csm_ansible
-. /etc/ansible/csm_ansible/bin/activate
-pip3 install --upgrade pip
-pip3 install ansible-core==$ANSIBLE_VERSION
-pip3 install ansible
-
-echo "Installing requirements: ${REQUIREMENTS[@]}"
-for requirement in ${REQUIREMENTS[@]}; do
-    pip3 install $requirement
-done
-deactivate
+# Install jq
+command -v jq >/dev/null 2>&1 || zypper -n install --auto-agree-with-licenses jq=1.6-3.3.1
