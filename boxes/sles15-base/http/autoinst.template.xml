@@ -83,8 +83,14 @@
   <yast2-bootloader>
     <loader_type>grub2</loader_type>
     <global>
-      <activate config:type='boolean'>true</activate>
-      <append>biosdevname transparent_hugepage=never</append><!-- Ensure BIOSDEVNAME is enabled and THP=never for the whole stack; initrd & squashFS. -->
+        <activate config:type='boolean'>true</activate>
+        <!-- 
+        Ensure these are set:
+            - BIOSDEVNAME is enabled for standardized interface names
+            - psi=1 is set to enable pressure stats (cat /proc/pressure/{cpu,io,memory} will not work without this set due to CONFIG_PSI_DEFAULT_DISABLED being set in kernel-default). 
+            - transparent_hugepage=never to disable transparent hugepaging dynamic memory allocation.
+        -->
+      <append>biosdevname psi=1 transparent_hugepage=never</append>
     </global>
   </yast2-bootloader>
 
