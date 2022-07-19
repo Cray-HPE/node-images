@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
 if kubectl get secret -n istio-system ingress-gateway-cert > /dev/null 2>&1 ; then
   kubectl get secret -n istio-system ingress-gateway-cert -o json | jq -r '.data."ca.crt"' | base64 -d > /tmp/oidc.pem
   fs_sha=$(shasum /etc/kubernetes/pki/oidc.pem | awk '{print $1}')
