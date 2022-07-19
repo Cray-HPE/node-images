@@ -150,7 +150,7 @@ function post-join() {
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 if [[ "$1" != "skip-upload-certs" ]]; then
-  kubeadm init phase upload-certs --upload-certs --config /etc/cray/kubernetes/kubeadm.cfg
+  kubeadm init phase upload-certs --upload-certs --config /etc/cray/kubernetes/kubeadm.yaml
 fi
 kubeadm token create --print-join-command > /etc/cray/kubernetes/join-command 2>/dev/null
 echo "$(cat /etc/cray/kubernetes/join-command) --control-plane --certificate-key $(cat /etc/cray/kubernetes/certificate-key)" \
