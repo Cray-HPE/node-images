@@ -6,8 +6,8 @@ set -e
 touch /etc/google_system
 
 echo "activate public cloud module"
-product=$(sudo SUSEConnect --list-extensions | grep -o "sle-module-public-cloud.*")
-[[ -n "$product" ]] && sudo SUSEConnect -p "$product"
+product=$(SUSEConnect --list-extensions | grep -o "sle-module-public-cloud.*")
+[[ -n "$product" ]] && SUSEConnect -p "$product"
 
 echo "install guest environment packages"
 zypper refresh
