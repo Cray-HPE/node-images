@@ -93,7 +93,9 @@ modprobe br_netfilter
 
 echo "Installing kubernetes python client"
 pip3 install --ignore-installed PyYAML
-pip3 install kubernetes
+KUBELET_VER=$(rpm -qa | grep kubelet |  awk -F '-' '{print $2}')
+K8S_MINOR_VERSION=$(echo $KUBELET_VER | awk -F '.' '{print $2}')
+pip3 install "kubernetes==${K8S_MINOR_VERSION}.*" --upgrade
 
 echo "Setting TasksMax to infinity via 10-kubelet.conf file"
 mkdir -p /etc/systemd/system/kubelet.service.d
