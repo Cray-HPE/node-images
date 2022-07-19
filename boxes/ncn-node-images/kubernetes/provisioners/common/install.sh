@@ -38,6 +38,9 @@ mkdir -p /opt/cray/tbd
 mkdir -p /var/run/sds
 echo "${KUBERNETES_PULL_VERSION}" > /etc/cray/kubernetes/version
 
+echo "Installing kata containers"
+wget -q -c https://github.com/kata-containers/kata-containers/releases/download/${KATA_VERSION}/kata-static-${KATA_VERSION}-x86_64.tar.xz -O - | tar -xJ -C /
+
 echo "Installing etcd binaries"
 mkdir -p /tmp/etcd
 wget -q -O /tmp/etcd/etcd-${ETCD_VERSION}-linux-amd64.tar.gz https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz

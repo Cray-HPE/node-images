@@ -37,6 +37,7 @@ export HELM_V3_VERSION="3.2.4"
 export VELERO_VERSION="v1.5.2"
 export ETCD_VERSION="v3.5.0"
 export PAUSE_VERSION="3.4.1"
+export KATA_VERSION="2.4.3"
 #
 # https://github.com/coredns/deployment/blob/master/kubernetes/CoreDNS-k8s_version.md
 #
