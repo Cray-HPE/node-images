@@ -16,8 +16,8 @@ def promotionToken = ~"(master|main|develop|lts\\/.*)"
 def buildAndPublish = env.TAG_NAME == null && !(env.BRANCH_NAME ==~ promotionToken) ? true : false
 def sourceBuildVersion = '[RELEASE]' // Pulls the latest release
 
-// Rebuild toggles; always build base to prevent pulling a newer stable from another lts or main branch, always rebuild common.
-def rebuildBaseImage = env.TAG_NAME == null ? true : false
+// Rebuild toggles; never build base unless explicitly required, always rebuild common.
+def rebuildBaseImage = false
 def rebuildCommonImage = env.TAG_NAME == null ? true : false
 
 // Temporary toggles; useful for certain contexts.
@@ -64,7 +64,7 @@ pipeline {
 
     parameters {
         booleanParam(name: 'buildAndPublish', defaultValue: buildAndPublish, description: 'Whether or not main, develop, lts/*, or git-tags should rebuild their current HASH. When unchecked these branches and git-tags will only verify their hash has been promoted.')
-        booleanParam(name: 'disablePIT', defaultValue: disablePIT, description: 'Build the PIT Image (experimental, after MTL-1476 merges this should always build and the parameter will go away.')
+        booleanParam(name: 'disablePIT', defaultValue: disablePIT, description: 'Whether the PIT image should not be built, this can be useful if builds are taking a long time or failing')
         booleanParam(name: 'rebuildBaseImage', defaultValue: rebuildBaseImage, description: 'If disabled, the common layer will build on the latest stable base image in Artifactory. If enabled, the base image will be rebuilt fresh. This layer DOES NOT need to build for publishing to succeed after a git-tag.')
         booleanParam(name: 'rebuildCommonImage', defaultValue: rebuildCommonImage, description: 'If disabled, the child images (Kubernetes & Storage-CEPH) will built atop the latest stable common image in Artifactory. If enabled, the common image will be rebuilt fresh. This layer needs to build for publishing to succeed after a git-tag.')
         string(name: 'googleSourceImageProjectId', defaultValue: "artifactory-202004", description: 'The source Project ID for pulling Google images.')

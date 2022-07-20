@@ -82,7 +82,7 @@ source "qemu" "sles15-google" {
   boot_command = [
     "<esc><enter><wait>",
     "linux netdevice=eth0 netsetup=dhcp install=cd:/<wait>",
-    " lang=en_US autoyast=http://{{ .HTTPIP }}:{{ .HTTPPort }}/autoinst.xml<wait>",
+    " lang=en_US autoyast=http://{{ .HTTPIP }}:{{ .HTTPPort }}/autoinst-google.xml<wait>",
     " textmode=1 password=${var.ssh_password}<wait>",
     "<enter><wait>"
   ]
