@@ -22,6 +22,31 @@ function kernel {
 }
 kernel
 
+# Install generic Python tools; ensures both the default python and any other installed python system versions have 
+# basic buildtools.
+# NOTE: /usr/bin/python3 should point to the Python 3 version installed by python3.rpm, this is set in metal-provision.
+function setup_python {
+    local pythons
+
+    local        pip_ver='21.3.1'
+    local      build_ver='0.8.0'
+    local setuptools_ver='59.6.0'
+    local      wheel_ver='0.37.1'
+    local virtualenv_ver='20.15.1'
+
+    readarray -t pythons < <(find /usr/bin/ -regex '.*python3\.[0-9]+')
+    printf 'Discovered [%s] python binaries: %s\n' "${#pythons[@]}" "${pythons[*]}"
+    for python in "${pythons[@]}"; do
+        $python -m pip install -U "pip==$pip_ver" || $python -m ensurepip
+        $python -m pip install -U \
+            "build==$build_ver" \
+            "setuptools==$setuptools_ver" \
+            "virtualenv==$virtualenv_ver" \
+            "wheel==$wheel_ver" 
+    done
+}
+setup_python
+
 echo "Ensuring /srv/cray/utilities locations are available for use system-wide"
 ln -s /srv/cray/utilities/common/craysys/craysys /bin/craysys
 echo "export PYTHONPATH=\"/srv/cray/utilities/common\"" >> /etc/profile.d/cray.sh
