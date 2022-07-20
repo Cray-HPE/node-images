@@ -6,19 +6,21 @@ set -ex
 # Clean up old kernels, if any. We should only ship with a single kernel.
 # Lock the kernel to prevent inadvertent updates.
 function kernel {
-    local sles15_kernel_version
-    sles15_kernel_version=$(rpm -q --queryformat "%{VERSION}-%{RELEASE}\n" kernel-default)
-    
+    local current_kernel
+
+    # Grab this from csm-rpms, the running kernel may not match the kernel we installed and want until the image is rebooted.
+    # This ensures we lock to what we want installed.
+    current_kernel="$(grep kernel-default /srv/cray/csm-rpms/packages/node-image-non-compute-common/base.packages | awk -F '=' '{print $NF}')"
+
     echo "Purging old kernels ... "
-    sed -i 's/^multiversion.kernels =.*/multiversion.kernels = '"${SLES15_KERNEL_VERSION}"'/g' /etc/zypp/zypp.conf
+    sed -i 's/^multiversion.kernels =.*/multiversion.kernels = '"${current_kernel}"'/g' /etc/zypp/zypp.conf
     zypper --non-interactive purge-kernels --details
+
+    echo "Locking the kernel to ${current_kernel}"
+    zypper addlock kernel-default && zypper locks
     
-    echo "Locking the kernel to $SLES15_KERNEL_VERSION"
-    zypper addlock kernel-default
-    
-    echo 'Listing locks and kernel RPM(s)'
-    zypper ll
-    rpm -qa | grep kernel-default   
+    echo "Listing currently installed kernel-default RPM:"
+    rpm -qa | grep kernel-default
 }
 kernel
 
