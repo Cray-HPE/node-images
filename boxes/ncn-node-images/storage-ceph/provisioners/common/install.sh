@@ -74,12 +74,12 @@ registries = []
 ## ADD BELOW
 [[registry]]
 prefix = "registry.local"
-location = "registry.local:5000"
+location = "registry.local"
 insecure = true
 
 [[registry.mirror]]
 prefix = "registry.local"
-location = "registry.local"
+location = "localhost:5000"
 insecure = true
 
 [[registry]]
