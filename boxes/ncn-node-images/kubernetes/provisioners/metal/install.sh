@@ -35,6 +35,3 @@ rsync -av /srv/cray/resources/metal/cloud.cfg.d/ /etc/cloud/cloud.cfg.d/
 # existing files.
 cp -pv /srv/cray/resources/metal/metalfs.service /usr/lib/systemd/system
 systemctl enable metalfs
-
-# enable this to run on first boot during deployment, and then the kdump script disables it
-systemctl enable kdump-cray

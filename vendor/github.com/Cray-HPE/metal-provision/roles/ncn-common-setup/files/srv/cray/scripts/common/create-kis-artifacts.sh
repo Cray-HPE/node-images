@@ -74,7 +74,14 @@ if [[ "$1" != "squashfs-only" ]]; then
     cp -v /mnt/squashfs/boot/vmlinuz-${KVER} /squashfs/${KVER}.kernel
     cp -v /mnt/squashfs/tmp/initrd.img.xz /squashfs/initrd.img.xz
     chmod 644 /squashfs/initrd.img.xz
+
+
     umount -v /mnt/squashfs/proc /mnt/squashfs/dev /mnt/squashfs/run /mnt/squashfs/sys /mnt/squashfs/var
+    if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
+      echo "Not running kdump because $(basename $0) is running in a chrooted environment."
+    else
+      "$(dirname $0)/create-kdump-artifacts.sh"
+    fi
 fi
 
 if [[ "$1" != "kernel-initrd-only" ]]; then

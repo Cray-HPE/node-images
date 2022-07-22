@@ -36,8 +36,8 @@
       <listentry>364M,high</listentry>
     </crash_kernel>
     <general>
-      <!-- dump target settings -->
-      <KDUMP_SAVEDIR>file:///var/crash</KDUMP_SAVEDIR>
+      <!-- Since we use the RAID partition for this, we'll write to /crash in the even of a dump. -->
+      <KDUMP_SAVEDIR>${KDUMP_SAVEDIR}</KDUMP_SAVEDIR>
       <!-- filtering and compression -->
       <KDUMP_DUMPFORMAT>compressed</KDUMP_DUMPFORMAT>
       <KDUMP_DUMPLEVEL>31</KDUMP_DUMPLEVEL>
@@ -102,9 +102,12 @@
           <mount>/</mount>
           <create_subvolumes config:type="boolean">false</create_subvolumes>
           <size>max</size>
-          <filesystem config:type="symbol">ext4</filesystem>
+          <!-- The filesystem, mountby, and label must be equal to xfs, label, and ROOTRAID in order for kdump to work natively.
+               This does hardcode the ROOTRAID label in, which could be changed by an administrator in runtime. Changing this is very unlikely, but
+               this statement serves as a warning incase anyone does it.-->
+          <filesystem config:type="symbol">xfs</filesystem>
           <mountby config:type="symbol">label</mountby>
-          <label>SQFSRAID</label>
+          <label>ROOTRAID</label>
         </partition>
       </partitions>
     </drive>

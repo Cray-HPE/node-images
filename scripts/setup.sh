@@ -28,4 +28,7 @@ fi
 
 [ -n "$SLES15_BETA_REGISTRATION_CODE" ] && export SLES15_REGISTRATION_CODE="$SLES15_BETA_REGISTRATION_CODE"
 export SLES15_SP_VERSION="15.3"
+export KDUMP_SAVEDIR='file:///crash'
 envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst.xml
+export KDUMP_SAVEDIR='file:///var/crash'
+envsubst < $root_dir/boxes/sles15-base/http/autoinst.template.xml > $root_dir/boxes/sles15-base/http/autoinst-google.xml

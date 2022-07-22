@@ -34,7 +34,12 @@ if read DEV_DISK DEV_PARTITION_NR && [ -n "$DEV_PARTITION_NR" ]; then
   sgdisk --new=${DEV_PARTITION_NR}:0:0 --typecode=0:8e00 ${DEV_DISK}
   partprobe "$DEV_DISK"
 
-  resize2fs ${DEV_DISK}${DEV_PARTITION_NR}
+  if ! resize2fs "$DEV_DISK"; then
+      if ! xfs_growfs ${DEV_DISK}${DEV_PARTITION_NR}; then
+          echo >&2 "Neither resize2fs nor xfs_growfs could resize the device. Potential filesystem mismatch on [$DEV_DISK]."
+          lsblk "$DEV_DISK"
+      fi
+  fi
 fi
 
 set +u
