@@ -47,4 +47,6 @@ dracut \
 --xz \
 "/boot/initrd-${KVER}"
 
+"$(dirname $0)/create-kdump-artifacts.sh"
+
 exit 0

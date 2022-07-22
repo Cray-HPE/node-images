@@ -101,3 +101,16 @@ services_metal:
   - name: sysstat.service
     enabled: yes
     state: started
+# disable systemd-remount-fs.service
+#
+# NOTE: The FSLabel in the autoinst will end up in /etc/fstab for `/`, for the sake of kdump we will leverage this even though it is incorrect.
+#
+# KDUMP will attempt to find `/` by reading /etc/fstab, if it finds an entry then it'll mount that target during a kernel panic. On the other hand, if no `/` entry exists
+# in /etc/fstab then kdump will read from /proc/mounts. However, since we use an overlayFS on metal the `/` entry in `/proc/mounts` is not usable within kdump. Therefore, 
+# we will align the FSLabel in the qcow images to that of a partition on metal. By doing this kdump's unavoidable auto-resolution will find something it can mount during a 
+# kernel panic. The upside of this is that kdump works, the downside is that /etc/fstab is incorrect. Since /etc/fstab is incorrect, we do not want the systemd-remount-fs 
+# service to run. If that service were to run it would mount the wrong item as root.
+# tl;dr we can't remove `/` from /etc/fstab or we loose control over what kdump will mount.
+  - name: systemd-remount-fs.service
+    enabled: no
+    state: stopped

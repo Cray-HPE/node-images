@@ -48,11 +48,9 @@ cleanup() {
     echo "CLEANUP: cleanup function running ..."
 
     # Restore the dracut config if it was removed.
-    [ ! -f /etc/dracut.conf.d/05-metal.conf ] && cp -v /run/rootfsbase/etc/dracut.conf.d/05-metal.conf /etc/dracut.conf.d/05-metal.conf
-
-    # Stops re-running this script on reboot
-    # TODO: This script should move to the pipeline, and the service can then be removed (MTL-1830).
-    systemctl disable kdump-cray
+    if [ -f /run/rootfsbase/etc/dracut.conf.d/05-metal.conf ]; then
+        cp -v /run/rootfsbase/etc/dracut.conf.d/05-metal.conf /etc/dracut.conf.d/05-metal.conf
+    fi
 }
 
 
@@ -64,7 +62,7 @@ check_size() {
 
     local initrd="$1"
     local max=20000000 # kdump initrds larger than 20M may run into issues with memory
-    
+
     if [[ "$(stat --format=%s $initrd)" -ge "$max" ]]; then
         echo >&2 "CAUTION: initrd might be too large ($(stat --format=%s $initrd)) and may exceed available memory (OOM) if used"
     else
@@ -72,121 +70,14 @@ check_size() {
     fi
 }
 
-
-# FIXME: Remove this function, see notes on each block of code contained for prerequites for removal.
-function update_fstab {
-
-    local initrd="$1"
-    local sqfs_label="${2:-'SQFSRAID'}"
-    local live_dir="${3:-'LiveOS'}"
-
-    echo "Unpacking generated initrd [$initrd] to amend fstab ..."
-
-    local temp=/tmp/ktmp
-
-    [ -d $temp ] && rm -rf $temp
-    mkdir -p $temp
-    pushd $temp || exit 1
-    /usr/lib/dracut/skipcpio ${initrd} | xzcat | cpio -id
-    
-    # This hack removes the automated entry for mnt0, we have been unable to resolve where it came from.
-    # It seems to come from kdump source, likely the C code.
-    tail -n +2 etc/fstab > etc/fstab.new
-    mv etc/fstab.new etc/fstab
-
-    # kdump/boot points to mnt0 assuming it is the `/` partition, this corrects it to point
-    # to the actual boot directory from the squash.
-    # NOTE: The boot directory won't contain the kdump initrd until we run this script in the NCN pipeline.
-    #       We assume that this directory is mounted to provide access
-    #       to the kdump initrd (not that it needs to be accessed).
-    rm -rf kdump/boot
-    ln -snf rootfsbase/boot kdump/boot
-
-    # /etc/sysconfig/kdump differs between the running system and in the kdump initrd.
-    # in the initrd the value is this: KDUMP_SAVEDIR="file:///mnt0/var/crash"
-    # in runtime it's KDUMP_SAVEDIR="file:////var/crash"
-    # instead of modifying KDUMP_SAVEDIR since the values don't match between each context, this symlinks
-    # where /var/crash exists in runtime to `/kdump/mnt0.
-    sqfs_uuid=$(blkid -lt LABEL=$sqfs_label | tr ' ' '\n' | awk -F '"' ' /UUID/ {print $2}')
-    rm -rf kdump/mnt0
-    ln -snf overlay/${live_dir}/overlay-$sqfs_label-$sqfs_uuid/ kdump/mnt0
-
-    echo "Regenerating modified kdump initrd ..."
-    rm -f ${initrd}
-    find . | cpio -oac | xz -C crc32 -z -c > ${initrd}
-    popd
-    rm -rf $temp
-}
-
-
 function build_initrd {
 
-    local init_cmdline    
-    local kdump_cmdline
+    local initrd_name
     local kdump_add
     local kdump_omit
     local kdump_omit_drivers
 
-    local live_dir=''
-    local live_dir_arg=''
-    local live_img=''
-    local live_img_arg=''
-    local overlay_label=''
-    local overlay_label_arg=''
-    local root=''
-    local root_arg=''
-    local sqfs_drive_url=''
-    local sqfs_label=''
-    local sqfs_label_arg=''
-    local sqfs_label_arg=''
-
-    # kdump-specific kernel parameters
-    init_cmdline=$(cat /proc/cmdline)
-    kdump_cmdline=()
-    for cmd in $init_cmdline; do
-        # cleans up first argument when running this script on a disk-booted system
-        if [[ $cmd =~ kernel$ ]]; then
-            cmd=$(basename "$(echo $cmd  | awk '{print $1}')")
-        fi
-        if [[ $cmd =~ ^rd\.live\.dir=.* ]]; then
-            live_dir_arg="${cmd//;/\\;}"
-        fi
-        if [[ $cmd =~ ^rd\.live\.squashimg=.* ]]; then
-            live_img_arg="${cmd//;/\\;}"
-        fi
-        if [[ $cmd =~ ^root=.* ]]; then
-            root_arg="${cmd//;/\\;}"
-            root=${root_arg#*=}
-            case "$root" in
-                live:*)
-                    sqfs_drive_url=${root#live:}
-                    sqfs_label_arg=${sqfs_drive_url#*:}
-                    ;;
-                *)
-                    echo >&2 "This kdump script does not support a root type of $root"
-                    ;;
-            esac
-        fi
-        if [[ $cmd =~ ^rd.live.overlay=.* ]]; then
-            overlay_label_arg="${cmd//;/\\;}"
-        fi
-        if [[ $cmd =~ ^rd.live.overlay.reset ]] ; then :
-        elif [[ ! $cmd =~ ^metal. ]] && [[ ! $cmd =~ ^ip=.* ]] && [[ ! $cmd =~ ^bootdev=.* ]] ; then
-            kdump_cmdline+=( "${cmd//;/\\;}" )
-        fi
-    done
-    kdump_cmdline+=( "rd.info" )
-    
-    # Resolve the filesystem and the live directory dynamically.
-    [ -n "${sqfs_label_arg:-''}" ] && sqfs_label="${sqfs_label_arg#*=}"
-    [ -z "$sqfs_label" ] && sqfs_label='SQFSRAID'
-    [ -n "${overlay_label_arg:-''}" ] && overlay_label="${overlay_label_arg##*=}"
-    [ -z "$overlay_label" ] && overlay_label='ROOTRAID'
-    [ -n "${live_dir_arg:-''}" ] && live_dir="${live_dir_arg#*=}"
-    [ -z "$live_dir" ] && live_dir='LiveOS'
-    [ -n "${live_img_arg:-''}" ] && live_img="${live_img_arg#*=}"
-    [ -z "$live_img" ] && live_img='filesystem.squashfs'
-    
+    sed -i -E 's/(KDUMP_COMMANDLINE_APPEND=)"(.*)"/\1"rd.info \2"/p' /etc/sysconfig/kdump
     initrd_name="/boot/initrd-${KVER}-kdump"
 
     # kdump-specific modules to add
@@ -209,7 +100,11 @@ function build_initrd {
     # move the 05-metal.conf file out of the way while the initrd is generated
     # it causes some conflicts if it's in place when 'dracut' is called.
     # This is restored by the cleanup function at the end.
-    rm -f /etc/dracut.conf.d/05-metal.conf
+    if [ -f /run/rootfsbase/etc/dracut.conf.d/05-metal.conf ]; then
+        rm -f /etc/dracut.conf.d/05-metal.conf
+    else
+        echo 'Not removing metal dracut config because no backup exists; this is likely running in the NCN pipeline and the inclusion of this file is safe.'
+    fi
 
     # generate the kdump initrd
     # Special notes for specific parameters:
@@ -230,22 +125,18 @@ function build_initrd {
         --add "$(printf '%s' "${kdump_add[*]}")" \
         --fstab \
         --nohardlink \
-        --mount "LABEL=${sqfs_label} /kdump/live xfs ro" \
-        --mount "/kdump/live/${live_dir}/${live_img} /kdump/rootfsbase squashfs ro" \
-        --mount "LABEL=${overlay_label} /kdump/overlay xfs" \
         --filesystems 'xfs' \
         --compress 'xz -0 --check=crc32' \
         --no-hostonly-default-device \
-        --kernel-cmdline "$(printf '%s' "${kdump_cmdline[*]}")" \
         --persistent-policy by-label \
-        --mdadmconf \
         --printsize \
+        --print-cmdline \
+        --kver ${KVER} \
         --force-drivers 'raid1' \
         ${initrd_name}
 
-    update_fstab ${initrd_name} ${sqfs_label} ${live_dir}
     check_size ${initrd_name}
-    
+
     # restart kdump to apply the change
     echo "Restarting kdump ..."
     systemctl restart kdump
